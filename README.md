@@ -4,12 +4,6 @@
 
 Contains WAVS enabled Safe Module and Guard contracts.
 
-TODO:
-
-- [ ] Better Dev Ex (no constantly writing to .env)
-- [ ] Write some forge tests
-- [ ] Refactor dao-agent component
-
 Reading and Resources:
 
 - [Zodiac](https://www.zodiac.wiki/documentation): a bunch of useful extensions to the Safe. If you're looking for examples of extending Safe, Zodiac has a ton of them.
