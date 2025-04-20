@@ -48,6 +48,37 @@ impl DaoContext {
         amount <= balance
     }
 
+    /// Check if a given token is supported and has sufficient balance
+    pub fn has_sufficient_token_balance(&self, token_address: &str, amount: &str) -> bool {
+        // Find the token balance
+        if let Some(token) = self.token_balances.iter().find(|t| t.token_address == token_address) {
+            let amount_val = amount.parse::<u128>().unwrap_or(u128::MAX);
+            let balance_val = token.balance.parse::<u128>().unwrap_or(0);
+            return amount_val <= balance_val;
+        }
+        false
+    }
+
+    /// Get a token by its symbol
+    pub fn get_token_by_symbol(&self, symbol: &str) -> Option<&TokenBalance> {
+        self.token_balances.iter().find(|t| t.symbol.to_lowercase() == symbol.to_lowercase())
+    }
+
+    /// Check if an address is in the allowed list
+    pub fn is_address_allowed(&self, address: &str) -> bool {
+        self.allowed_addresses.iter().any(|a| a.to_lowercase() == address.to_lowercase())
+    }
+
+    /// Get a smart contract by name
+    pub fn get_contract_by_name(&self, name: &str) -> Option<&Contract> {
+        self.contracts.iter().find(|c| c.name.to_lowercase() == name.to_lowercase())
+    }
+
+    /// Get list of supported token symbols
+    pub fn get_supported_token_symbols(&self) -> Vec<String> {
+        self.token_balances.iter().map(|t| t.symbol.clone()).collect()
+    }
+
     /// Format balances for display in the prompt
     pub fn format_balances(&self) -> String {
         let mut result =

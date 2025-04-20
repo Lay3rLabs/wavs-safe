@@ -578,20 +578,38 @@ mod tests {
 
                 // Define tools
                 let eth_tool = builders::send_eth();
-                let erc20_tool = builders::send_erc20();
+
+                // Create a test contract for generated tools
+                let test_contract = crate::models::Contract {
+                    name: "USDC".to_string(),
+                    address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48".to_string(),
+                    abi: r#"[{
+                        "constant": false,
+                        "inputs": [{"name": "to","type": "address"},{"name": "value","type": "uint256"}],
+                        "name": "transfer",
+                        "outputs": [{"name": "","type": "bool"}],
+                        "type": "function"
+                    }]"#.to_string(),
+                };
+
+                let contract_tools = builders::from_contract(&test_contract);
 
                 let messages = vec![
                     Message::new_system(
-                        "You are a DAO agent that can send ETH and ERC20 tokens. Use the send_eth or send_erc20 tools as needed."
+                        "You are a DAO agent that can send ETH and interact with smart contracts. Use the appropriate tools as needed."
                             .to_string(),
                     ),
                     Message::new_user("Send 0.1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3".to_string()),
                 ];
 
                 println!("Sending test message with tools");
-                let result = block_on(async {
-                    client.chat_completion(&messages, Some(&[eth_tool, erc20_tool])).await
-                });
+
+                // Combine all tools
+                let mut all_tools = vec![eth_tool];
+                all_tools.extend(contract_tools);
+
+                let result =
+                    block_on(async { client.chat_completion(&messages, Some(&all_tools)).await });
 
                 // Note: This test may fail if Ollama doesn't support tool calls
                 // We're just checking that the request completes, not that it uses tools
@@ -603,10 +621,10 @@ mod tests {
                         if let Some(tool_calls) = &message.tool_calls {
                             assert!(!tool_calls.is_empty(), "Expected tool calls to be non-empty");
                             let tool_call = &tool_calls[0];
-                            // Tool could be either send_eth or send_erc20
+                            // Tool could be send_eth or a contract_* tool
                             assert!(
                                 tool_call.function.name == "send_eth"
-                                    || tool_call.function.name == "send_erc20",
+                                    || tool_call.function.name.starts_with("contract_"),
                                 "Unexpected tool: {}",
                                 tool_call.function.name
                             );
@@ -698,20 +716,38 @@ mod tests {
 
                 // Define tools
                 let eth_tool = builders::send_eth();
-                let erc20_tool = builders::send_erc20();
+
+                // Create a test contract for generated tools
+                let test_contract = crate::models::Contract {
+                    name: "USDC".to_string(),
+                    address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48".to_string(),
+                    abi: r#"[{
+                        "constant": false,
+                        "inputs": [{"name": "to","type": "address"},{"name": "value","type": "uint256"}],
+                        "name": "transfer",
+                        "outputs": [{"name": "","type": "bool"}],
+                        "type": "function"
+                    }]"#.to_string(),
+                };
+
+                let contract_tools = builders::from_contract(&test_contract);
 
                 let messages = vec![
                     Message::new_system(
-                        "You are a DAO agent that can send ETH and ERC20 tokens. Use the send_eth or send_erc20 tools as needed."
+                        "You are a DAO agent that can send ETH and interact with smart contracts. Use the appropriate tools as needed."
                             .to_string(),
                     ),
                     Message::new_user("Send 0.1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3".to_string()),
                 ];
 
                 println!("Sending test message with tools");
-                let result = block_on(async {
-                    client.chat_completion(&messages, Some(&[eth_tool, erc20_tool])).await
-                });
+
+                // Combine all tools
+                let mut all_tools = vec![eth_tool];
+                all_tools.extend(contract_tools);
+
+                let result =
+                    block_on(async { client.chat_completion(&messages, Some(&all_tools)).await });
 
                 match result {
                     Ok(message) => {
@@ -721,10 +757,10 @@ mod tests {
                         if let Some(tool_calls) = &message.tool_calls {
                             assert!(!tool_calls.is_empty());
                             let tool_call = &tool_calls[0];
-                            // Tool could be either send_eth or send_erc20
+                            // Tool could be send_eth or a contract_* tool
                             assert!(
                                 tool_call.function.name == "send_eth"
-                                    || tool_call.function.name == "send_erc20",
+                                    || tool_call.function.name.starts_with("contract_"),
                                 "Unexpected tool: {}",
                                 tool_call.function.name
                             );

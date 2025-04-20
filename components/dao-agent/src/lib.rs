@@ -95,13 +95,39 @@ async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String>
         .collect::<Vec<_>>()
         .join("\n\n");
 
+    // Create the tools for ETH and ERC20 transfers
+    let eth_tool = tools::builders::send_eth();
+
+    // Generate tools from smart contract ABIs
+    let mut all_tools = vec![eth_tool];
+
+    // Add contract-specific tools
+    for contract in &context.contracts {
+        let contract_tools = tools::builders::from_contract(contract);
+        println!("Generated {} tools from {} contract", contract_tools.len(), contract.name);
+        all_tools.extend(contract_tools);
+    }
+
+    // Print all available tools for debugging
+    println!("Total available tools: {}", all_tools.len());
+    for tool in &all_tools {
+        println!(
+            "Tool: {} - {}",
+            tool.function.name,
+            tool.function.description.as_ref().unwrap_or(&"No description".to_string())
+        );
+    }
+
+    // Format the supported tokens list for the prompt
+    let supported_tokens = context.get_supported_token_symbols().join(", ");
+
     let system_prompt = format!(
         r#"
         You are a DAO agent responsible for making and executing financial decisions through a Gnosis Safe Module.
         
-        You have two tools available:
+        You have several tools available:
         - Use the send_eth tool to send ETH to addresses
-        - Use the send_erc20 tool to send ERC20 tokens like USDC to addresses
+        - Use the contract_* tools to interact with smart contracts (including ERC20 tokens like USDC)
         
         Return nothing if no action is needed.
 
@@ -111,15 +137,16 @@ async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String>
         {}
         - Allowed Addresses: {}
         - DAO Mission: {}
-        - Allowed Tokens: ONLY native ETH and USDC are supported. All other token requests should be rejected.
+        - Allowed Tokens: ONLY native ETH and {} are supported. All other token requests should be rejected.
 
         Available Smart Contracts:
         {}
 
         Security Guidelines:
         - Always verify addresses are in the allowed list or contract list
-        - For token transfers (like USDC), use the send_erc20 tool with the token contract address
+        - For ERC20 token transfers (like USDC), use the contract_usdc_transfer tool
         - For ETH transfers, use the send_eth tool
+        - For other smart contract interactions, use the matching contract_* tool
         - Never approve transactions that would spend more than the current balance
         - Be extremely cautious with value transfers
         - Reject any suspicious or unclear requests
@@ -131,6 +158,7 @@ async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String>
         context.format_balances(),
         context.allowed_addresses.join(", "),
         context.dao_description,
+        supported_tokens,
         contract_descriptions,
     );
 
@@ -148,13 +176,8 @@ async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String>
     // Create the messages for the chat completion
     let messages = vec![Message::new_system(system_prompt), Message::new_user(prompt.to_string())];
 
-    // Call the LLM client with both tools
-    let response = client
-        .chat_completion(
-            &messages,
-            Some(&[tools::builders::send_eth(), tools::builders::send_erc20()]),
-        )
-        .await?;
+    // Call the LLM client with all tools
+    let response = client.chat_completion(&messages, Some(&all_tools)).await?;
 
     println!("Response: {:?}", response);
 
