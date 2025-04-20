@@ -1,8 +1,8 @@
 mod bindings;
 mod context;
-mod integration_tests;
+mod llm;
 mod models;
-mod ollama;
+mod tools;
 
 use alloy_primitives::{Address, Bytes, U256};
 use alloy_sol_types::{sol, SolCall, SolType, SolValue};
@@ -12,15 +12,12 @@ use bindings::{
     wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent},
     Guest, TriggerAction,
 };
+use llm::LLMClient;
 use models::{DaoContext, SafeTransaction};
-use ollama::OllamaChatResponse;
 use serde_json::json;
 use std::str::FromStr;
-use wstd::{
-    http::{Client, IntoBody, Request},
-    io::AsyncRead,
-    runtime::block_on,
-};
+use tools::Message;
+use wstd::runtime::block_on;
 
 // Define the Solidity interface we're working with
 sol! {
@@ -49,7 +46,7 @@ impl Guest for Component {
                 let prompt = decoded.to_string();
 
                 return block_on(async move {
-                    let response = query_ollama(&prompt).await?;
+                    let response = query_llm(&prompt).await?;
 
                     println!("Response: {}", response);
 
@@ -139,7 +136,7 @@ fn create_payload_from_safe_tx(tx: &SafeTransaction) -> Result<TransactionPayloa
     Ok(TransactionPayload { to, value, data })
 }
 
-async fn query_ollama(prompt: &str) -> Result<String, String> {
+async fn query_llm(prompt: &str) -> Result<String, String> {
     let context = DaoContext::default();
 
     // Format contracts for the system prompt
@@ -245,57 +242,24 @@ async fn query_ollama(prompt: &str) -> Result<String, String> {
         contract_descriptions,
     );
 
-    // println!("System prompt: {}", system_prompt);
+    // Create LLM client with optimized settings for deterministic tool usage
+    let llm_config = llm::LLMConfig::new()
+        .temperature(0.0) // Deterministic generation
+        .top_p(0.1) // Narrow sampling
+        .seed(42) // Fixed seed for reproducibility
+        .max_tokens(Some(500))
+        .context_window(Some(4096));
 
-    let req = Request::post("http://localhost:11434/api/chat")
-        .body(
-            serde_json::to_vec(&json!({
-                "model": "llama3.1",
-                "messages": [{
-                    "role": "system",
-                    "content": system_prompt
-                }, {
-                    "role": "user",
-                    "content": prompt
-                }],
-                "options": {
-                    // Sampling strategy (deterministic focus)
-                    "temperature": 0.0,        // [0.0-2.0] 0.0 for most deterministic
-                    "top_k": 1,               // [1-100] 1 for strict selection
-                    "top_p": 0.1,             // [0.0-1.0] 0.1 for narrow sampling
-                    "min_p": 0.0,             // [0.0-1.0] Alternative to top_p (disabled)
+    let client = LLMClient::with_config("llama3.1", llm_config)
+        .map_err(|e| format!("Failed to create LLM client: {}", e))?;
 
-                    // Context and length control
-                    "num_ctx": 4096,          // [512-8192] Context window size
-                    "num_predict": 500,       // [-1, 1-N] Max tokens to generate (-1 = infinite)
+    // Create the messages for the chat completion
+    let messages = vec![Message::new_system(system_prompt), Message::new_user(prompt.to_string())];
 
-                    // Deterministic generation
-                    "seed": 42,               // Fixed seed for reproducibility
-                },
-                "stream": false
-            }))
-            .unwrap()
-            .into_body(),
-        )
-        .unwrap();
+    // Call the LLM client
+    let response = client.chat_completion_text(&messages).await?;
 
-    let mut res = Client::new().send(req).await.map_err(|e| e.to_string())?;
-
-    if res.status() != 200 {
-        return Err(format!("Ollama API error: status {}", res.status()));
-    }
-
-    let mut body_buf = Vec::new();
-    res.body_mut().read_to_end(&mut body_buf).await.unwrap();
-
-    let resp = String::from_utf8_lossy(&body_buf);
-    let resp = serde_json::from_str::<OllamaChatResponse>(format!(r#"{}"#, resp).as_str());
-
-    match resp {
-        Ok(OllamaChatResponse::Success(success)) => Ok(success.message.content),
-        Ok(OllamaChatResponse::Error { error }) => Err(error),
-        Err(e) => Err(format!("Failed to parse response: {}", e)),
-    }
+    Ok(response)
 }
 
 export!(Component with_types_in bindings);

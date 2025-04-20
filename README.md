@@ -7,6 +7,7 @@ TODO:
 - [ ] Refactor agent for better tool use and openai support
 - [ ] Consolidate / refactor service types
 - [ ] Better way to check result from Guard in demo
+- [ ] Get make wasi-exec working for easier testing
 
 Later:
 
