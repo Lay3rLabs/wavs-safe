@@ -6,11 +6,13 @@ import "forge-std/console.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 import "../src/contracts/WavsSafeModule.sol";
 import "../src/contracts/Trigger.sol";
+import "../src/contracts/MockUSDC.sol";
 import "@gnosis.pm/safe-contracts/contracts/Safe.sol";
 import "@gnosis.pm/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
 import "@gnosis.pm/safe-contracts/contracts/base/ModuleManager.sol";
 import {Utils} from "./Utils.sol";
 import {Strings} from "@openzeppelin-contracts/utils/Strings.sol";
+import {Create2} from "@openzeppelin-contracts/utils/Create2.sol";
 
 contract Deploy is Script {
     using stdJson for string;
@@ -22,6 +24,10 @@ contract Deploy is Script {
     address public deployedSafeAddress;
     address public deployedModuleAddress;
     address public deployedTriggerAddress;
+    address public deployedUSDCAddress;
+
+    // Salt for deterministic deployment
+    bytes32 public constant USDC_SALT = keccak256("MOCK_USDC_SALT_V1");
 
     // JSON output path
     string public root;
@@ -31,7 +37,7 @@ contract Deploy is Script {
         root = vm.projectRoot();
         deploymentsPath = string.concat(
             root,
-            ".docker/module_deployments.json"
+            "/.docker/module_deployments.json"
         );
 
         (uint256 deployerPrivateKey, address deployer) = Utils.getPrivateKey(
@@ -61,6 +67,41 @@ contract Deploy is Script {
         } else {
             deployedSafeAddress = vm.envAddress("EXISTING_SAFE_ADDRESS");
             console.log("Using existing Safe at:", deployedSafeAddress);
+        }
+
+        // Deploy MockUSDC (or use existing one if already deployed)
+        deployedUSDCAddress = _deployMockUSDC();
+        console.log("Deployed/Using MockUSDC at:", deployedUSDCAddress);
+
+        // Mint 1 million USDC to the Safe (1,000,000 * 10^6) if it's a fresh deployment
+        MockUSDC usdc = MockUSDC(deployedUSDCAddress);
+        try usdc.mint(deployedSafeAddress, 1_000_000_000_000) {
+            console.log("Minted 1,000,000 USDC to Safe");
+        } catch Error(string memory reason) {
+            console.log("USDC mint failed:", reason);
+
+            // Try to check the current balance instead
+            try usdc.balanceOf(deployedSafeAddress) returns (uint256 balance) {
+                console.log("Current Safe USDC balance:", balance / 1e6);
+                if (balance == 0) {
+                    console.log("Warning: Safe has no USDC balance");
+                }
+            } catch {
+                console.log("Failed to check USDC balance");
+            }
+        } catch (bytes memory) {
+            // Custom error case (likely OwnableUnauthorizedAccount)
+            console.log("Failed to mint USDC: Not the owner of the contract");
+
+            // Try to check the current balance instead
+            try usdc.balanceOf(deployedSafeAddress) returns (uint256 balance) {
+                console.log("Current Safe USDC balance:", balance / 1e6);
+                if (balance == 0) {
+                    console.log("Warning: Safe has no USDC balance");
+                }
+            } catch {
+                console.log("Failed to check USDC balance");
+            }
         }
 
         address serviceManager = Utils.getServiceManager(vm);
@@ -137,6 +178,32 @@ contract Deploy is Script {
         return safeAddress;
     }
 
+    /**
+     * @dev Deploys MockUSDC or returns the existing instance
+     */
+    function _deployMockUSDC() internal returns (address) {
+        // Specific address to check first
+        address specificAddress = 0xb7278A61aa25c888815aFC32Ad3cC52fF24fE575;
+
+        // Check if there's already code at this address
+        uint256 codeSize;
+        assembly {
+            codeSize := extcodesize(specificAddress)
+        }
+
+        // If a contract exists at the specified address, use it
+        if (codeSize > 0) {
+            console.log("Found existing MockUSDC at:", specificAddress);
+            return specificAddress;
+        }
+
+        // Otherwise deploy a new MockUSDC
+        MockUSDC usdc = new MockUSDC();
+        console.log("Deployed new MockUSDC at:", address(usdc));
+
+        return address(usdc);
+    }
+
     function writeDeploymentsToJson() internal {
         // Create JSON string with deployment information
         string memory json = "{";
@@ -168,13 +235,10 @@ contract Deploy is Script {
             deployedModuleAddress,
             false
         );
+        json = appendJsonPair(json, "mockUSDC", deployedUSDCAddress, false);
 
         // Close JSON
         json = string.concat(json, "}");
-
-        // Create directories if they don't exist
-        string memory dirPath = string.concat(root, "/deployments");
-        vm.createDir(dirPath, true);
 
         // Write JSON to file
         vm.writeFile(deploymentsPath, json);
@@ -290,7 +354,10 @@ contract AddTrigger is Script {
 
     function run(string calldata triggerData) public {
         root = vm.projectRoot();
-        deploymentsPath = string.concat(root, "/deployments/local.json");
+        deploymentsPath = string.concat(
+            root,
+            "/.docker/module_deployments.json"
+        );
 
         string memory json = vm.readFile(deploymentsPath);
         address triggerAddress = json.readAddress(".triggerContract");
@@ -325,11 +392,45 @@ contract AddTrigger is Script {
 }
 
 contract ViewBalance is Script {
-    function run() public view {
-        uint256 balanceBefore = address(
-            0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3
-        ).balance;
+    using stdJson for string;
 
-        console.log("ETH balance:", balanceBefore);
+    function run() public view {
+        // Get the root directory and deployments path
+        string memory root = vm.projectRoot();
+        string memory deploymentsPath = string.concat(
+            root,
+            "/.docker/module_deployments.json"
+        );
+
+        // Read deployment information from JSON file
+        string memory json = vm.readFile(deploymentsPath);
+        address mockUSDCAddress = json.readAddress(".mockUSDC");
+
+        // Address to check balance for
+        address targetAddress = 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3;
+
+        // Check ETH balance
+        uint256 ethBalance = targetAddress.balance;
+        console.log("ETH balance:", ethBalance);
+
+        // Check USDC balance if contract is deployed
+        if (mockUSDCAddress != address(0)) {
+            try MockUSDC(mockUSDCAddress).balanceOf(targetAddress) returns (
+                uint256 usdcBalance
+            ) {
+                // Get decimals to format the balance correctly
+                uint8 decimals = MockUSDC(mockUSDCAddress).decimals();
+                // Display both raw and formatted balance
+                console.log("USDC balance (raw):", usdcBalance);
+                console.log(
+                    "USDC balance (formatted):",
+                    usdcBalance / (10 ** decimals)
+                );
+            } catch {
+                console.log("Failed to check USDC balance");
+            }
+        } else {
+            console.log("MockUSDC address not found in deployments");
+        }
     }
 }

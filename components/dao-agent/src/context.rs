@@ -215,7 +215,7 @@ impl Default for DaoContext {
                 18,
             ),
             token_balances: vec![TokenBalance::new(
-                "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+                "0xb7278a61aa25c888815afc32ad3cc52ff24fe575",
                 "USDC",
                 "1000000000", // 1000 USDC (6 decimals)
                 6,
@@ -225,14 +225,8 @@ impl Default for DaoContext {
                 .to_string(),
             contracts: vec![Contract::new(
                 "USDC",
-                "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-                r#"[{
-                        "constant": false,
-                        "inputs": [{"name": "_to","type": "address"},{"name": "_value","type": "uint256"}],
-                        "name": "transfer",
-                        "outputs": [{"name": "","type": "bool"}],
-                        "type": "function"
-                    }]"#,
+                "0xb7278a61aa25c888815afc32ad3cc52ff24fe575",
+                r#"[{"type":"function","name":"transfer","inputs":[{"name":"to","type":"address","internalType":"address"},{"name":"value","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"nonpayable"}]"#,
             )],
             llm_config: LLMConfig::new()
                 .temperature(0.0)
@@ -261,6 +255,31 @@ impl Default for DaoContext {
             Available Smart Contracts:
             {contracts}
 
+            TOKEN DECIMALS - CRITICAL INSTRUCTIONS:
+            When a user requests to transfer tokens, you MUST convert the human-readable amount to the correct base units:
+            
+            - ETH has 18 decimals: 
+              * 1 ETH = 1000000000000000000 wei (10^18)
+              * 0.5 ETH = 500000000000000000 wei (5 * 10^17)
+              * 0.1 ETH = 100000000000000000 wei (10^17)
+              
+            - USDC has 6 decimals:
+              * 1 USDC = 1000000 base units (10^6)
+              * 100 USDC = 100000000 base units (10^8)
+              * 0.5 USDC = 500000 base units (5 * 10^5)
+              
+            Always multiply the human-readable amount by 10^(decimals) to get the correct token amount.
+            For example:
+            - If a user asks to "send 1 USDC," you must use "1000000" (one million) as the value
+            - If a user asks to "donate 0.5 ETH," you must use "500000000000000000" as the value
+
+            EXAMPLES:
+            User: "Send 1 USDC to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3"
+            Action: Use contract_usdc_transfer with value="1000000" (NOT "1")
+            
+            User: "Send 0.1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3"
+            Action: Use send_eth with value="100000000000000000" (NOT "0.1")
+            
             Security Guidelines:
             - Always verify addresses are in the allowed list or contract list
             - For ERC20 token transfers (like USDC), use the contract_usdc_transfer tool

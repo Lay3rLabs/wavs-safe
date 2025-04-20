@@ -8,7 +8,7 @@
   },
   "token_balances": [
     {
-      "token_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "token_address": "0xb7278a61aa25c888815afc32ad3cc52ff24fe575",
       "symbol": "USDC",
       "balance": "1000000000",
       "decimals": 6
@@ -21,7 +21,7 @@
   "contracts": [
     {
       "name": "USDC",
-      "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "address": "0xb7278a61aa25c888815afc32ad3cc52ff24fe575",
       "abi": "[{\"constant\": false,\"inputs\": [{\"name\": \"_to\",\"type\": \"address\"},{\"name\": \"_value\",\"type\": \"uint256\"}],\"name\": \"transfer\",\"outputs\": [{\"name\": \"\",\"type\": \"bool\"}],\"type\": \"function\"}]"
     }
   ],

@@ -347,14 +347,31 @@ pub mod handlers {
         let args: Value = serde_json::from_str(&tool_call.function.arguments)
             .map_err(|e| format!("Failed to parse function arguments: {}", e))?;
 
+        // Get the contract from context to check ABI
+        let context = crate::context::DaoContext::default();
+        let contract = context
+            .get_contract_by_name(contract_name)
+            .ok_or_else(|| format!("Unknown contract: {}", contract_name))?;
+
+        // Check if this function is payable by examining the ABI
+        let is_payable = contract.abi.contains(&format!("\"name\":\"{}\",", function_name))
+            && contract.abi.contains("\"stateMutability\":\"payable\"");
+
         // Extract args for the function call
         let mut function_args = Vec::new();
         let mut value = "0".to_string();
 
-        // Collect all args except 'value'
+        // Collect all args except 'value' (for ETH transfers)
         for (key, val) in args.as_object().unwrap() {
             if key == "value" {
-                value = val.as_str().unwrap_or("0").to_string();
+                // For ERC20 transfers and other nonpayable functions, include "value"
+                // as a function argument but don't set ETH value
+                function_args.push(val.clone());
+
+                // Only set transaction ETH value for payable functions
+                if is_payable {
+                    value = val.as_str().unwrap_or("0").to_string();
+                }
             } else {
                 function_args.push(val.clone());
             }
@@ -363,12 +380,6 @@ pub mod handlers {
         // Create contract call
         let contract_call =
             Some(ContractCall { function: function_name.to_string(), args: function_args });
-
-        // Get the contract from context
-        let context = crate::context::DaoContext::default();
-        let contract = context
-            .get_contract_by_name(contract_name)
-            .ok_or_else(|| format!("Unknown contract: {}", contract_name))?;
 
         // Create a SafeTransaction targeting the contract
         let transaction = SafeTransaction {

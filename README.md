@@ -1,8 +1,11 @@
-# [WAVS](https://docs.wavs.xyz) Safe Template
+# [WAVS](https://docs.wavs.xyz) Safe Example
 
-**Template for getting started with developing WAVS applications and Gnosis Safe. NOT PRODUCTION READY.**
+TODO:
 
-Contains WAVS enabled Safe Module and Guard contracts.
+- Write up determinism notes
+- Document config_uri
+
+Contains WAVS enabled Safe Module and Guard contracts, as well as a DEFINITELY NOT PRODUCTION ready agent which controls the custom Safe Module.
 
 Reading and Resources:
 
@@ -158,7 +161,7 @@ make wasi-build # or `make build` to include solidity compilation.
 Test run the component locally to validate the business logic works. Be sure to run `make wasi-build` if you make changes.
 
 ```bash
-COMPONENT_FILENAME="dao_agent.wasm" PROMPT='We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3.' make wasi-exec
+COMPONENT_FILENAME="dao_agent.wasm" PROMPT='We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3.' SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[],"workflow_id":"default","component_id":"default"}' make wasi-exec
 ```
 
 ## WAVS
@@ -226,18 +229,17 @@ A custom Safe module that integrates with WAVS.
 forge script script/WavsSafeModule.s.sol:Deploy --rpc-url http://localhost:8545 --broadcast
 ```
 
-This will deploy both the WavsSafeModule and Trigger contracts, and write their addresses to a JSON file in the `deployments/local.json` path.
+This will deploy both the WavsSafeModule and Trigger contracts, and write their addresses to a JSON file in the `.docker/module_deployments.json` path.
 
 ### Deploy service component
 
 ```bash
 # Load the addresses from the JSON file
-TRIGGER_ADDR=$(jq -r '.triggerContract' deployments/local.json)
-MODULE_ADDR=$(jq -r '.wavsSafeModule' deployments/local.json)
+TRIGGER_ADDR=$(jq -r '.triggerContract' .docker/module_deployments.json)
+MODULE_ADDR=$(jq -r '.wavsSafeModule' .docker/module_deployments.json)
 
 # Set service config
-SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[["config_uri", "ipfs://bafkreiaeq4xvqqelateurl3clkoxtpcflurrjvh6va457f6qxj44t3gevu"]],"workflow_id":"default","component_id":"default"}'
-
+SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[],"workflow_id":"default","component_id":"default"}'
 
 # Deploy the service
 COMPONENT_FILENAME=dao_agent.wasm SERVICE_TRIGGER_ADDR=$TRIGGER_ADDR SERVICE_SUBMISSION_ADDR=$MODULE_ADDR SERVICE_CONFIG=$SERVICE_CONFIG make deploy-service
@@ -245,11 +247,19 @@ COMPONENT_FILENAME=dao_agent.wasm SERVICE_TRIGGER_ADDR=$TRIGGER_ADDR SERVICE_SUB
 
 ### Trigger the AVS to execute a transaction
 
+Test sending ETH:
+
 ```bash
 forge script script/WavsSafeModule.s.sol:AddTrigger --sig "run(string)" "We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3." --rpc-url http://localhost:8545 --broadcast
 ```
 
-The script will automatically read the Trigger contract address from the JSON file.
+Test sending an ERC20:
+
+```bash
+forge script script/WavsSafeModule.s.sol:AddTrigger --sig "run(string)" "We should donate 1 USDC to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3." --rpc-url http://localhost:8545 --broadcast
+```
+
+The script will automatically read the Trigger and MockUSDC contract addresses from the JSON file.
 
 ### Check the balance
 
@@ -257,7 +267,7 @@ The script will automatically read the Trigger contract address from the JSON fi
 forge script script/WavsSafeModule.s.sol:ViewBalance --rpc-url http://localhost:8545
 ```
 
-> Notice that the balance now contains the 1 ETH donation. If you don't see anything, watch the Anvil and WAVS logs during the trigger creation above to make sure the transaction is succeeding.
+> Notice that the balance now contains both the 1 ETH and 1 USDC donations. If you don't see anything, watch the Anvil and WAVS logs during the trigger creation above to make sure the transaction is succeeding.
 
 ## WAVS Safe Guard Demo
 
@@ -269,14 +279,14 @@ A custom Safe Guard that leverages WAVS to check whether transactions are author
 forge script script/WavsSafeGuard.s.sol:Deploy --rpc-url http://localhost:8545 --broadcast
 ```
 
-This will deploy the Safe and Guard contracts, and write their addresses to a JSON file in the `deployments/guard.json` path.
+This will deploy the Safe and Guard contracts, and write their addresses to a JSON file in the `.docker/guard_deployments.json` path.
 
 ### Deploy service component
 
 ```bash
 # Load the addresses from the JSON file
-SAFE_ADDR=$(jq -r '.safeAddress' deployments/guard.json)
-GUARD_ADDR=$(jq -r '.guardAddress' deployments/guard.json)
+SAFE_ADDR=$(jq -r '.safeAddress' .docker/guard_deployments.json)
+GUARD_ADDR=$(jq -r '.guardAddress' .docker/guard_deployments.json)
 
 # Deploy the service
 COMPONENT_FILENAME=safe_guard.wasm SERVICE_TRIGGER_ADDR=$SAFE_ADDR SERVICE_SUBMISSION_ADDR=$GUARD_ADDR TRIGGER_EVENT="ApproveHash(bytes32,address)" make deploy-service
@@ -297,7 +307,3 @@ forge script script/WavsSafeGuard.s.sol:ExecuteSafeTransaction --rpc-url http://
 ```
 
 The script will automatically read the Safe address from the JSON file.
-
-```
-
-```

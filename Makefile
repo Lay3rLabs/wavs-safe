@@ -41,7 +41,7 @@ wasi-build:
 wasi-exec:
 	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
 	--component "/data/compiled/${COMPONENT_FILENAME}" \
-	--service-config $(SERVICE_CONFIG) \
+	--service-config '$(SERVICE_CONFIG)' \
 	--input $(INPUT)
 
 ## update-submodules: update the git submodules
