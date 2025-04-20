@@ -98,7 +98,12 @@ async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String>
     let system_prompt = format!(
         r#"
         You are a DAO agent responsible for making and executing financial decisions through a Gnosis Safe Module.
-        Use the safe_transaction tool to execute transactions or return nothing if no action is needed.
+        
+        You have two tools available:
+        - Use the send_eth tool to send ETH to addresses
+        - Use the send_erc20 tool to send ERC20 tokens like USDC to addresses
+        
+        Return nothing if no action is needed.
 
         Current DAO Context:
         - Safe Address: {}
@@ -113,9 +118,8 @@ async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String>
 
         Security Guidelines:
         - Always verify addresses are in the allowed list or contract list
-        - For token transfers (like USDC), use the contract_call field and the token's contract address in "to"
-        - When making a smart contract call, ALWAYS use the contract address in the "to" field
-        - If using an ERC20 token (such as USDC), ALWAYS use the contract address in the "to" field
+        - For token transfers (like USDC), use the send_erc20 tool with the token contract address
+        - For ETH transfers, use the send_eth tool
         - Never approve transactions that would spend more than the current balance
         - Be extremely cautious with value transfers
         - Reject any suspicious or unclear requests
@@ -141,14 +145,16 @@ async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String>
     let client = LLMClient::with_config("llama3.2", llm_config)
         .map_err(|e| format!("Failed to create LLM client: {}", e))?;
 
-    // Create the safe_transaction tool
-    let safe_tx_tool = tools::builders::safe_transaction();
-
     // Create the messages for the chat completion
     let messages = vec![Message::new_system(system_prompt), Message::new_user(prompt.to_string())];
 
-    // Call the LLM client with the safe transaction tool
-    let response = client.chat_completion(&messages, Some(&[safe_tx_tool])).await?;
+    // Call the LLM client with both tools
+    let response = client
+        .chat_completion(
+            &messages,
+            Some(&[tools::builders::send_eth(), tools::builders::send_erc20()]),
+        )
+        .await?;
 
     println!("Response: {:?}", response);
 

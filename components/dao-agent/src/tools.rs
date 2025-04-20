@@ -128,15 +128,13 @@ pub mod builders {
     use super::*;
     use serde_json::json;
 
-    /// Create a safe transaction tool
-    pub fn safe_transaction() -> Tool {
+    /// Create a tool to send ETH through the DAO's Safe
+    pub fn send_eth() -> Tool {
         Tool {
             tool_type: "function".to_string(),
             function: Function {
-                name: "safe_transaction".to_string(),
-                description: Some(
-                    "Execute a transaction through the DAO's Gnosis Safe".to_string(),
-                ),
+                name: "send_eth".to_string(),
+                description: Some("Send ETH through the DAO's Gnosis Safe".to_string()),
                 parameters: Some(json!({
                     "type": "object",
                     "properties": {
@@ -155,26 +153,48 @@ pub mod builders {
                         "description": {
                             "type": "string",
                             "description": "Description of the transaction"
-                        },
-                        "contract_call": {
-                            "type": "object",
-                            "properties": {
-                                "function": {
-                                    "type": "string",
-                                    "description": "Function name to call"
-                                },
-                                "args": {
-                                    "type": "array",
-                                    "description": "Function arguments",
-                                    "items": {
-                                        "type": "object"
-                                    }
-                                }
-                            },
-                            "required": ["function", "args"]
                         }
                     },
                     "required": ["to", "value", "data", "description"]
+                })),
+            },
+        }
+    }
+
+    /// Create a tool to send ERC20 tokens through the DAO's Safe
+    pub fn send_erc20() -> Tool {
+        Tool {
+            tool_type: "function".to_string(),
+            function: Function {
+                name: "send_erc20".to_string(),
+                description: Some(
+                    "Send ERC20 tokens (like USDC) through the DAO's Gnosis Safe".to_string(),
+                ),
+                parameters: Some(json!({
+                    "type": "object",
+                    "properties": {
+                        "token_address": {
+                            "type": "string",
+                            "description": "Address of the ERC20 token contract (0x...)"
+                        },
+                        "token_symbol": {
+                            "type": "string",
+                            "description": "Symbol of the token (e.g., USDC)"
+                        },
+                        "to": {
+                            "type": "string",
+                            "description": "Recipient address (0x...)"
+                        },
+                        "amount": {
+                            "type": "string",
+                            "description": "Amount to send as a string (in token's smallest unit)"
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "Description of the transaction"
+                        }
+                    },
+                    "required": ["token_address", "token_symbol", "to", "amount", "description"]
                 })),
             },
         }
@@ -189,20 +209,65 @@ pub mod handlers {
     /// Execute a tool call and return the result
     pub fn execute_tool_call(tool_call: &ToolCall) -> Result<String, String> {
         match tool_call.function.name.as_str() {
-            "safe_transaction" => parse_safe_transaction(tool_call),
+            "send_eth" => parse_eth_transaction(tool_call),
+            "send_erc20" => parse_erc20_transaction(tool_call),
             _ => Ok(format!("Unknown tool: {}", tool_call.function.name)),
         }
     }
 
-    /// Parse a safe transaction from tool call
-    pub fn parse_safe_transaction(tool_call: &ToolCall) -> Result<String, String> {
+    /// Parse an ETH transaction from tool call
+    pub fn parse_eth_transaction(tool_call: &ToolCall) -> Result<String, String> {
         // Parse the tool call arguments
         let args: Value = serde_json::from_str(&tool_call.function.arguments)
             .map_err(|e| format!("Failed to parse transaction arguments: {}", e))?;
 
-        // Parse into our SafeTransaction type
-        let transaction: SafeTransaction = serde_json::from_value(args)
-            .map_err(|e| format!("Failed to convert to SafeTransaction: {}", e))?;
+        // Create a SafeTransaction from the arguments
+        let transaction = SafeTransaction {
+            to: args["to"].as_str().ok_or("Missing 'to' field")?.to_string(),
+            value: args["value"].as_str().ok_or("Missing 'value' field")?.to_string(),
+            data: args["data"].as_str().ok_or("Missing 'data' field")?.to_string(),
+            description: args["description"]
+                .as_str()
+                .ok_or("Missing 'description' field")?
+                .to_string(),
+            contract_call: None,
+        };
+
+        // Serialize back to a string for passing between functions
+        let tx_json = serde_json::to_string(&transaction)
+            .map_err(|e| format!("Failed to serialize transaction: {}", e))?;
+
+        Ok(tx_json)
+    }
+
+    /// Parse an ERC20 transaction from tool call
+    pub fn parse_erc20_transaction(tool_call: &ToolCall) -> Result<String, String> {
+        // Parse the tool call arguments
+        let args: Value = serde_json::from_str(&tool_call.function.arguments)
+            .map_err(|e| format!("Failed to parse transaction arguments: {}", e))?;
+
+        // Extract required fields
+        let token_address =
+            args["token_address"].as_str().ok_or("Missing 'token_address' field")?.to_string();
+        let to = args["to"].as_str().ok_or("Missing 'to' field")?.to_string();
+        let amount = args["amount"].as_str().ok_or("Missing 'amount' field")?.to_string();
+        let description =
+            args["description"].as_str().ok_or("Missing 'description' field")?.to_string();
+
+        // Create a contract call for the ERC20 transfer
+        let contract_call = Some(crate::models::ContractCall {
+            function: "transfer".to_string(),
+            args: vec![serde_json::to_value(&to).unwrap(), serde_json::to_value(&amount).unwrap()],
+        });
+
+        // Create a SafeTransaction targeting the token contract
+        let transaction = SafeTransaction {
+            to: token_address,
+            value: "0".to_string(), // No ETH is sent for ERC20 transfers
+            data: "0x".to_string(), // Will be encoded by the execution layer
+            description,
+            contract_call,
+        };
 
         // Serialize back to a string for passing between functions
         let tx_json = serde_json::to_string(&transaction)
@@ -240,6 +305,7 @@ pub async fn process_tool_calls(
 
     // Check if we're using Ollama based on the model name
     let model = client.get_model();
+    // TODO: This is a hack and could be improved
     let is_ollama =
         model.starts_with("llama") || model.starts_with("mistral") || !model.contains("gpt");
 
@@ -305,15 +371,21 @@ mod tests {
 
     #[test]
     fn test_tool_definition() {
-        // Define a safe transaction tool
-        let safe_tx_tool = builders::safe_transaction();
+        // Define tools
+        let eth_tool = builders::send_eth();
+        let erc20_tool = builders::send_erc20();
 
         // Convert to JSON
-        let json = serde_json::to_string(&safe_tx_tool).unwrap();
+        let eth_json = serde_json::to_string(&eth_tool).unwrap();
+        let erc20_json = serde_json::to_string(&erc20_tool).unwrap();
 
-        // Ensure it can be serialized and deserialized correctly
-        let deserialized: Tool = serde_json::from_str(&json).unwrap();
-        assert_eq!(deserialized.tool_type, "function");
-        assert_eq!(deserialized.function.name, "safe_transaction");
+        // Ensure they can be serialized and deserialized correctly
+        let deserialized_eth: Tool = serde_json::from_str(&eth_json).unwrap();
+        assert_eq!(deserialized_eth.tool_type, "function");
+        assert_eq!(deserialized_eth.function.name, "send_eth");
+
+        let deserialized_erc20: Tool = serde_json::from_str(&erc20_json).unwrap();
+        assert_eq!(deserialized_erc20.tool_type, "function");
+        assert_eq!(deserialized_erc20.function.name, "send_erc20");
     }
 }

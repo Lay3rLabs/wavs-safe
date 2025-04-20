@@ -576,12 +576,13 @@ mod tests {
                 println!("Initializing Ollama client for tools test...");
                 let client = LLMClient::new("llama3.2").unwrap();
 
-                // Define a safe transaction tool
-                let safe_tx_tool = builders::safe_transaction();
+                // Define tools
+                let eth_tool = builders::send_eth();
+                let erc20_tool = builders::send_erc20();
 
                 let messages = vec![
                     Message::new_system(
-                        "You are a DAO agent that can create transactions. Use the safe_transaction tool when needed."
+                        "You are a DAO agent that can send ETH and ERC20 tokens. Use the send_eth or send_erc20 tools as needed."
                             .to_string(),
                     ),
                     Message::new_user("Send 0.1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3".to_string()),
@@ -589,7 +590,7 @@ mod tests {
 
                 println!("Sending test message with tools");
                 let result = block_on(async {
-                    client.chat_completion(&messages, Some(&[safe_tx_tool])).await
+                    client.chat_completion(&messages, Some(&[eth_tool, erc20_tool])).await
                 });
 
                 // Note: This test may fail if Ollama doesn't support tool calls
@@ -602,7 +603,13 @@ mod tests {
                         if let Some(tool_calls) = &message.tool_calls {
                             assert!(!tool_calls.is_empty(), "Expected tool calls to be non-empty");
                             let tool_call = &tool_calls[0];
-                            assert_eq!(tool_call.function.name, "safe_transaction");
+                            // Tool could be either send_eth or send_erc20
+                            assert!(
+                                tool_call.function.name == "send_eth"
+                                    || tool_call.function.name == "send_erc20",
+                                "Unexpected tool: {}",
+                                tool_call.function.name
+                            );
                         }
                         // With some models we might get a text response instead - that's fine too
                         else if let Some(content) = &message.content {
@@ -689,12 +696,13 @@ mod tests {
                 println!("Initializing OpenAI client for tools test...");
                 let client = LLMClient::new("gpt-4").unwrap();
 
-                // Define a safe transaction tool
-                let safe_tx_tool = builders::safe_transaction();
+                // Define tools
+                let eth_tool = builders::send_eth();
+                let erc20_tool = builders::send_erc20();
 
                 let messages = vec![
                     Message::new_system(
-                        "You are a DAO agent that can create transactions. Use the safe_transaction tool when needed."
+                        "You are a DAO agent that can send ETH and ERC20 tokens. Use the send_eth or send_erc20 tools as needed."
                             .to_string(),
                     ),
                     Message::new_user("Send 0.1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3".to_string()),
@@ -702,7 +710,7 @@ mod tests {
 
                 println!("Sending test message with tools");
                 let result = block_on(async {
-                    client.chat_completion(&messages, Some(&[safe_tx_tool])).await
+                    client.chat_completion(&messages, Some(&[eth_tool, erc20_tool])).await
                 });
 
                 match result {
@@ -713,7 +721,13 @@ mod tests {
                         if let Some(tool_calls) = &message.tool_calls {
                             assert!(!tool_calls.is_empty());
                             let tool_call = &tool_calls[0];
-                            assert_eq!(tool_call.function.name, "safe_transaction");
+                            // Tool could be either send_eth or send_erc20
+                            assert!(
+                                tool_call.function.name == "send_eth"
+                                    || tool_call.function.name == "send_erc20",
+                                "Unexpected tool: {}",
+                                tool_call.function.name
+                            );
                             println!("Tool call arguments: {}", tool_call.function.arguments);
                         } else if let Some(content) = &message.content {
                             assert!(!content.is_empty());

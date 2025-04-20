@@ -4,11 +4,11 @@
 
 TODO:
 
-- [ ] Refactor agent for better tool use and openai support
-- [ ] Tool use should support contract calls
 - [ ] Consolidate / refactor service types
 - [ ] Better way to check result from Guard in demo
 - [ ] Gaurd should support make wasi-exec
+- [ ] Refactor context
+- [ ] Better way to get system_prompt, model, config, context
 
 Later:
 
