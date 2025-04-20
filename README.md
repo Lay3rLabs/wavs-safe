@@ -8,9 +8,8 @@ TODO:
 - [ ] Better way to check result from Guard in demo
 - [ ] Gaurd should support make wasi-exec
 - [ ] Refactor context
-- [ ] Kill models.rs
 - [ ] Better way to get system_prompt, model, config, context
-- [ ] Add ipfs gateway environment variable
+- [ ] Add ipfs gateway environment variable, store config_uri in Module contract?
 
 Later:
 

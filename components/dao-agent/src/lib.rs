@@ -6,7 +6,7 @@ mod safe;
 mod sol_interfaces;
 mod tools;
 
-use alloy_sol_types::{sol, SolType, SolValue};
+use alloy_sol_types::{SolType, SolValue};
 use anyhow::Result;
 use bindings::{
     export,
@@ -18,20 +18,6 @@ use llm::LLMClient;
 use safe::SafeTransaction;
 use tools::{process_tool_calls, Message};
 use wstd::runtime::block_on;
-
-// Define the Solidity interface we're working with
-sol! {
-    interface IERC20 {
-        function transfer(address recipient, uint256 amount) external returns (bool);
-    }
-
-    #[derive(Debug)]
-    struct TransactionPayload {
-        address to;
-        uint256 value;
-        bytes data;
-    }
-}
 
 struct Component;
 
@@ -121,6 +107,7 @@ async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String>
     // Format the supported tokens list for the prompt
     let supported_tokens = context.get_supported_token_symbols().join(", ");
 
+    // TODO move this to the context
     let system_prompt = format!(
         r#"
         You are a DAO agent responsible for making and executing financial decisions through a Gnosis Safe Module.
@@ -162,6 +149,7 @@ async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String>
         contract_descriptions,
     );
 
+    // TODO move this to the context, parse from JSON
     // Create LLM client with optimized settings for deterministic tool usage
     let llm_config = llm::LLMConfig::new()
         .temperature(0.0) // Deterministic generation

@@ -1,6 +1,6 @@
-use crate::contracts::Contract;
+use crate::contracts::{Contract, ContractCall};
 use crate::llm::LLMClient;
-use crate::safe::{ContractCall, SafeTransaction};
+use crate::safe::SafeTransaction;
 use serde::{Deserialize, Serialize};
 
 /// Function parameter for tool calls
@@ -360,16 +360,15 @@ pub mod handlers {
         let contract_call =
             Some(ContractCall { function: function_name.to_string(), args: function_args });
 
-        // Get contract address - in a real implementation, this would be looked up
-        // from a registry or context that's passed to this function
-        let contract_address = match contract_name.to_lowercase().as_str() {
-            "usdc" => "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-            _ => return Err(format!("Unknown contract: {}", contract_name)),
-        };
+        // Get the contract from context
+        let context = crate::context::DaoContext::default();
+        let contract = context
+            .get_contract_by_name(contract_name)
+            .ok_or_else(|| format!("Unknown contract: {}", contract_name))?;
 
         // Create a SafeTransaction targeting the contract
         let transaction = SafeTransaction {
-            to: contract_address.to_string(),
+            to: contract.address.clone(),
             value,
             data: "0x".to_string(), // Will be encoded by the execution layer
             description: format!("Calling {} on {} contract", function_name, contract_name),
@@ -386,14 +385,16 @@ pub mod handlers {
 
 /// Default function for tool ID
 fn default_tool_id() -> String {
-    // Generate a simple random ID when none is provided (e.g., by Ollama)
-    format!(
-        "call_{}",
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_millis()
-    )
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    // Use a static counter to ensure unique, sequential IDs
+    static COUNTER: AtomicU64 = AtomicU64::new(1);
+
+    // Get the next ID and increment the counter
+    let id = COUNTER.fetch_add(1, Ordering::SeqCst);
+
+    // Format as a predictable string
+    format!("call_{:016x}", id)
 }
 
 /// Default function for tool type

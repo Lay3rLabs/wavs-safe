@@ -2,6 +2,7 @@ use crate::contracts::{Contract, TokenBalance};
 
 // TODO add LlmConfig to the context
 // TODO add model to the context
+// TODO add system prompt to the context
 // TODO serialize and deserialize the context to a json string
 /// Context for the DAO agent's decision making
 #[derive(Debug)]

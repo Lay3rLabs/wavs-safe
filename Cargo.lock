@@ -938,6 +938,7 @@ dependencies = [
  "primitive-types 0.13.1",
  "serde",
  "serde_json",
+ "tiny-keccak",
  "wavs-wasi-chain",
  "wit-bindgen-rt 0.39.0",
  "wstd",
