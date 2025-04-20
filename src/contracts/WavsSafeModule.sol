@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
-import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
-import "@gnosis.pm/safe-contracts/contracts/base/ModuleManager.sol";
-import "@gnosis.pm/safe-contracts/contracts/base/OwnerManager.sol";
+import {Enum} from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
+import {ModuleManager} from "@gnosis.pm/safe-contracts/contracts/base/ModuleManager.sol";
 import {IWavsServiceHandler} from "@wavs/interfaces/IWavsServiceHandler.sol";
 import {IWavsServiceManager} from "@wavs/interfaces/IWavsServiceManager.sol";
-import {ITypes} from "../interfaces/ITypes.sol";
 
 contract WavsSafeModule is IWavsServiceHandler {
     // The payload for a transaction to be executed by the Safe, returned from the AVS
@@ -27,30 +25,34 @@ contract WavsSafeModule is IWavsServiceHandler {
 
     event Funded(address sender, uint256 amount);
 
+    error OnlyOwnerAllowed();
+    error OnlySafeAllowed();
+    error OnlyServiceManagerAllowed();
+    error InvalidSafeAddress();
+    error InvalidServiceManagerAddress();
+    error InvalidTargetAddress();
+    error ModuleTransactionFailed();
+
     modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner can call this function");
+        if (msg.sender != owner) revert OnlyOwnerAllowed();
         _;
     }
 
     modifier onlySafe() {
-        require(msg.sender == safe, "Only safe can call this function");
+        if (msg.sender != safe) revert OnlySafeAllowed();
         _;
     }
 
     modifier onlyServiceManager() {
-        require(
-            msg.sender == address(serviceManager),
-            "Only service manager can call this function"
-        );
+        if (msg.sender != address(serviceManager))
+            revert OnlyServiceManagerAllowed();
         _;
     }
 
     constructor(address _safe, address _serviceManager) {
-        require(_safe != address(0), "Invalid safe address");
-        require(
-            _serviceManager != address(0),
-            "Invalid service manager address"
-        );
+        if (_safe == address(0)) revert InvalidSafeAddress();
+        if (_serviceManager == address(0))
+            revert InvalidServiceManagerAddress();
 
         safe = _safe;
         serviceManager = IWavsServiceManager(_serviceManager);
@@ -79,7 +81,7 @@ contract WavsSafeModule is IWavsServiceHandler {
             (TransactionPayload)
         );
 
-        require(payload.to != address(0), "Invalid target address");
+        if (payload.to == address(0)) revert InvalidTargetAddress();
 
         // Execute the transaction from the Safe
         bool success = ModuleManager(safe).execTransactionFromModule(
@@ -89,6 +91,6 @@ contract WavsSafeModule is IWavsServiceHandler {
             Enum.Operation.Call
         );
 
-        require(success, "Module transaction failed");
+        if (!success) revert ModuleTransactionFailed();
     }
 }

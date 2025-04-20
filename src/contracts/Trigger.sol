@@ -21,8 +21,12 @@ contract Trigger {
 
     event Funded(address sender, uint256 amount);
 
+    error InvalidRecipientAddress();
+    error PaymentAmountIncorrect();
+    error EthTransferFailed();
+
     constructor(address _recipient) {
-        require(_recipient != address(0), "Invalid recipient address");
+        if (_recipient == address(0)) revert InvalidRecipientAddress();
         recipient = _recipient;
     }
 
@@ -34,11 +38,11 @@ contract Trigger {
     function addTrigger(
         bytes memory data
     ) external payable returns (uint64 triggerId) {
-        require(msg.value == 0.1 ether, "Payment must be exactly 0.1 ETH");
+        if (msg.value != 0.1 ether) revert PaymentAmountIncorrect();
 
         // Forward the ETH to the recipient using low-level call
         (bool sent, ) = recipient.call{value: msg.value}("");
-        require(sent, "ETH transfer failed");
+        if (!sent) revert EthTransferFailed();
 
         // Get the next trigger id
         triggerId = nextTriggerId;

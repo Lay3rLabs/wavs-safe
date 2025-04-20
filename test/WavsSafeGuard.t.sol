@@ -196,7 +196,7 @@ contract WavsSafeGuardTest is Test {
 
         // Call the checkTransaction function directly (should revert with rejected message)
         vm.prank(address(mockSafe)); // Mock that the call comes from Safe
-        vm.expectRevert("Transaction was rejected");
+        vm.expectRevert(WavsSafeGuard.TransactionRejected.selector);
         guard.checkTransaction(
             to,
             value,
@@ -316,14 +316,14 @@ contract WavsSafeGuardTest is Test {
 
         // Call with failure should revert
         vm.prank(address(mockSafe));
-        vm.expectRevert("Transaction failed");
+        vm.expectRevert(WavsSafeGuard.TransactionFailed.selector);
         guard.checkAfterExecution(bytes32(0), false);
     }
 
     function testUnauthorizedCalls() public {
         // Try to call checkTransaction from unauthorized address
         vm.prank(address(0x456));
-        vm.expectRevert("Unauthorized");
+        vm.expectRevert(WavsSafeGuard.Unauthorized.selector);
         guard.checkTransaction(
             address(0x123),
             0.1 ether,
@@ -340,7 +340,7 @@ contract WavsSafeGuardTest is Test {
 
         // Try to call checkAfterExecution from unauthorized address
         vm.prank(address(0x456));
-        vm.expectRevert("Unauthorized");
+        vm.expectRevert(WavsSafeGuard.Unauthorized.selector);
         guard.checkAfterExecution(bytes32(0), true);
     }
 
