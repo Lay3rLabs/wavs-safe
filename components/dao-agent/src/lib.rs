@@ -37,36 +37,44 @@ struct Component;
 
 impl Guest for Component {
     fn run(trigger_action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
-        match trigger_action.data {
+        let prompt = match trigger_action.data {
             TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
                 // Decode the ABI-encoded string first
                 let decoded = alloy_sol_types::sol_data::String::abi_decode(&log.data, false)
                     .map_err(|e| format!("Failed to decode ABI string: {}", e))?;
 
-                let prompt = decoded.to_string();
-
-                return block_on(async move {
-                    // Process prompt using LLM with tools
-                    let result = process_prompt(&prompt).await?;
-
-                    // If no transaction is needed, return None
-                    if result.is_none() {
-                        println!("No transaction needed");
-                        return Ok(None);
-                    }
-
-                    // Parse the transaction JSON
-                    let transaction: SafeTransaction = result.unwrap();
-
-                    // Create the transaction payload
-                    let payload = create_payload_from_safe_tx(&transaction)?;
-                    println!("Payload: {:?}", payload);
-
-                    Ok(Some(payload.abi_encode().to_vec()))
-                });
+                Ok(decoded.to_string())
+            }
+            // Fired from a raw data event (e.g. from a CLI command or from another component).
+            // Note: this is just for testing ATM.
+            // TODO pass in and decode an actual event, so this can be composed with other components
+            TriggerData::Raw(data) => {
+                let prompt = std::str::from_utf8(&data)
+                    .map_err(|e| format!("Failed to decode prompt from bytes: {}", e))?;
+                Ok(prompt.to_string())
             }
             _ => Err("Unsupported trigger data".to_string()),
-        }
+        }?;
+
+        return block_on(async move {
+            // Process prompt using LLM with tools
+            let result = process_prompt(&prompt).await?;
+
+            // If no transaction is needed, return None
+            if result.is_none() {
+                println!("No transaction needed");
+                return Ok(None);
+            }
+
+            // Parse the transaction JSON
+            let transaction: SafeTransaction = result.unwrap();
+
+            // Create the transaction payload
+            let payload = create_payload_from_safe_tx(&transaction)?;
+            println!("Payload: {:?}", payload);
+
+            Ok(Some(payload.abi_encode().to_vec()))
+        });
     }
 }
 

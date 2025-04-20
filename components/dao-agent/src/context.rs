@@ -1,6 +1,6 @@
 use crate::models::{Contract, DaoContext, TokenBalance};
 
-// TODO make it so we don't have to hardcode these, fetch them from an IPFS node
+// TODO make it so we don't have to hardcode these, fetch them from an IPFS
 impl Default for DaoContext {
     fn default() -> Self {
         Self {

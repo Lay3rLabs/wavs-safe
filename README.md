@@ -5,9 +5,10 @@
 TODO:
 
 - [ ] Refactor agent for better tool use and openai support
+- [ ] Tool use should support contract calls
 - [ ] Consolidate / refactor service types
 - [ ] Better way to check result from Guard in demo
-- [ ] Get make wasi-exec working for easier testing
+- [ ] Gaurd should support make wasi-exec
 
 Later:
 
@@ -146,10 +147,10 @@ make wasi-build # or `make build` to include solidity compilation.
 
 ### Execute WASI component directly
 
-Test run the component locally to validate the business logic works. An ID of 1 is Bitcoin. Nothing will be saved on-chain, just the output of the component is shown. This input is formatted using `cast format-bytes32-string` in the makefile command.
+Test run the component locally to validate the business logic works.
 
 ```bash
-COIN_MARKET_CAP_ID=1 make wasi-exec
+COMPONENT_FILENAME="dao_agent.wasm" PROMPT='We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3.' make wasi-exec
 ```
 
 ## WAVS
@@ -198,8 +199,11 @@ This will deploy both the WavsSafeModule and Trigger contracts, and write their 
 TRIGGER_ADDR=$(jq -r '.triggerContract' deployments/local.json)
 MODULE_ADDR=$(jq -r '.wavsSafeModule' deployments/local.json)
 
+# Set service config
+SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL"],"kv":[],"workflow_id":"default","component_id":"default"}'
+
 # Deploy the service
-COMPONENT_FILENAME=dao_agent.wasm SERVICE_TRIGGER_ADDR=$TRIGGER_ADDR SERVICE_SUBMISSION_ADDR=$MODULE_ADDR make deploy-service
+COMPONENT_FILENAME=dao_agent.wasm SERVICE_TRIGGER_ADDR=$TRIGGER_ADDR SERVICE_SUBMISSION_ADDR=$MODULE_ADDR SERVICE_CONFIG=$SERVICE_CONFIG make deploy-service
 ```
 
 ### Trigger the AVS to execute a transaction

@@ -7,9 +7,9 @@ SUDO := $(shell if groups | grep -q docker; then echo ''; else echo 'sudo'; fi)
 default: build
 
 # Customize these variables
-COMPONENT_FILENAME ?= eth_price_oracle.wasm
+COMPONENT_FILENAME ?= dao_agent.wasm
 TRIGGER_EVENT ?= NewTrigger(bytes)
-SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":[],"kv":[],"workflow_id":"default","component_id":"default"}'
+SERVICE_CONFIG ?= '{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL"],"kv":[],"workflow_id":"default","component_id":"default"}'
 
 # Define common variables
 CARGO?=cargo
@@ -19,7 +19,8 @@ RPC_URL?=http://localhost:8545
 SERVICE_MANAGER_ADDR?=`jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json`
 SERVICE_TRIGGER_ADDR?=`jq -r '.trigger' "./.docker/script_deploy.json"`
 SERVICE_SUBMISSION_ADDR?=`jq -r '.service_handler' "./.docker/script_deploy.json"`
-COIN_MARKET_CAP_ID?=1
+PROMPT?="We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3."
+INPUT?=`cast from-utf8 "$(PROMPT)"`
 
 ## check-requirements: verify system requirements are installed
 check-requirements: check-node check-jq check-cargo
@@ -41,7 +42,7 @@ wasi-exec:
 	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
 	--component "/data/compiled/${COMPONENT_FILENAME}" \
 	--service-config $(SERVICE_CONFIG) \
-	--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)`
+	--input $(INPUT)
 
 ## update-submodules: update the git submodules
 update-submodules:
