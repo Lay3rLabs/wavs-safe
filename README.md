@@ -6,7 +6,7 @@ TODO:
 
 - [ ] Refactor agent for better tool use and openai support
 - [ ] Consolidate / refactor service types
-- [ ] Better way to check result from Guard?
+- [ ] Better way to check result from Guard in demo
 - [ ] Basic tests
 
 Later:
