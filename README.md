@@ -7,9 +7,8 @@ TODO:
 - [ ] Consolidate / refactor service types
 - [ ] Better way to check result from Guard in demo
 - [ ] Gaurd should support make wasi-exec
-- [ ] Refactor context
-- [ ] Better way to get system_prompt, model, config, context
-- [ ] Add ipfs gateway environment variable, store config_uri in Module contract?
+- [ ] See if there is a better way to encode contract ABIs using an existing lib
+- [ ] Add ipfs gateway environment variable, store config_uri in Module contract, download config
 
 Later:
 

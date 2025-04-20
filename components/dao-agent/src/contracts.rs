@@ -5,7 +5,7 @@ use std::str::FromStr;
 use tiny_keccak::{Hasher, Keccak};
 
 /// Represents a smart contract that the DAO can interact with
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Contract {
     pub name: String,
     pub address: String,
@@ -339,7 +339,7 @@ pub fn validate_argument(type_str: &str, value: &serde_json::Value) -> Result<()
 }
 
 /// Represents a token balance
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TokenBalance {
     pub token_address: String,
     pub symbol: String,

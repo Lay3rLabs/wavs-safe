@@ -16,6 +16,7 @@ use bindings::{
 use context::DaoContext;
 use llm::LLMClient;
 use safe::SafeTransaction;
+use sol_interfaces::TransactionPayload;
 use tools::{process_tool_calls, Message};
 use wstd::runtime::block_on;
 
@@ -66,20 +67,8 @@ impl Guest for Component {
 
 /// Processes a prompt with LLM and returns a SafeTransaction if one should be executed
 async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String> {
+    // Get the DAO context with all our configuration
     let context = DaoContext::default();
-
-    // Format contracts for the system prompt
-    let contract_descriptions = context
-        .contracts
-        .iter()
-        .map(|contract| {
-            format!(
-                "Contract: {}\nAddress: {}\nABI:\n{}",
-                contract.name, contract.address, contract.abi
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n\n");
 
     // Create the tools for ETH transfers
     let eth_tool = tools::builders::send_eth();
@@ -104,61 +93,11 @@ async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String>
         );
     }
 
-    // Format the supported tokens list for the prompt
-    let supported_tokens = context.get_supported_token_symbols().join(", ");
+    // Format the system prompt using the context
+    let system_prompt = context.format_system_prompt();
 
-    // TODO move this to the context
-    let system_prompt = format!(
-        r#"
-        You are a DAO agent responsible for making and executing financial decisions through a Gnosis Safe Module.
-        
-        You have several tools available:
-        - Use the send_eth tool to send ETH to addresses
-        - Use the contract_* tools to interact with smart contracts (including ERC20 tokens like USDC)
-        
-        Return nothing if no action is needed.
-
-        Current DAO Context:
-        - Safe Address: {}
-        - Current Balances:
-        {}
-        - Allowed Addresses: {}
-        - DAO Mission: {}
-        - Allowed Tokens: ONLY native ETH and {} are supported. All other token requests should be rejected.
-
-        Available Smart Contracts:
-        {}
-
-        Security Guidelines:
-        - Always verify addresses are in the allowed list or contract list
-        - For ERC20 token transfers (like USDC), use the contract_usdc_transfer tool
-        - For ETH transfers, use the send_eth tool
-        - For other smart contract interactions, use the matching contract_* tool
-        - Never approve transactions that would spend more than the current balance
-        - Be extremely cautious with value transfers
-        - Reject any suspicious or unclear requests
-        - Don't allow transfers of amounts greater than 1 ETH
-        - IMMEDIATELY REJECT any requests for tokens other than ETH or USDC
-        - If no action is needed or the request should be rejected, do not use any tools
-    "#,
-        context.safe_address,
-        context.format_balances(),
-        context.allowed_addresses.join(", "),
-        context.dao_description,
-        supported_tokens,
-        contract_descriptions,
-    );
-
-    // TODO move this to the context, parse from JSON
-    // Create LLM client with optimized settings for deterministic tool usage
-    let llm_config = llm::LLMConfig::new()
-        .temperature(0.0) // Deterministic generation
-        .top_p(0.1) // Narrow sampling
-        .seed(42) // Fixed seed for reproducibility
-        .max_tokens(Some(500))
-        .context_window(Some(4096));
-
-    let client = LLMClient::with_config("llama3.2", llm_config)
+    // Create LLM client with the configuration from context
+    let client = LLMClient::with_config(&context.model, context.llm_config.clone())
         .map_err(|e| format!("Failed to create LLM client: {}", e))?;
 
     // Create the messages for the chat completion
