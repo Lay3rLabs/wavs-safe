@@ -2,22 +2,38 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
+import "forge-std/console.sol";
+import {stdJson} from "forge-std/StdJson.sol";
 import "../src/contracts/WavsSafeModule.sol";
 import "../src/contracts/Trigger.sol";
 import "@gnosis.pm/safe-contracts/contracts/Safe.sol";
 import "@gnosis.pm/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
 import "@gnosis.pm/safe-contracts/contracts/base/ModuleManager.sol";
 import {Utils} from "./Utils.sol";
+import {Strings} from "@openzeppelin-contracts/utils/Strings.sol";
 
 contract Deploy is Script {
+    using stdJson for string;
+    using Strings for address;
+    using Strings for uint256;
+
     Safe public safeSingleton;
     SafeProxyFactory public factory;
     address public deployedSafeAddress;
     address public deployedModuleAddress;
     address public deployedTriggerAddress;
 
+    // JSON output path
+    string public root;
+    string public deploymentsPath;
+
     function run() public {
-        (uint256 deployerPrivateKey, ) = Utils.getPrivateKey(vm);
+        root = vm.projectRoot();
+        deploymentsPath = string.concat(root, "/deployments/local.json");
+
+        (uint256 deployerPrivateKey, address deployer) = Utils.getPrivateKey(
+            vm
+        );
         vm.startBroadcast(deployerPrivateKey);
 
         // Deploy Safe singleton and factory
@@ -75,7 +91,8 @@ contract Deploy is Script {
             console.log("Enabled module on Safe at:", safeAddress);
         }
 
-        _writeDeploymentToFile();
+        // Write deployment information to JSON file
+        writeDeploymentsToJson();
 
         vm.stopBroadcast();
     }
@@ -117,37 +134,68 @@ contract Deploy is Script {
         return safeAddress;
     }
 
-    function _writeDeploymentToFile() internal {
-        // Prepare new environment variables
-        string memory moduleAddressVar = string.concat(
-            "WAVS_SAFE_MODULE=",
-            vm.toString(deployedModuleAddress)
+    function writeDeploymentsToJson() internal {
+        // Create JSON string with deployment information
+        string memory json = "{";
+
+        // Add contract addresses
+        json = appendJsonPair(
+            json,
+            "safeSingleton",
+            address(safeSingleton),
+            true
         );
-        string memory serviceHandlerVar = string.concat(
-            "CLI_EIGEN_SERVICE_HANDLER=",
-            vm.toString(deployedModuleAddress)
+        json = appendJsonPair(json, "safeFactory", address(factory), false);
+        json = appendJsonPair(json, "safeAddress", deployedSafeAddress, false);
+        json = appendJsonPair(
+            json,
+            "wavsSafeModule",
+            deployedModuleAddress,
+            false
         );
-        string memory triggerAddressVar = string.concat(
-            "WAVS_TRIGGER=",
-            vm.toString(deployedTriggerAddress)
+        json = appendJsonPair(
+            json,
+            "triggerContract",
+            deployedTriggerAddress,
+            false
+        );
+        json = appendJsonPair(
+            json,
+            "serviceHandler",
+            deployedModuleAddress,
+            false
         );
 
-        string memory updatedEnv = string.concat(
-            "\n",
-            moduleAddressVar,
-            "\n",
-            serviceHandlerVar,
-            "\n",
-            triggerAddressVar,
-            "\n"
-        );
+        // Close JSON
+        json = string.concat(json, "}");
 
-        Utils.saveEnvVars(vm, updatedEnv);
+        // Create directories if they don't exist
+        string memory dirPath = string.concat(root, "/deployments");
+        vm.createDir(dirPath, true);
 
-        console.log("\n=== Environment Variables Updated ===");
-        console.log(moduleAddressVar);
-        console.log(serviceHandlerVar);
-        console.log(triggerAddressVar);
+        // Write JSON to file
+        vm.writeFile(deploymentsPath, json);
+
+        console.log("Deployment information saved to:", deploymentsPath);
+    }
+
+    function appendJsonPair(
+        string memory _json,
+        string memory _key,
+        address _value,
+        bool _isFirst
+    ) internal pure returns (string memory) {
+        string memory prefix = _isFirst ? "" : ",";
+        return
+            string.concat(
+                _json,
+                prefix,
+                '"',
+                _key,
+                '":"',
+                Strings.toHexString(_value),
+                '"'
+            );
     }
 
     function _split(
@@ -231,9 +279,20 @@ contract Deploy is Script {
 }
 
 contract AddTrigger is Script {
+    using stdJson for string;
+
+    // JSON output path
+    string public root;
+    string public deploymentsPath;
+
     function run(string calldata triggerData) public {
+        root = vm.projectRoot();
+        deploymentsPath = string.concat(root, "/deployments/local.json");
+
+        string memory json = vm.readFile(deploymentsPath);
+        address triggerAddress = json.readAddress(".triggerContract");
+
         (uint256 deployerPrivateKey, ) = Utils.getPrivateKey(vm);
-        address triggerAddress = vm.envAddress("WAVS_TRIGGER");
 
         uint256 balanceBefore = address(
             0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3
