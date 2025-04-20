@@ -6,9 +6,7 @@ TODO:
 
 - [ ] Refactor agent for better tool use and openai support
 - [ ] No environment variables, use JSON
-- [ ] Kill triggerId, just uint64
-- [ ] Consolidate service types
-- [ ] Separate agent trigger into test contract
+- [ ] Consolidate / refactor service types
 - [ ] Better way to check result from Guard?
 
 Later:
@@ -192,14 +190,16 @@ forge script script/WavsSafeModule.s.sol:Deploy --rpc-url http://localhost:8545 
 
 # Load the created addresses into the environment
 export WAVS_SAFE_MODULE=$(cat .env | grep WAVS_SAFE_MODULE | tail -1 | cut -d '=' -f 2)
+export WAVS_TRIGGER=$(cat .env | grep WAVS_TRIGGER | tail -1 | cut -d '=' -f 2)
 # fish shell:
 # set -gx WAVS_SAFE_MODULE (cat .env | grep WAVS_SAFE_MODULE | tail -1 | cut -d '=' -f 2)
+# set -gx WAVS_TRIGGER (cat .env | grep WAVS_TRIGGER | tail -1 | cut -d '=' -f 2)
 ```
 
 ### Deploy service component
 
 ```bash
-COMPONENT_FILENAME=dao_agent.wasm SERVICE_TRIGGER_ADDR=$WAVS_SAFE_MODULE SERVICE_SUBMISSION_ADDR=$WAVS_SAFE_MODULE make deploy-service
+COMPONENT_FILENAME=dao_agent.wasm SERVICE_TRIGGER_ADDR=$WAVS_TRIGGER SERVICE_SUBMISSION_ADDR=$WAVS_SAFE_MODULE make deploy-service
 ```
 
 ### Trigger the AVS to execute a transaction

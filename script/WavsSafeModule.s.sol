@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 import "../src/contracts/WavsSafeModule.sol";
+import "../src/contracts/Trigger.sol";
 import "@gnosis.pm/safe-contracts/contracts/Safe.sol";
 import "@gnosis.pm/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
 import "@gnosis.pm/safe-contracts/contracts/base/ModuleManager.sol";
@@ -13,6 +14,7 @@ contract Deploy is Script {
     SafeProxyFactory public factory;
     address public deployedSafeAddress;
     address public deployedModuleAddress;
+    address public deployedTriggerAddress;
 
     function run() public {
         (uint256 deployerPrivateKey, ) = Utils.getPrivateKey(vm);
@@ -51,6 +53,11 @@ contract Deploy is Script {
         );
         deployedModuleAddress = address(module);
         console.log("Deployed WavsSafeModule at:", deployedModuleAddress);
+
+        // Deploy Trigger contract (using Safe as recipient)
+        Trigger trigger = new Trigger(deployedSafeAddress);
+        deployedTriggerAddress = address(trigger);
+        console.log("Deployed Trigger contract at:", deployedTriggerAddress);
 
         // Fund the module
         try module.fundModule{value: 1 ether}() {
@@ -120,12 +127,18 @@ contract Deploy is Script {
             "CLI_EIGEN_SERVICE_HANDLER=",
             vm.toString(deployedModuleAddress)
         );
+        string memory triggerAddressVar = string.concat(
+            "WAVS_TRIGGER=",
+            vm.toString(deployedTriggerAddress)
+        );
 
         string memory updatedEnv = string.concat(
             "\n",
             moduleAddressVar,
             "\n",
             serviceHandlerVar,
+            "\n",
+            triggerAddressVar,
             "\n"
         );
 
@@ -134,6 +147,7 @@ contract Deploy is Script {
         console.log("\n=== Environment Variables Updated ===");
         console.log(moduleAddressVar);
         console.log(serviceHandlerVar);
+        console.log(triggerAddressVar);
     }
 
     function _split(
@@ -219,25 +233,25 @@ contract Deploy is Script {
 contract AddTrigger is Script {
     function run(string calldata triggerData) public {
         (uint256 deployerPrivateKey, ) = Utils.getPrivateKey(vm);
-        address moduleAddress = vm.envAddress("WAVS_SAFE_MODULE");
+        address triggerAddress = vm.envAddress("WAVS_TRIGGER");
 
         uint256 balanceBefore = address(
             0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3
         ).balance;
 
-        console.log("Adding trigger to module at:", moduleAddress);
+        console.log("Adding trigger to contract at:", triggerAddress);
         console.log("Trigger data:", triggerData);
         console.log("ETH balance before:", balanceBefore);
 
-        WavsSafeModule module = WavsSafeModule(moduleAddress);
-        require(address(module).code.length > 0, "No code at module address");
+        Trigger trigger = Trigger(triggerAddress);
+        require(address(trigger).code.length > 0, "No code at trigger address");
 
         vm.startBroadcast(deployerPrivateKey);
 
         // Convert string to bytes
         bytes memory triggerBytes = bytes(triggerData);
 
-        try module.addTrigger{value: 0.1 ether}(triggerBytes) {
+        try trigger.addTrigger{value: 0.1 ether}(triggerBytes) {
             console.log("Successfully added trigger");
         } catch Error(string memory reason) {
             console.log("Failed to add trigger:", reason);

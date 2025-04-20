@@ -9,11 +9,7 @@ import {IWavsServiceManager} from "@wavs/interfaces/IWavsServiceManager.sol";
 import {ITypes} from "../interfaces/ITypes.sol";
 
 contract WavsSafeModule is IWavsServiceHandler {
-    struct Trigger {
-        address creator;
-        bytes data;
-    }
-
+    // The payload for a transaction to be executed by the Safe, returned from the AVS
     struct TransactionPayload {
         address to;
         uint256 value;
@@ -28,8 +24,6 @@ contract WavsSafeModule is IWavsServiceHandler {
 
     // Address of the authorized service manager
     IWavsServiceManager public serviceManager;
-
-    ITypes.TriggerId public nextTriggerId;
 
     event Funded(address sender, uint256 amount);
 
@@ -96,34 +90,5 @@ contract WavsSafeModule is IWavsServiceHandler {
         );
 
         require(success, "Module transaction failed");
-    }
-
-    // TODO breakout into a Test contract. This shouldn't be here.
-    function addTrigger(
-        bytes memory data
-    ) external payable returns (ITypes.TriggerId triggerId) {
-        require(msg.value == 0.1 ether, "Payment must be exactly 0.1 ETH");
-
-        // Forward the ETH to the Safe using low-level call
-        (bool sent, ) = safe.call{value: msg.value}("");
-        require(sent, "ETH transfer to Safe failed");
-
-        // Get the next trigger id
-        triggerId = nextTriggerId;
-        nextTriggerId = ITypes.TriggerId.wrap(
-            ITypes.TriggerId.unwrap(nextTriggerId) + 1
-        );
-
-        // Create the trigger
-        Trigger memory trigger = Trigger({creator: msg.sender, data: data});
-
-        // Emit trigger info
-        ITypes.TriggerInfo memory triggerInfo = ITypes.TriggerInfo({
-            triggerId: triggerId,
-            creator: trigger.creator,
-            data: trigger.data
-        });
-
-        emit ITypes.NewTrigger(abi.encode(triggerInfo));
     }
 }
