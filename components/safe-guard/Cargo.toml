@@ -13,14 +13,14 @@ serde_json = { workspace = true }
 anyhow = { workspace = true }
 wit-bindgen-rt = { workspace = true, features = ["bitflags"] }
 alloy-sol-types = { workspace = true }
-hex = "0.4.3"
-ethabi = "18.0.0"
-primitive-types = "0.13.1"
-alloy-primitives = "0.8.13"
-base64 = "0.22.1"
+hex = { workspace = true }
+ethabi = { workspace = true }
+primitive-types = { workspace = true }
+alloy-primitives = { workspace = true }
+base64 = { workspace = true }
 
 [dev-dependencies]
-mockall = "0.11"
+mockall = { workspace = true }
 
 [lib]
 crate-type = ["cdylib"]
