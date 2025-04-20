@@ -1,8 +1,9 @@
-use alloy_primitives::{Address, Bytes, U256};
+use alloy_dyn_abi::{DynSolType, DynSolValue};
+use alloy_json_abi::{Function, JsonAbi};
+use alloy_primitives::{Address, Bytes, FixedBytes, U256};
 use hex;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-use tiny_keccak::{Hasher, Keccak};
 
 /// Represents a smart contract that the DAO can interact with
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -19,37 +20,42 @@ impl Contract {
         Self { name: name.to_string(), address: address.to_string(), abi: abi.to_string() }
     }
 
+    /// Parse the JSON ABI to JsonAbi struct
+    fn parse_abi(&self) -> Result<JsonAbi, String> {
+        serde_json::from_str(&self.abi).map_err(|e| format!("Failed to parse ABI: {}", e))
+    }
+
     /// Encode a function call for this contract using the ABI
     pub fn encode_function_call(
         &self,
         function_name: &str,
         args: &[serde_json::Value],
     ) -> Result<Bytes, String> {
-        encode_function_call(&self.abi, function_name, args)
+        // Find the function in the parsed ABI
+        let function = self.find_function(function_name)?;
+
+        // Get function selector
+        let selector = function.selector();
+
+        // Encode the arguments
+        let encoded_args = encode_function_args(&function, args)?;
+
+        // Combine selector and encoded args
+        let mut calldata = selector.to_vec();
+        calldata.extend_from_slice(&encoded_args);
+
+        Ok(Bytes::from(calldata))
     }
 
     /// Find a function in the ABI
-    pub fn find_function(&self, function_name: &str) -> Result<serde_json::Value, String> {
-        // Parse the ABI
-        let abi: serde_json::Value =
-            serde_json::from_str(&self.abi).map_err(|e| format!("Failed to parse ABI: {}", e))?;
+    pub fn find_function(&self, function_name: &str) -> Result<Function, String> {
+        let json_abi = self.parse_abi()?;
 
-        // Get the array of functions from the ABI
-        let functions = match abi {
-            serde_json::Value::Array(funcs) => funcs,
-            _ => return Err("ABI is not in expected format".to_string()),
-        };
-
-        // Find the specific function
-        let function = functions
-            .iter()
-            .find(|func| {
-                func.get("name").and_then(|n| n.as_str()) == Some(function_name)
-                    && func.get("type").and_then(|t| t.as_str()) == Some("function")
-            })
-            .ok_or_else(|| format!("Function '{}' not found in ABI", function_name))?;
-
-        Ok(function.clone())
+        json_abi
+            .functions()
+            .find(|f| f.name == function_name)
+            .cloned()
+            .ok_or_else(|| format!("Function '{}' not found in ABI", function_name))
     }
 
     /// Validate function arguments against the ABI
@@ -61,32 +67,18 @@ impl Contract {
         // Find the function in the ABI
         let function = self.find_function(function_name)?;
 
-        // Get the inputs
-        let inputs = function
-            .get("inputs")
-            .and_then(|i| i.as_array())
-            .ok_or_else(|| format!("Function '{}' has no inputs defined", function_name))?;
-
         // Check argument count
-        if inputs.len() != args.len() {
+        if function.inputs.len() != args.len() {
             return Err(format!(
                 "Function '{}' expects {} arguments, but {} were provided",
                 function_name,
-                inputs.len(),
+                function.inputs.len(),
                 args.len()
             ));
         }
 
-        // Validate each argument
-        for (i, (input, arg)) in inputs.iter().zip(args.iter()).enumerate() {
-            let input_type = input
-                .get("type")
-                .and_then(|t| t.as_str())
-                .ok_or_else(|| format!("Input {} has no type", i))?;
-
-            validate_argument(input_type, arg)
-                .map_err(|e| format!("Invalid argument {}: {}", i, e))?;
-        }
+        // Try encoding the arguments - if it fails, it's invalid
+        encode_function_args(&function, args)?;
 
         Ok(())
     }
@@ -104,238 +96,140 @@ pub fn default_contract_call() -> Option<ContractCall> {
     None
 }
 
-/// Dynamically encode a function call using the ABI
-pub fn encode_function_call(
-    abi_json: &str,
-    function_name: &str,
-    args: &[serde_json::Value],
-) -> Result<Bytes, String> {
-    // Parse the ABI to find the function
-    let abi: serde_json::Value =
-        serde_json::from_str(abi_json).map_err(|e| format!("Failed to parse ABI: {}", e))?;
-
-    // Get the array of functions from the ABI
-    let functions = match abi {
-        serde_json::Value::Array(funcs) => funcs,
-        _ => return Err("ABI is not in expected format".to_string()),
-    };
-
-    // Find the specific function
-    let function = functions
-        .iter()
-        .find(|func| {
-            func.get("name").and_then(|n| n.as_str()) == Some(function_name)
-                && func.get("type").and_then(|t| t.as_str()) == Some("function")
-        })
-        .ok_or_else(|| format!("Function '{}' not found in ABI", function_name))?;
-
-    // Get the inputs
-    let inputs = function
-        .get("inputs")
-        .and_then(|i| i.as_array())
-        .ok_or_else(|| format!("Function '{}' has no inputs defined", function_name))?;
-
-    // Ensure we have the right number of arguments
-    if inputs.len() != args.len() {
-        return Err(format!(
-            "Function '{}' expects {} arguments, but {} were provided",
-            function_name,
-            inputs.len(),
-            args.len()
-        ));
-    }
-
-    // For any contract function, use the generic ethabi approach
-    // Create a function selector (first 4 bytes of the keccak256 hash of the function signature)
-    let mut selector = [0u8; 4];
-
-    // Build the function signature (e.g., "transfer(address,uint256)")
-    let mut signature = function_name.to_string();
-    signature.push('(');
-
-    for (i, input) in inputs.iter().enumerate() {
-        if let Some(type_str) = input.get("type").and_then(|t| t.as_str()) {
-            if i > 0 {
-                signature.push(',');
-            }
-            signature.push_str(type_str);
+/// Convert a string to a DynSolValue based on the type
+fn json_to_sol_value(value: &serde_json::Value, ty: &DynSolType) -> Result<DynSolValue, String> {
+    match ty {
+        DynSolType::Address => {
+            // Convert string address to DynSolValue::Address
+            let addr_str = value.as_str().ok_or("Address must be a string")?;
+            let address = Address::from_str(addr_str)
+                .map_err(|_| format!("Invalid address: {}", addr_str))?;
+            Ok(DynSolValue::Address(address))
         }
-    }
-
-    signature.push(')');
-
-    // Hash the signature
-    let mut hasher = Keccak::v256();
-    hasher.update(signature.as_bytes());
-    hasher.finalize(&mut selector);
-
-    // Start with the selector
-    let mut calldata = selector.to_vec();
-
-    // Encode each argument
-    for (i, arg) in args.iter().enumerate() {
-        if let Some(input_type) =
-            inputs.get(i).and_then(|input| input.get("type")).and_then(|t| t.as_str())
-        {
-            encode_argument(&mut calldata, input_type, arg)?;
-        }
-    }
-
-    Ok(Bytes::from(calldata))
-}
-
-/// Encode a single argument based on its Solidity type
-/// This is a simplified implementation that handles common types
-pub fn encode_argument(
-    calldata: &mut Vec<u8>,
-    type_str: &str,
-    value: &serde_json::Value,
-) -> Result<(), String> {
-    match type_str {
-        // Address type
-        "address" => {
-            let address_str = value.as_str().ok_or("Address must be a string")?;
-            let address = Address::from_str(address_str)
-                .map_err(|_| format!("Invalid address: {}", address_str))?;
-
-            // Pad to 32 bytes
-            let mut padded = [0u8; 32];
-            padded[12..].copy_from_slice(address.as_slice());
-            calldata.extend_from_slice(&padded);
-        }
-
-        // Uint types
-        t if t.starts_with("uint") => {
+        DynSolType::Uint(bits) => {
+            // Convert string number to DynSolValue::Uint
             let num_str = value.as_str().ok_or("Number must be a string")?;
             let num =
                 U256::from_str(num_str).map_err(|_| format!("Invalid number: {}", num_str))?;
-
-            // Convert U256 to bytes
-            let bytes = num.to_be_bytes::<32>();
-            calldata.extend_from_slice(&bytes);
+            Ok(DynSolValue::Uint(num, *bits))
         }
-
-        // Boolean type
-        "bool" => {
-            let bool_val = value.as_bool().ok_or("Boolean value expected")?;
-
-            // Pad to 32 bytes
-            let mut padded = [0u8; 32];
-            if bool_val {
-                padded[31] = 1;
-            }
-            calldata.extend_from_slice(&padded);
+        DynSolType::Bool => {
+            // Convert JSON boolean to DynSolValue::Bool
+            let bool_val = value.as_bool().ok_or("Expected a boolean value")?;
+            Ok(DynSolValue::Bool(bool_val))
         }
-
-        // String and bytes - dynamic types require more complex encoding
-        "string" => {
-            return Err(format!(
-                "Dynamic type string not supported in this simplified implementation"
-            ));
+        DynSolType::String => {
+            // Convert JSON string to DynSolValue::String
+            let string_val = value.as_str().ok_or("Expected a string value")?;
+            Ok(DynSolValue::String(string_val.to_string()))
         }
-
-        // Bytes type validation
-        t if t.starts_with("bytes") => {
-            if t == "bytes32" {
-                // Fixed size bytes can be handled
-                let bytes_str = value.as_str().ok_or("Bytes must be a hex string")?;
-                if !bytes_str.starts_with("0x") {
-                    return Err("Bytes must start with 0x".to_string());
-                }
-
-                // Decode hex
-                let hex_str = &bytes_str[2..];
-                if !hex_str.chars().all(|c| c.is_ascii_hexdigit()) {
-                    return Err("Bytes contain invalid characters".to_string());
-                }
-
-                // Create padded bytes
-                let mut padded = [0u8; 32];
-                if hex_str.len() <= 64 {
-                    // 32 bytes = 64 hex chars
-                    let bytes =
-                        hex::decode(hex_str).map_err(|_| "Invalid hex string".to_string())?;
-
-                    // Copy to padded buffer, right-aligned
-                    let start = 32 - bytes.len();
-                    padded[start..].copy_from_slice(&bytes);
-                } else {
-                    return Err("bytes32 value too long".to_string());
-                }
-
-                calldata.extend_from_slice(&padded);
-            } else {
-                return Err(format!(
-                    "Dynamic bytes type {} not supported in this implementation",
-                    t
-                ));
-            }
-        }
-
-        // Unsupported type
-        _ => {
-            return Err(format!("Unsupported type: {}", type_str));
-        }
-    }
-
-    Ok(())
-}
-
-/// Validate a single argument against its expected Solidity type
-pub fn validate_argument(type_str: &str, value: &serde_json::Value) -> Result<(), String> {
-    match type_str {
-        // Address validation
-        "address" => {
-            let address_str = value.as_str().ok_or("Address must be a string")?;
-            if address_str.len() != 42 || !address_str.starts_with("0x") {
-                return Err("Invalid address format".to_string());
-            }
-            // Check if it's a valid hex string
-            if !address_str[2..].chars().all(|c| c.is_ascii_hexdigit()) {
-                return Err("Address contains invalid characters".to_string());
-            }
-        }
-
-        // Uint validation
-        t if t.starts_with("uint") => {
-            let num_str = value.as_str().ok_or("Number must be a string")?;
-            if let Err(e) = U256::from_str(num_str) {
-                return Err(format!("Invalid number: {}", e));
-            }
-        }
-
-        // Bool validation
-        "bool" => {
-            if !value.is_boolean() {
-                return Err("Expected a boolean value".to_string());
-            }
-        }
-
-        // String validation
-        "string" => {
-            if !value.is_string() {
-                return Err("Expected a string value".to_string());
-            }
-        }
-
-        // Bytes validation
-        t if t.starts_with("bytes") => {
+        DynSolType::Bytes => {
+            // Convert hex string to DynSolValue::Bytes
             let bytes_str = value.as_str().ok_or("Bytes must be a hex string")?;
             if !bytes_str.starts_with("0x") {
                 return Err("Bytes must start with 0x".to_string());
             }
-            if !bytes_str[2..].chars().all(|c| c.is_ascii_hexdigit()) {
-                return Err("Bytes contain invalid characters".to_string());
+            let hex_str = &bytes_str[2..];
+            let bytes = hex::decode(hex_str).map_err(|_| "Invalid hex string".to_string())?;
+            Ok(DynSolValue::Bytes(bytes))
+        }
+        DynSolType::FixedBytes(size) => {
+            // Convert hex string to fixed-size bytes
+            let bytes_str = value.as_str().ok_or("Bytes must be a hex string")?;
+            if !bytes_str.starts_with("0x") {
+                return Err("Bytes must start with 0x".to_string());
+            }
+            let hex_str = &bytes_str[2..];
+            let bytes = hex::decode(hex_str).map_err(|_| "Invalid hex string".to_string())?;
+
+            if bytes.len() > *size {
+                return Err(format!("Hex string too long for bytes{}", size));
+            }
+
+            // For bytes32, create a FixedBytes<32>
+            if *size == 32 {
+                let mut fixed = [0u8; 32];
+                let start = 32 - bytes.len();
+                fixed[start..].copy_from_slice(&bytes);
+                Ok(DynSolValue::FixedBytes(FixedBytes::from(fixed), 32))
+            } else {
+                // For other sizes, use regular bytes
+                Ok(DynSolValue::Bytes(bytes))
             }
         }
+        // Add handling for other types as needed
+        _ => Err(format!("Unsupported type: {:?}", ty)),
+    }
+}
 
-        // Unsupported type
-        _ => {
-            return Err(format!("Validation for type {} not implemented", type_str));
+/// Encode function arguments using Alloy's built-in functionality
+fn encode_function_args(
+    function: &Function,
+    args: &[serde_json::Value],
+) -> Result<Vec<u8>, String> {
+    // If there are no arguments, return an empty vector
+    if args.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    // Parse each parameter's type
+    let param_types: Vec<DynSolType> = function
+        .inputs
+        .iter()
+        .map(|param| {
+            DynSolType::parse(&param.ty)
+                .map_err(|e| format!("Invalid parameter type '{}': {}", param.ty, e))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+
+    // Convert each JSON value to a DynSolValue
+    let mut values = Vec::with_capacity(args.len());
+
+    for (i, (arg, ty)) in args.iter().zip(&param_types).enumerate() {
+        match json_to_sol_value(arg, ty) {
+            Ok(value) => values.push(value),
+            Err(e) => return Err(format!("Error converting argument {}: {}", i, e)),
         }
     }
 
-    Ok(())
+    // Manually encode according to the ABI specification
+    // First, encode head and tail parts
+    let mut head = Vec::new();
+    let mut tail = Vec::new();
+
+    for (i, (value, ty)) in values.iter().zip(&param_types).enumerate() {
+        if is_dynamic_type(ty) {
+            // For dynamic types, the head contains the offset to the data
+            let offset = head.len() + (values.len() - i) * 32; // Calculate offset
+            head.extend_from_slice(&U256::from(offset).to_be_bytes::<32>());
+
+            // The tail contains the actual data
+            let encoded = value.abi_encode();
+            tail.extend_from_slice(&encoded);
+        } else {
+            // For static types, encode directly in the head
+            let encoded = value.abi_encode();
+            head.extend_from_slice(&encoded);
+        }
+    }
+
+    // Combine head and tail
+    let mut result = Vec::new();
+    result.extend_from_slice(&head);
+    result.extend_from_slice(&tail);
+
+    Ok(result)
+}
+
+/// Check if a type is dynamic (string, bytes, arrays)
+fn is_dynamic_type(ty: &DynSolType) -> bool {
+    match ty {
+        DynSolType::String => true,
+        DynSolType::Bytes => true,
+        DynSolType::Array(_) => true,
+        DynSolType::FixedArray(_, size) => *size == 0,
+        _ => false,
+    }
 }
 
 /// Represents a token balance
