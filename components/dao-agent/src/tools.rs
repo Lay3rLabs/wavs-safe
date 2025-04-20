@@ -1,4 +1,5 @@
 use crate::llm::LLMClient;
+use crate::models::SafeTransaction;
 use serde::{Deserialize, Serialize};
 
 /// Function parameter for tool calls
@@ -127,30 +128,50 @@ pub mod builders {
     use super::*;
     use serde_json::json;
 
-    /// Create a calculator tool
-    pub fn calculator() -> Tool {
+    /// Create a safe transaction tool
+    pub fn safe_transaction() -> Tool {
         Tool {
             tool_type: "function".to_string(),
             function: Function {
-                name: "calculator".to_string(),
+                name: "safe_transaction".to_string(),
                 description: Some(
-                    "A simple calculator function for arithmetic operations".to_string(),
+                    "Execute a transaction through the DAO's Gnosis Safe".to_string(),
                 ),
                 parameters: Some(json!({
                     "type": "object",
                     "properties": {
-                        "operation": {
+                        "to": {
                             "type": "string",
-                            "enum": ["add", "subtract", "multiply", "divide"]
+                            "description": "Destination address (0x...)"
                         },
-                        "a": {
-                            "type": "number"
+                        "value": {
+                            "type": "string",
+                            "description": "Amount in wei to send (as string)"
                         },
-                        "b": {
-                            "type": "number"
+                        "data": {
+                            "type": "string",
+                            "description": "Hex-encoded transaction data, usually '0x' for simple transfers"
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "Description of the transaction"
+                        },
+                        "contract_call": {
+                            "type": "object",
+                            "properties": {
+                                "function": {
+                                    "type": "string",
+                                    "description": "Function name to call"
+                                },
+                                "args": {
+                                    "type": "array",
+                                    "description": "Function arguments"
+                                }
+                            },
+                            "required": ["function", "args"]
                         }
                     },
-                    "required": ["operation", "a", "b"]
+                    "required": ["to", "value", "data", "description"]
                 })),
             },
         }
@@ -165,61 +186,26 @@ pub mod handlers {
     /// Execute a tool call and return the result
     pub fn execute_tool_call(tool_call: &ToolCall) -> Result<String, String> {
         match tool_call.function.name.as_str() {
-            "calculator" => execute_calculator(tool_call),
+            "safe_transaction" => parse_safe_transaction(tool_call),
             _ => Ok(format!("Unknown tool: {}", tool_call.function.name)),
         }
     }
 
-    /// Execute calculator tool
-    fn execute_calculator(tool_call: &ToolCall) -> Result<String, String> {
+    /// Parse a safe transaction from tool call
+    pub fn parse_safe_transaction(tool_call: &ToolCall) -> Result<String, String> {
         // Parse the tool call arguments
         let args: Value = serde_json::from_str(&tool_call.function.arguments)
-            .map_err(|e| format!("Failed to parse calculator arguments: {}", e))?;
+            .map_err(|e| format!("Failed to parse transaction arguments: {}", e))?;
 
-        println!("Calculator received arguments: {:?}", args);
+        // Parse into our SafeTransaction type
+        let transaction: SafeTransaction = serde_json::from_value(args)
+            .map_err(|e| format!("Failed to convert to SafeTransaction: {}", e))?;
 
-        // Extract operation
-        let operation = args["operation"].as_str().ok_or("Missing operation")?;
+        // Serialize back to a string for passing between functions
+        let tx_json = serde_json::to_string(&transaction)
+            .map_err(|e| format!("Failed to serialize transaction: {}", e))?;
 
-        // Extract parameters, handling both number and string formats
-        let a = if let Some(num) = args["a"].as_f64() {
-            num
-        } else if let Some(str_val) = args["a"].as_str() {
-            str_val
-                .parse::<f64>()
-                .map_err(|_| format!("Invalid number for parameter a: {}", str_val))?
-        } else {
-            return Err("Missing parameter a".to_string());
-        };
-
-        let b = if let Some(num) = args["b"].as_f64() {
-            num
-        } else if let Some(str_val) = args["b"].as_str() {
-            str_val
-                .parse::<f64>()
-                .map_err(|_| format!("Invalid number for parameter b: {}", str_val))?
-        } else {
-            return Err("Missing parameter b".to_string());
-        };
-
-        println!("Parsed calculator parameters: operation={}, a={}, b={}", operation, a, b);
-
-        // Perform calculation
-        let result = match operation {
-            "add" => a + b,
-            "subtract" => a - b,
-            "multiply" => a * b,
-            "divide" => {
-                if b == 0.0 {
-                    return Err("Division by zero".to_string());
-                }
-                a / b
-            }
-            _ => return Err(format!("Unsupported operation: {}", operation)),
-        };
-
-        // Format result
-        Ok(format!("The result of {} {} {} is {}", a, operation, b, result))
+        Ok(tx_json)
     }
 }
 
@@ -308,15 +294,15 @@ mod tests {
 
     #[test]
     fn test_tool_definition() {
-        // Define a simple calculator tool
-        let calculator_tool = builders::calculator();
+        // Define a safe transaction tool
+        let safe_tx_tool = builders::safe_transaction();
 
         // Convert to JSON
-        let json = serde_json::to_string(&calculator_tool).unwrap();
+        let json = serde_json::to_string(&safe_tx_tool).unwrap();
 
         // Ensure it can be serialized and deserialized correctly
         let deserialized: Tool = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized.tool_type, "function");
-        assert_eq!(deserialized.function.name, "calculator");
+        assert_eq!(deserialized.function.name, "safe_transaction");
     }
 }
