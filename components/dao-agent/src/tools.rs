@@ -165,7 +165,10 @@ pub mod builders {
                                 },
                                 "args": {
                                     "type": "array",
-                                    "description": "Function arguments"
+                                    "description": "Function arguments",
+                                    "items": {
+                                        "type": "object"
+                                    }
                                 }
                             },
                             "required": ["function", "args"]
@@ -281,10 +284,18 @@ pub async fn process_tool_calls(
                 .push(Message::new_tool_result(tool_call.id.clone(), tool_results[i].clone()));
         }
 
-        // Get the final response incorporating all tool results
-        let final_response = client.chat_completion_text(&tool_messages).await?;
-        println!("Final response: {:?}", final_response);
-        Ok(final_response)
+        // Call OpenAI to get final response, but we don't use it for parsing
+        // It's mainly for human readable confirmation
+        let final_response = client.chat_completion_text(&tool_messages).await;
+        println!("OpenAI final response (for logs only): {:?}", final_response);
+
+        // Return the original tool result which contains valid JSON
+        // Only handle the first tool result for now since we expect a single transaction
+        if tool_results.len() >= 1 {
+            Ok(tool_results[0].clone())
+        } else {
+            Err("No tool results available".to_string())
+        }
     }
 }
 

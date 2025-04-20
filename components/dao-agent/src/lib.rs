@@ -138,7 +138,7 @@ async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String>
         .max_tokens(Some(500))
         .context_window(Some(4096));
 
-    let client = LLMClient::with_config("llama3.1", llm_config)
+    let client = LLMClient::with_config("llama3.2", llm_config)
         .map_err(|e| format!("Failed to create LLM client: {}", e))?;
 
     // Create the safe_transaction tool
