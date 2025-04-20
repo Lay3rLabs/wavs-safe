@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
-import "@gnosis.pm/safe-contracts/contracts/base/GuardManager.sol";
-import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
-import "@gnosis.pm/safe-contracts/contracts/Safe.sol";
+import {Guard} from "@gnosis.pm/safe-contracts/contracts/base/GuardManager.sol";
+import {Enum} from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
+import {Safe} from "@gnosis.pm/safe-contracts/contracts/Safe.sol";
 import {IWavsServiceHandler} from "@wavs/interfaces/IWavsServiceHandler.sol";
 import {IWavsServiceManager} from "@wavs/interfaces/IWavsServiceManager.sol";
-import {ITypes} from "../interfaces/ITypes.sol";
 
-contract SafeGuard is Guard, IWavsServiceHandler {
+contract WavsSafeGuard is Guard, IWavsServiceHandler {
     enum ValidationStatus {
         NotExists,
         Pending,
@@ -16,9 +15,6 @@ contract SafeGuard is Guard, IWavsServiceHandler {
         Rejected,
         Expired
     }
-
-    // Add validation timeout
-    uint256 public constant VALIDATION_TIMEOUT = 1 hours;
 
     struct TransactionDetails {
         ValidationStatus status;
@@ -30,14 +26,17 @@ contract SafeGuard is Guard, IWavsServiceHandler {
         bool approved;
     }
 
+    // Add validation timeout
+    uint256 public constant VALIDATION_TIMEOUT = 1 hours;
+
     // Address of the Gnosis Safe this guard is connected to
-    address payable public immutable safe;
+    address payable public immutable SAFE;
 
     // Address of the authorized service manager
     IWavsServiceManager public serviceManager;
 
     // Validation state mappings
-    mapping(bytes32 => TransactionDetails) public txDetails;
+    mapping(bytes32 txHash => TransactionDetails details) public txDetails;
 
     event ValidationStatusUpdated(
         bytes32 indexed approvedHash,
@@ -46,75 +45,25 @@ contract SafeGuard is Guard, IWavsServiceHandler {
 
     error AsyncValidationRequired();
     error TransactionExpired();
+    error Unauthorized();
+    error TransactionRejected();
+    error InvalidSafeAddress();
+    error InvalidServiceManagerAddress();
+    error OnlyServiceManagerAllowed();
+    error TransactionFailed();
 
     modifier onlyServiceManager() {
-        require(
-            msg.sender == address(serviceManager),
-            "Only service manager can call this function"
-        );
+        if (msg.sender != address(serviceManager))
+            revert OnlyServiceManagerAllowed();
         _;
     }
 
     constructor(address payable _safe, address _serviceManager) {
-        require(_safe != address(0), "Invalid safe address");
-        require(
-            _serviceManager != address(0),
-            "Invalid service manager address"
-        );
-        safe = _safe;
+        if (_safe == address(0)) revert InvalidSafeAddress();
+        if (_serviceManager == address(0))
+            revert InvalidServiceManagerAddress();
+        SAFE = _safe;
         serviceManager = IWavsServiceManager(_serviceManager);
-    }
-
-    function checkTransaction(
-        address to,
-        uint256 value,
-        bytes memory data,
-        Enum.Operation operation,
-        uint256 safeTxGas,
-        uint256 baseGas,
-        uint256 gasPrice,
-        address gasToken,
-        address payable refundReceiver,
-        bytes memory, //signatures,
-        address //initiator
-    ) external view override {
-        require(msg.sender == address(safe), "Unauthorized");
-
-        // Calculate the transaction hash using Safe's getTransactionHash with current nonce - 1
-        // since the nonce has already been incremented when this check is called
-        uint256 currentNonce = Safe(safe).nonce();
-        bytes32 txHash = Safe(safe).getTransactionHash(
-            to,
-            value,
-            data,
-            operation,
-            safeTxGas,
-            baseGas,
-            gasPrice,
-            gasToken,
-            refundReceiver,
-            currentNonce - 1 // Use nonce - 1 since it's already incremented
-        );
-
-        TransactionDetails storage details = txDetails[txHash];
-
-        if (details.status == ValidationStatus.NotExists) {
-            revert AsyncValidationRequired();
-        }
-
-        if (details.status == ValidationStatus.Rejected) {
-            revert("Transaction was rejected");
-        }
-
-        if (details.status == ValidationStatus.Approved) {
-            if (block.timestamp > details.validationExpiry) {
-                revert TransactionExpired();
-            }
-            return; // Allow execution if validated and not expired
-        }
-
-        // If pending or other status, revert
-        revert AsyncValidationRequired();
     }
 
     /**
@@ -147,6 +96,58 @@ contract SafeGuard is Guard, IWavsServiceHandler {
         emit ValidationStatusUpdated(payload.approvedHash, newStatus);
     }
 
+    function checkTransaction(
+        address to,
+        uint256 value,
+        bytes memory data,
+        Enum.Operation operation,
+        uint256 safeTxGas,
+        uint256 baseGas,
+        uint256 gasPrice,
+        address gasToken,
+        address payable refundReceiver,
+        bytes memory, //signatures,
+        address //initiator
+    ) external view override {
+        if (msg.sender != address(SAFE)) revert Unauthorized();
+
+        // Calculate the transaction hash using Safe's getTransactionHash with current nonce - 1
+        // since the nonce has already been incremented when this check is called
+        uint256 currentNonce = Safe(SAFE).nonce();
+        bytes32 txHash = Safe(SAFE).getTransactionHash(
+            to,
+            value,
+            data,
+            operation,
+            safeTxGas,
+            baseGas,
+            gasPrice,
+            gasToken,
+            refundReceiver,
+            currentNonce - 1 // Use nonce - 1 since it's already incremented
+        );
+
+        TransactionDetails storage details = txDetails[txHash];
+
+        if (details.status == ValidationStatus.NotExists) {
+            revert AsyncValidationRequired();
+        }
+
+        if (details.status == ValidationStatus.Rejected) {
+            revert TransactionRejected();
+        }
+
+        if (details.status == ValidationStatus.Approved) {
+            if (block.timestamp > details.validationExpiry) {
+                revert TransactionExpired();
+            }
+            return; // Allow execution if validated and not expired
+        }
+
+        // If pending or other status, revert
+        revert AsyncValidationRequired();
+    }
+
     function getTransactionStatus(
         bytes32 txHash
     ) external view returns (ValidationStatus status, uint256 remainingTime) {
@@ -169,8 +170,8 @@ contract SafeGuard is Guard, IWavsServiceHandler {
         bytes32, //txHash,
         bool success
     ) external view override {
-        require(msg.sender == address(safe), "Unauthorized");
-        require(success, "Transaction failed");
+        if (msg.sender != address(SAFE)) revert Unauthorized();
+        if (!success) revert TransactionFailed();
         // Note: We don't clean up state here anymore since it's tied to parameters
         // not the specific transaction hash
     }

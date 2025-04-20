@@ -3,13 +3,23 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-import "../src/contracts/SafeGuard.sol";
+import {stdJson} from "forge-std/StdJson.sol";
+import "../src/contracts/WavsSafeGuard.sol";
 import "@gnosis.pm/safe-contracts/contracts/Safe.sol";
 import "@gnosis.pm/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
 import {Utils} from "./Utils.sol";
+import {Strings} from "@openzeppelin-contracts/utils/Strings.sol";
 
 // Base contract with shared functionality
-contract SafeGuardBaseScript is Script {
+contract WavsSafeGuardBase is Script {
+    using stdJson for string;
+    using Strings for address;
+    using Strings for uint256;
+
+    // JSON output path
+    string public root;
+    string public deploymentsPath;
+
     Safe public safeSingleton;
     SafeProxyFactory public factory;
 
@@ -46,6 +56,44 @@ contract SafeGuardBaseScript is Script {
             owners[i] = vm.parseAddress(ownerStrings[i]);
         }
         return owners;
+    }
+
+    function _loadDeployments()
+        internal
+        returns (address safeAddress, address guardAddress)
+    {
+        root = vm.projectRoot();
+        deploymentsPath = string.concat(root, "/deployments/guard.json");
+
+        // Check if file exists
+        try vm.readFile(deploymentsPath) returns (string memory content) {
+            string memory json = content;
+            safeAddress = json.readAddress(".safeAddress");
+            guardAddress = json.readAddress(".guardAddress");
+        } catch {
+            // File doesn't exist or couldn't be read
+            safeAddress = address(0);
+            guardAddress = address(0);
+        }
+    }
+
+    function appendJsonPair(
+        string memory _json,
+        string memory _key,
+        address _value,
+        bool _isFirst
+    ) internal pure returns (string memory) {
+        string memory prefix = _isFirst ? "" : ",";
+        return
+            string.concat(
+                _json,
+                prefix,
+                '"',
+                _key,
+                '":"',
+                Strings.toHexString(_value),
+                '"'
+            );
     }
 
     // Helper functions for string manipulation
@@ -89,9 +137,16 @@ contract SafeGuardBaseScript is Script {
 }
 
 // Deploy contracts script
-contract DeploySafeGuardScript is SafeGuardBaseScript {
+contract Deploy is WavsSafeGuardBase {
     function run() public {
-        (uint256 deployerPrivateKey, ) = Utils.getPrivateKey(vm);
+        (uint256 deployerPrivateKey, address deployer) = Utils.getPrivateKey(
+            vm
+        );
+
+        // Initialize deployment paths
+        root = vm.projectRoot();
+        deploymentsPath = string.concat(root, "/deployments/guard.json");
+
         vm.startBroadcast(deployerPrivateKey);
 
         // Deploy Safe singleton and factory first if needed
@@ -117,28 +172,53 @@ contract DeploySafeGuardScript is SafeGuardBaseScript {
 
         address serviceManager = Utils.getServiceManager(vm);
 
-        // Deploy SafeGuard with just the Safe address
-        SafeGuard guard = new SafeGuard(payable(safeAddress), serviceManager);
-        console.log("Deployed SafeGuard at:", address(guard));
-
-        // Save addresses to .env file
-        Utils.saveEnvVars(
-            vm,
-            string.concat(
-                "\nSAFE_ADDRESS=",
-                vm.toString(safeAddress),
-                "\nGUARD_ADDRESS=",
-                vm.toString(address(guard))
-            )
+        // Deploy WavsSafeGuard with just the Safe address
+        WavsSafeGuard guard = new WavsSafeGuard(
+            payable(safeAddress),
+            serviceManager
         );
-        console.log("Saved safe and guard addresses to .env file");
+        console.log("Deployed WavsSafeGuard at:", address(guard));
+
+        // Write deployment information to JSON
+        _writeDeploymentsToJson(safeAddress, address(guard));
 
         vm.stopBroadcast();
+    }
+
+    function _writeDeploymentsToJson(
+        address safeAddress,
+        address guardAddress
+    ) internal {
+        // Create JSON string with deployment information
+        string memory json = "{";
+
+        // Add contract addresses
+        json = appendJsonPair(
+            json,
+            "safeSingleton",
+            address(safeSingleton),
+            true
+        );
+        json = appendJsonPair(json, "safeFactory", address(factory), false);
+        json = appendJsonPair(json, "safeAddress", safeAddress, false);
+        json = appendJsonPair(json, "guardAddress", guardAddress, false);
+
+        // Close JSON
+        json = string.concat(json, "}");
+
+        // Create directories if they don't exist
+        string memory dirPath = string.concat(root, "/deployments");
+        vm.createDir(dirPath, true);
+
+        // Write JSON to file
+        vm.writeFile(deploymentsPath, json);
+
+        console.log("Deployment information saved to:", deploymentsPath);
     }
 }
 
 // Create and approve safe transaction script
-contract ApproveSafeTransactionScript is SafeGuardBaseScript {
+contract ApproveSafeTransaction is WavsSafeGuardBase {
     function _getTxHash(Safe safe) internal view returns (bytes32) {
         // Pack parameters into a struct to reduce stack usage
         return
@@ -158,9 +238,16 @@ contract ApproveSafeTransactionScript is SafeGuardBaseScript {
 
     function run() public {
         (uint256 ownerPrivateKey, ) = Utils.getPrivateKey(vm);
+
+        // Load deployments from JSON
+        (address safeAddress, ) = _loadDeployments();
+        require(
+            safeAddress != address(0),
+            "Safe address not found in deployments"
+        );
+
         vm.startBroadcast(ownerPrivateKey);
 
-        address safeAddress = vm.envAddress("SAFE_ADDRESS");
         Safe safe = Safe(payable(safeAddress));
 
         // Get and approve transaction hash
@@ -173,7 +260,7 @@ contract ApproveSafeTransactionScript is SafeGuardBaseScript {
 }
 
 // Execute safe transaction script
-contract ExecuteSafeTransactionScript is SafeGuardBaseScript {
+contract ExecuteSafeTransaction is WavsSafeGuardBase {
     function _getTxHash(Safe safe) internal view returns (bytes32) {
         // Pack parameters into a struct to reduce stack usage
         return
@@ -193,9 +280,17 @@ contract ExecuteSafeTransactionScript is SafeGuardBaseScript {
 
     function run() public {
         (uint256 ownerPrivateKey, ) = Utils.getPrivateKey(vm);
+
+        // Load deployments from JSON
+        (address safeAddress, ) = _loadDeployments();
+        require(
+            safeAddress != address(0),
+            "Safe address not found in deployments"
+        );
+
         vm.startBroadcast(ownerPrivateKey);
 
-        Safe safe = Safe(payable(vm.envAddress("SAFE_ADDRESS")));
+        Safe safe = Safe(payable(safeAddress));
 
         // First, fund the Safe with more than needed ETH
         (bool success, ) = address(safe).call{value: 0.2 ether}("");

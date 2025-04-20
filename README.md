@@ -2,6 +2,16 @@
 
 **Template for getting started with developing WAVS applications and Gnosis Safe. NOT PRODUCTION READY.**
 
+TODO:
+
+- [ ] Refactor agent for better tool use and openai support
+- [ ] Consolidate / refactor service types
+- [ ] Better way to check result from Guard in demo
+
+Later:
+
+- [ ] Consider better guards like borg-core?
+
 Contains WAVS enabled Safe Module and Guard contracts.
 
 Reading and Resources:
@@ -175,30 +185,34 @@ A custom Safe module that integrates with WAVS.
 ### Deploy contracts
 
 ```bash
-forge script script/SafeAIModule.s.sol:DeploySafeAIModule --rpc-url http://localhost:8545 --broadcast
-
-# Load the created addresses into the environment
-export WAVS_SAFE_MODULE=$(cat .env | grep WAVS_SAFE_MODULE | tail -1 | cut -d '=' -f 2)
-# fish shell:
-# set -gx WAVS_SAFE_MODULE (cat .env | grep WAVS_SAFE_MODULE | tail -1 | cut -d '=' -f 2)
+forge script script/WavsSafeModule.s.sol:Deploy --rpc-url http://localhost:8545 --broadcast
 ```
+
+This will deploy both the WavsSafeModule and Trigger contracts, and write their addresses to a JSON file in the `deployments/local.json` path.
 
 ### Deploy service component
 
 ```bash
-COMPONENT_FILENAME=dao_agent.wasm SERVICE_TRIGGER_ADDR=$WAVS_SAFE_MODULE SERVICE_SUBMISSION_ADDR=$WAVS_SAFE_MODULE make deploy-service
+# Load the addresses from the JSON file
+TRIGGER_ADDR=$(jq -r '.triggerContract' deployments/local.json)
+MODULE_ADDR=$(jq -r '.wavsSafeModule' deployments/local.json)
+
+# Deploy the service
+COMPONENT_FILENAME=dao_agent.wasm SERVICE_TRIGGER_ADDR=$TRIGGER_ADDR SERVICE_SUBMISSION_ADDR=$MODULE_ADDR make deploy-service
 ```
 
 ### Trigger the AVS to execute a transaction
 
 ```bash
-forge script script/SafeAIModule.s.sol:AddTrigger --sig "run(string)" "We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3." --rpc-url http://localhost:8545 --broadcast
+forge script script/WavsSafeModule.s.sol:AddTrigger --sig "run(string)" "We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3." --rpc-url http://localhost:8545 --broadcast
 ```
+
+The script will automatically read the Trigger contract address from the JSON file.
 
 ### Check the balance
 
 ```bash
-forge script script/SafeAIModule.s.sol:ViewBalance --rpc-url http://localhost:8545
+forge script script/WavsSafeModule.s.sol:ViewBalance --rpc-url http://localhost:8545
 ```
 
 > Notice that the balance now contains the 1 ETH donation. If you don't see anything, watch the Anvil and WAVS logs during the trigger creation above to make sure the transaction is succeeding.
@@ -210,30 +224,34 @@ A custom Safe Guard that leverages WAVS to check whether transactions are author
 ### Deploy contracts
 
 ```bash
-forge script script/SafeGuard.s.sol:DeploySafeGuardScript --rpc-url http://localhost:8545 --broadcast
-
-# Load the created addresses into the environment
-export SAFE_ADDRESS=$(cat .env | grep SAFE_ADDRESS | tail -1 | cut -d '=' -f 2)
-export GUARD_ADDRESS=$(cat .env | grep GUARD_ADDRESS | tail -1 | cut -d '=' -f 2)
-# fish shell:
-# set -gx SAFE_ADDRESS (cat .env | grep SAFE_ADDRESS | tail -1 | cut -d '=' -f 2)
-# set -gx GUARD_ADDRESS (cat .env | grep GUARD_ADDRESS | tail -1 | cut -d '=' -f 2)
+forge script script/WavsSafeGuard.s.sol:Deploy --rpc-url http://localhost:8545 --broadcast
 ```
+
+This will deploy the Safe and Guard contracts, and write their addresses to a JSON file in the `deployments/guard.json` path.
 
 ### Deploy service component
 
 ```bash
-COMPONENT_FILENAME=safe_guard.wasm SERVICE_TRIGGER_ADDR=$SAFE_ADDRESS SERVICE_SUBMISSION_ADDR=$GUARD_ADDRESS TRIGGER_EVENT="ApproveHash(bytes32,address)" make deploy-service
+# Load the addresses from the JSON file
+SAFE_ADDR=$(jq -r '.safeAddress' deployments/guard.json)
+GUARD_ADDR=$(jq -r '.guardAddress' deployments/guard.json)
+
+# Deploy the service
+COMPONENT_FILENAME=safe_guard.wasm SERVICE_TRIGGER_ADDR=$SAFE_ADDR SERVICE_SUBMISSION_ADDR=$GUARD_ADDR TRIGGER_EVENT="ApproveHash(bytes32,address)" make deploy-service
 ```
 
 ### Trigger the validation process
 
 ```bash
-forge script script/SafeGuard.s.sol:ApproveSafeTransactionScript --rpc-url http://localhost:8545 --broadcast
+forge script script/WavsSafeGuard.s.sol:ApproveSafeTransaction --rpc-url http://localhost:8545 --broadcast
 ```
+
+The script will automatically read the Safe address from the JSON file.
 
 ### Execute the transaction
 
 ```bash
-forge script script/SafeGuard.s.sol:ExecuteSafeTransactionScript --rpc-url http://localhost:8545 --broadcast
+forge script script/WavsSafeGuard.s.sol:ExecuteSafeTransaction --rpc-url http://localhost:8545 --broadcast
 ```
+
+The script will automatically read the Safe address from the JSON file.

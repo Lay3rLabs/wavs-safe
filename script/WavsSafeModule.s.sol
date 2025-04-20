@@ -2,20 +2,38 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
-import "../src/contracts/SafeAIModule.sol";
+import "forge-std/console.sol";
+import {stdJson} from "forge-std/StdJson.sol";
+import "../src/contracts/WavsSafeModule.sol";
+import "../src/contracts/Trigger.sol";
 import "@gnosis.pm/safe-contracts/contracts/Safe.sol";
 import "@gnosis.pm/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
 import "@gnosis.pm/safe-contracts/contracts/base/ModuleManager.sol";
 import {Utils} from "./Utils.sol";
+import {Strings} from "@openzeppelin-contracts/utils/Strings.sol";
 
-contract DeploySafeAIModule is Script {
+contract Deploy is Script {
+    using stdJson for string;
+    using Strings for address;
+    using Strings for uint256;
+
     Safe public safeSingleton;
     SafeProxyFactory public factory;
     address public deployedSafeAddress;
     address public deployedModuleAddress;
+    address public deployedTriggerAddress;
+
+    // JSON output path
+    string public root;
+    string public deploymentsPath;
 
     function run() public {
-        (uint256 deployerPrivateKey, ) = Utils.getPrivateKey(vm);
+        root = vm.projectRoot();
+        deploymentsPath = string.concat(root, "/deployments/local.json");
+
+        (uint256 deployerPrivateKey, address deployer) = Utils.getPrivateKey(
+            vm
+        );
         vm.startBroadcast(deployerPrivateKey);
 
         // Deploy Safe singleton and factory
@@ -44,13 +62,18 @@ contract DeploySafeAIModule is Script {
 
         address serviceManager = Utils.getServiceManager(vm);
 
-        // Deploy SafeAIModule
-        SafeAIModule module = new SafeAIModule(
+        // Deploy WavsSafeModule
+        WavsSafeModule module = new WavsSafeModule(
             deployedSafeAddress,
             serviceManager
         );
         deployedModuleAddress = address(module);
-        console.log("Deployed SafeAIModule at:", deployedModuleAddress);
+        console.log("Deployed WavsSafeModule at:", deployedModuleAddress);
+
+        // Deploy Trigger contract (using Safe as recipient)
+        Trigger trigger = new Trigger(deployedSafeAddress);
+        deployedTriggerAddress = address(trigger);
+        console.log("Deployed Trigger contract at:", deployedTriggerAddress);
 
         // Fund the module
         try module.fundModule{value: 1 ether}() {
@@ -68,7 +91,8 @@ contract DeploySafeAIModule is Script {
             console.log("Enabled module on Safe at:", safeAddress);
         }
 
-        _writeDeploymentToFile();
+        // Write deployment information to JSON file
+        writeDeploymentsToJson();
 
         vm.stopBroadcast();
     }
@@ -110,50 +134,68 @@ contract DeploySafeAIModule is Script {
         return safeAddress;
     }
 
-    function _writeDeploymentToFile() internal {
-        // Write JSON deployment info
-        // string memory deploymentInfo = string(
-        //     abi.encodePacked(
-        //         "{\n",
-        //         '  "safeAddress": "',
-        //         vm.toString(deployedSafeAddress),
-        //         '",\n',
-        //         '  "moduleAddress": "',
-        //         vm.toString(deployedModuleAddress),
-        //         '",\n',
-        //         '  "timestamp": "',
-        //         vm.toString(block.timestamp),
-        //         '"\n',
-        //         "}"
-        //     )
-        // );
-        // vm.writeFile("deployments.json", deploymentInfo);
+    function writeDeploymentsToJson() internal {
+        // Create JSON string with deployment information
+        string memory json = "{";
 
-        // Update .env file with new addresses
-
-        // Prepare new environment variables
-        string memory moduleAddressVar = string.concat(
-            "WAVS_SAFE_MODULE=",
-            vm.toString(deployedModuleAddress)
+        // Add contract addresses
+        json = appendJsonPair(
+            json,
+            "safeSingleton",
+            address(safeSingleton),
+            true
         );
-        string memory serviceHandlerVar = string.concat(
-            "CLI_EIGEN_SERVICE_HANDLER=",
-            vm.toString(deployedModuleAddress)
+        json = appendJsonPair(json, "safeFactory", address(factory), false);
+        json = appendJsonPair(json, "safeAddress", deployedSafeAddress, false);
+        json = appendJsonPair(
+            json,
+            "wavsSafeModule",
+            deployedModuleAddress,
+            false
         );
-
-        string memory updatedEnv = string.concat(
-            "\n",
-            moduleAddressVar,
-            "\n",
-            serviceHandlerVar,
-            "\n"
+        json = appendJsonPair(
+            json,
+            "triggerContract",
+            deployedTriggerAddress,
+            false
+        );
+        json = appendJsonPair(
+            json,
+            "serviceHandler",
+            deployedModuleAddress,
+            false
         );
 
-        Utils.saveEnvVars(vm, updatedEnv);
+        // Close JSON
+        json = string.concat(json, "}");
 
-        console.log("\n=== Environment Variables Updated ===");
-        console.log(moduleAddressVar);
-        console.log(serviceHandlerVar);
+        // Create directories if they don't exist
+        string memory dirPath = string.concat(root, "/deployments");
+        vm.createDir(dirPath, true);
+
+        // Write JSON to file
+        vm.writeFile(deploymentsPath, json);
+
+        console.log("Deployment information saved to:", deploymentsPath);
+    }
+
+    function appendJsonPair(
+        string memory _json,
+        string memory _key,
+        address _value,
+        bool _isFirst
+    ) internal pure returns (string memory) {
+        string memory prefix = _isFirst ? "" : ",";
+        return
+            string.concat(
+                _json,
+                prefix,
+                '"',
+                _key,
+                '":"',
+                Strings.toHexString(_value),
+                '"'
+            );
     }
 
     function _split(
@@ -237,27 +279,38 @@ contract DeploySafeAIModule is Script {
 }
 
 contract AddTrigger is Script {
+    using stdJson for string;
+
+    // JSON output path
+    string public root;
+    string public deploymentsPath;
+
     function run(string calldata triggerData) public {
+        root = vm.projectRoot();
+        deploymentsPath = string.concat(root, "/deployments/local.json");
+
+        string memory json = vm.readFile(deploymentsPath);
+        address triggerAddress = json.readAddress(".triggerContract");
+
         (uint256 deployerPrivateKey, ) = Utils.getPrivateKey(vm);
-        address moduleAddress = vm.envAddress("WAVS_SAFE_MODULE");
 
         uint256 balanceBefore = address(
             0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3
         ).balance;
 
-        console.log("Adding trigger to module at:", moduleAddress);
+        console.log("Adding trigger to contract at:", triggerAddress);
         console.log("Trigger data:", triggerData);
         console.log("ETH balance before:", balanceBefore);
 
-        SafeAIModule module = SafeAIModule(moduleAddress);
-        require(address(module).code.length > 0, "No code at module address");
+        Trigger trigger = Trigger(triggerAddress);
+        require(address(trigger).code.length > 0, "No code at trigger address");
 
         vm.startBroadcast(deployerPrivateKey);
 
         // Convert string to bytes
         bytes memory triggerBytes = bytes(triggerData);
 
-        try module.addTrigger{value: 0.1 ether}(triggerBytes) {
+        try trigger.addTrigger{value: 0.1 ether}(triggerBytes) {
             console.log("Successfully added trigger");
         } catch Error(string memory reason) {
             console.log("Failed to add trigger:", reason);
