@@ -2,6 +2,19 @@
 
 **Template for getting started with developing WAVS applications and Gnosis Safe. NOT PRODUCTION READY.**
 
+TODO:
+
+- [ ] Refactor agent for better tool use and openai support
+- [ ] No environment variables, use JSON
+- [ ] Kill triggerId, just uint64
+- [ ] Consolidate service types
+- [ ] Separate agent trigger into test contract
+- [ ] Better way to check result from Guard?
+
+Later:
+
+- [ ] Consider better guards like borg-core?
+
 Contains WAVS enabled Safe Module and Guard contracts.
 
 Reading and Resources:
@@ -175,7 +188,7 @@ A custom Safe module that integrates with WAVS.
 ### Deploy contracts
 
 ```bash
-forge script script/SafeAIModule.s.sol:DeploySafeAIModule --rpc-url http://localhost:8545 --broadcast
+forge script script/WavsSafeModule.s.sol:Deploy --rpc-url http://localhost:8545 --broadcast
 
 # Load the created addresses into the environment
 export WAVS_SAFE_MODULE=$(cat .env | grep WAVS_SAFE_MODULE | tail -1 | cut -d '=' -f 2)
@@ -192,13 +205,13 @@ COMPONENT_FILENAME=dao_agent.wasm SERVICE_TRIGGER_ADDR=$WAVS_SAFE_MODULE SERVICE
 ### Trigger the AVS to execute a transaction
 
 ```bash
-forge script script/SafeAIModule.s.sol:AddTrigger --sig "run(string)" "We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3." --rpc-url http://localhost:8545 --broadcast
+forge script script/WavsSafeModule.s.sol:AddTrigger --sig "run(string)" "We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3." --rpc-url http://localhost:8545 --broadcast
 ```
 
 ### Check the balance
 
 ```bash
-forge script script/SafeAIModule.s.sol:ViewBalance --rpc-url http://localhost:8545
+forge script script/WavsSafeModule.s.sol:ViewBalance --rpc-url http://localhost:8545
 ```
 
 > Notice that the balance now contains the 1 ETH donation. If you don't see anything, watch the Anvil and WAVS logs during the trigger creation above to make sure the transaction is succeeding.
@@ -210,7 +223,7 @@ A custom Safe Guard that leverages WAVS to check whether transactions are author
 ### Deploy contracts
 
 ```bash
-forge script script/SafeGuard.s.sol:DeploySafeGuardScript --rpc-url http://localhost:8545 --broadcast
+forge script script/WavsSafeGuard.s.sol:Deploy --rpc-url http://localhost:8545 --broadcast
 
 # Load the created addresses into the environment
 export SAFE_ADDRESS=$(cat .env | grep SAFE_ADDRESS | tail -1 | cut -d '=' -f 2)
@@ -229,11 +242,11 @@ COMPONENT_FILENAME=safe_guard.wasm SERVICE_TRIGGER_ADDR=$SAFE_ADDRESS SERVICE_SU
 ### Trigger the validation process
 
 ```bash
-forge script script/SafeGuard.s.sol:ApproveSafeTransactionScript --rpc-url http://localhost:8545 --broadcast
+forge script script/WavsSafeGuard.s.sol:ApproveSafeTransaction --rpc-url http://localhost:8545 --broadcast
 ```
 
 ### Execute the transaction
 
 ```bash
-forge script script/SafeGuard.s.sol:ExecuteSafeTransactionScript --rpc-url http://localhost:8545 --broadcast
+forge script script/WavsSafeGuard.s.sol:ExecuteSafeTransaction --rpc-url http://localhost:8545 --broadcast
 ```

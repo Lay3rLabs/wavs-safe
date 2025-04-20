@@ -8,16 +8,7 @@ import {IWavsServiceHandler} from "@wavs/interfaces/IWavsServiceHandler.sol";
 import {IWavsServiceManager} from "@wavs/interfaces/IWavsServiceManager.sol";
 import {ITypes} from "../interfaces/ITypes.sol";
 
-contract SafeAIModule is IWavsServiceHandler {
-    // Address of the Gnosis Safe this module is connected to
-    address public safe;
-
-    // Store the owner who can use this module
-    address public owner;
-
-    // Address of the authorized service manager
-    IWavsServiceManager public serviceManager;
-
+contract WavsSafeModule is IWavsServiceHandler {
     struct Trigger {
         address creator;
         bytes data;
@@ -29,8 +20,15 @@ contract SafeAIModule is IWavsServiceHandler {
         bytes data;
     }
 
-    mapping(ITypes.TriggerId => Trigger) public triggersById;
-    mapping(address => ITypes.TriggerId[]) public triggerIdsByCreator;
+    // Address of the Gnosis Safe this module is connected to
+    address public safe;
+
+    // Store the owner who can use this module
+    address public owner;
+
+    // Address of the authorized service manager
+    IWavsServiceManager public serviceManager;
+
     ITypes.TriggerId public nextTriggerId;
 
     event Funded(address sender, uint256 amount);
@@ -100,6 +98,7 @@ contract SafeAIModule is IWavsServiceHandler {
         require(success, "Module transaction failed");
     }
 
+    // TODO breakout into a Test contract. This shouldn't be here.
     function addTrigger(
         bytes memory data
     ) external payable returns (ITypes.TriggerId triggerId) {
@@ -118,10 +117,6 @@ contract SafeAIModule is IWavsServiceHandler {
         // Create the trigger
         Trigger memory trigger = Trigger({creator: msg.sender, data: data});
 
-        // Update storage
-        triggersById[triggerId] = trigger;
-        triggerIdsByCreator[msg.sender].push(triggerId);
-
         // Emit trigger info
         ITypes.TriggerInfo memory triggerInfo = ITypes.TriggerInfo({
             triggerId: triggerId,
@@ -130,33 +125,5 @@ contract SafeAIModule is IWavsServiceHandler {
         });
 
         emit ITypes.NewTrigger(abi.encode(triggerInfo));
-    }
-
-    function getTrigger(
-        ITypes.TriggerId triggerId
-    ) external view returns (ITypes.TriggerInfo memory) {
-        Trigger storage trigger = triggersById[triggerId];
-
-        return
-            ITypes.TriggerInfo({
-                triggerId: triggerId,
-                creator: trigger.creator,
-                data: trigger.data
-            });
-    }
-
-    function getTriggerCount(address creator) external view returns (uint256) {
-        return triggerIdsByCreator[creator].length;
-    }
-
-    function getTriggerIdAtIndex(
-        address creator,
-        uint256 index
-    ) external view returns (ITypes.TriggerId) {
-        require(
-            index < triggerIdsByCreator[creator].length,
-            "Index out of bounds"
-        );
-        return triggerIdsByCreator[creator][index];
     }
 }

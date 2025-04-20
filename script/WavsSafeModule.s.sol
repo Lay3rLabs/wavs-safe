@@ -2,13 +2,13 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
-import "../src/contracts/SafeAIModule.sol";
+import "../src/contracts/WavsSafeModule.sol";
 import "@gnosis.pm/safe-contracts/contracts/Safe.sol";
 import "@gnosis.pm/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
 import "@gnosis.pm/safe-contracts/contracts/base/ModuleManager.sol";
 import {Utils} from "./Utils.sol";
 
-contract DeploySafeAIModule is Script {
+contract Deploy is Script {
     Safe public safeSingleton;
     SafeProxyFactory public factory;
     address public deployedSafeAddress;
@@ -44,13 +44,13 @@ contract DeploySafeAIModule is Script {
 
         address serviceManager = Utils.getServiceManager(vm);
 
-        // Deploy SafeAIModule
-        SafeAIModule module = new SafeAIModule(
+        // Deploy WavsSafeModule
+        WavsSafeModule module = new WavsSafeModule(
             deployedSafeAddress,
             serviceManager
         );
         deployedModuleAddress = address(module);
-        console.log("Deployed SafeAIModule at:", deployedModuleAddress);
+        console.log("Deployed WavsSafeModule at:", deployedModuleAddress);
 
         // Fund the module
         try module.fundModule{value: 1 ether}() {
@@ -111,26 +111,6 @@ contract DeploySafeAIModule is Script {
     }
 
     function _writeDeploymentToFile() internal {
-        // Write JSON deployment info
-        // string memory deploymentInfo = string(
-        //     abi.encodePacked(
-        //         "{\n",
-        //         '  "safeAddress": "',
-        //         vm.toString(deployedSafeAddress),
-        //         '",\n',
-        //         '  "moduleAddress": "',
-        //         vm.toString(deployedModuleAddress),
-        //         '",\n',
-        //         '  "timestamp": "',
-        //         vm.toString(block.timestamp),
-        //         '"\n',
-        //         "}"
-        //     )
-        // );
-        // vm.writeFile("deployments.json", deploymentInfo);
-
-        // Update .env file with new addresses
-
         // Prepare new environment variables
         string memory moduleAddressVar = string.concat(
             "WAVS_SAFE_MODULE=",
@@ -249,7 +229,7 @@ contract AddTrigger is Script {
         console.log("Trigger data:", triggerData);
         console.log("ETH balance before:", balanceBefore);
 
-        SafeAIModule module = SafeAIModule(moduleAddress);
+        WavsSafeModule module = WavsSafeModule(moduleAddress);
         require(address(module).code.length > 0, "No code at module address");
 
         vm.startBroadcast(deployerPrivateKey);

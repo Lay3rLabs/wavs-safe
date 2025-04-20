@@ -8,7 +8,7 @@ import {IWavsServiceHandler} from "@wavs/interfaces/IWavsServiceHandler.sol";
 import {IWavsServiceManager} from "@wavs/interfaces/IWavsServiceManager.sol";
 import {ITypes} from "../interfaces/ITypes.sol";
 
-contract SafeGuard is Guard, IWavsServiceHandler {
+contract WavsSafeGuard is Guard, IWavsServiceHandler {
     enum ValidationStatus {
         NotExists,
         Pending,

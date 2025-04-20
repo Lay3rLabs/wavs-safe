@@ -3,13 +3,13 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-import "../src/contracts/SafeGuard.sol";
+import "../src/contracts/WavsSafeGuard.sol";
 import "@gnosis.pm/safe-contracts/contracts/Safe.sol";
 import "@gnosis.pm/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
 import {Utils} from "./Utils.sol";
 
 // Base contract with shared functionality
-contract SafeGuardBaseScript is Script {
+contract WavsSafeGuardBase is Script {
     Safe public safeSingleton;
     SafeProxyFactory public factory;
 
@@ -89,7 +89,7 @@ contract SafeGuardBaseScript is Script {
 }
 
 // Deploy contracts script
-contract DeploySafeGuardScript is SafeGuardBaseScript {
+contract Deploy is WavsSafeGuardBase {
     function run() public {
         (uint256 deployerPrivateKey, ) = Utils.getPrivateKey(vm);
         vm.startBroadcast(deployerPrivateKey);
@@ -117,9 +117,12 @@ contract DeploySafeGuardScript is SafeGuardBaseScript {
 
         address serviceManager = Utils.getServiceManager(vm);
 
-        // Deploy SafeGuard with just the Safe address
-        SafeGuard guard = new SafeGuard(payable(safeAddress), serviceManager);
-        console.log("Deployed SafeGuard at:", address(guard));
+        // Deploy WavsSafeGuard with just the Safe address
+        WavsSafeGuard guard = new WavsSafeGuard(
+            payable(safeAddress),
+            serviceManager
+        );
+        console.log("Deployed WavsSafeGuard at:", address(guard));
 
         // Save addresses to .env file
         Utils.saveEnvVars(
@@ -138,7 +141,7 @@ contract DeploySafeGuardScript is SafeGuardBaseScript {
 }
 
 // Create and approve safe transaction script
-contract ApproveSafeTransactionScript is SafeGuardBaseScript {
+contract ApproveSafeTransaction is WavsSafeGuardBase {
     function _getTxHash(Safe safe) internal view returns (bytes32) {
         // Pack parameters into a struct to reduce stack usage
         return
@@ -173,7 +176,7 @@ contract ApproveSafeTransactionScript is SafeGuardBaseScript {
 }
 
 // Execute safe transaction script
-contract ExecuteSafeTransactionScript is SafeGuardBaseScript {
+contract ExecuteSafeTransaction is WavsSafeGuardBase {
     function _getTxHash(Safe safe) internal view returns (bytes32) {
         // Pack parameters into a struct to reduce stack usage
         return
