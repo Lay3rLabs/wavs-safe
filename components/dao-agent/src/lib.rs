@@ -1,22 +1,22 @@
 mod bindings;
 mod context;
+mod contracts;
 mod llm;
-mod models;
+mod safe;
+mod sol_interfaces;
 mod tools;
 
-use alloy_primitives::{Address, Bytes, U256};
-use alloy_sol_types::{sol, SolCall, SolType, SolValue};
+use alloy_sol_types::{sol, SolType, SolValue};
 use anyhow::Result;
 use bindings::{
     export,
     wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent},
     Guest, TriggerAction,
 };
+use context::DaoContext;
 use llm::LLMClient;
-use models::{DaoContext, SafeTransaction};
-use std::str::FromStr;
-use tools::process_tool_calls;
-use tools::Message;
+use safe::SafeTransaction;
+use tools::{process_tool_calls, Message};
 use wstd::runtime::block_on;
 
 // Define the Solidity interface we're working with
@@ -69,8 +69,8 @@ impl Guest for Component {
             // Parse the transaction JSON
             let transaction: SafeTransaction = result.unwrap();
 
-            // Create the transaction payload
-            let payload = create_payload_from_safe_tx(&transaction)?;
+            // Create the transaction payload using the function from safe.rs
+            let payload = safe::create_payload_from_safe_tx(&transaction)?;
             println!("Payload: {:?}", payload);
 
             Ok(Some(payload.abi_encode().to_vec()))
@@ -95,7 +95,7 @@ async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String>
         .collect::<Vec<_>>()
         .join("\n\n");
 
-    // Create the tools for ETH and ERC20 transfers
+    // Create the tools for ETH transfers
     let eth_tool = tools::builders::send_eth();
 
     // Generate tools from smart contract ABIs
@@ -197,39 +197,6 @@ async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String>
 
     // No tool calls means no action needed
     Ok(None)
-}
-
-/// Helper function to create a TransactionPayload from a SafeTransaction
-fn create_payload_from_safe_tx(tx: &SafeTransaction) -> Result<TransactionPayload, String> {
-    // Parse address
-    let to: Address = tx.to.parse().map_err(|e| format!("Invalid address: {}", e))?;
-
-    // Parse value
-    let value = U256::from_str(&tx.value).map_err(|e| format!("Invalid value: {}", e))?;
-
-    // Handle contract calls
-    let data = if let Some(contract_call) = &tx.contract_call {
-        match contract_call.function.as_str() {
-            "transfer" => {
-                let recipient = contract_call.args[0]
-                    .as_str()
-                    .ok_or("Missing recipient")?
-                    .parse::<Address>()
-                    .map_err(|e| format!("Invalid recipient address: {}", e))?;
-                let amount =
-                    U256::from_str(contract_call.args[1].as_str().ok_or("Missing amount")?)
-                        .map_err(|e| format!("Invalid amount: {}", e))?;
-
-                let call = IERC20::transferCall { recipient, amount };
-                Bytes::from(call.abi_encode())
-            }
-            _ => Bytes::default(),
-        }
-    } else {
-        Bytes::default()
-    };
-
-    Ok(TransactionPayload { to, value, data })
 }
 
 export!(Component with_types_in bindings);

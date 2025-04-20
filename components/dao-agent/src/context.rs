@@ -1,41 +1,50 @@
-use crate::models::{Contract, DaoContext, TokenBalance};
+use crate::contracts::{Contract, TokenBalance};
+
+// TODO add LlmConfig to the context
+// TODO add model to the context
+// TODO serialize and deserialize the context to a json string
+/// Context for the DAO agent's decision making
+#[derive(Debug)]
+pub struct DaoContext {
+    pub safe_address: String,
+    pub eth_balance: TokenBalance,
+    pub token_balances: Vec<TokenBalance>,
+    pub allowed_addresses: Vec<String>,
+    pub dao_description: String,
+    pub contracts: Vec<Contract>,
+}
 
 // TODO make it so we don't have to hardcode these, fetch them from an IPFS
 impl Default for DaoContext {
     fn default() -> Self {
         Self {
             safe_address: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e".to_string(),
-            eth_balance: TokenBalance {
-                token_address: "0x0000000000000000000000000000000000000000".to_string(),
-                symbol: "ETH".to_string(),
-                balance: "100000000000000000000".to_string(), // 100 ETH in wei
-                decimals: 18,
-            },
-            token_balances: vec![
-                TokenBalance {
-                    token_address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48".to_string(),
-                    symbol: "USDC".to_string(),
-                    balance: "1000000000".to_string(), // 1000 USDC (6 decimals)
-                    decimals: 6,
-                },
-            ],
-            allowed_addresses: vec![
-                "0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3".to_string(),
-            ],
-            dao_description: "A DAO focused on funding public goods and environmental causes".to_string(),
-            contracts: vec![
-                Contract {
-                    name: "USDC".to_string(),
-                    address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48".to_string(),
-                    abi: r#"[{
+            eth_balance: TokenBalance::new(
+                "0x0000000000000000000000000000000000000000",
+                "ETH",
+                "100000000000000000000", // 100 ETH in wei
+                18,
+            ),
+            token_balances: vec![TokenBalance::new(
+                "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+                "USDC",
+                "1000000000", // 1000 USDC (6 decimals)
+                6,
+            )],
+            allowed_addresses: vec!["0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3".to_string()],
+            dao_description: "A DAO focused on funding public goods and environmental causes"
+                .to_string(),
+            contracts: vec![Contract::new(
+                "USDC",
+                "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+                r#"[{
                         "constant": false,
                         "inputs": [{"name": "_to","type": "address"},{"name": "_value","type": "uint256"}],
                         "name": "transfer",
                         "outputs": [{"name": "","type": "bool"}],
                         "type": "function"
-                    }]"#.to_string(),
-                },
-            ],
+                    }]"#,
+            )],
         }
     }
 }
@@ -81,13 +90,18 @@ impl DaoContext {
 
     /// Format balances for display in the prompt
     pub fn format_balances(&self) -> String {
-        let mut result =
-            vec![format!("ETH: {} ({})", self.eth_balance.balance, self.eth_balance.symbol)];
+        let mut result = vec![format!(
+            "ETH: {} ({})",
+            self.eth_balance.formatted_balance(),
+            self.eth_balance.symbol
+        )];
 
         for balance in &self.token_balances {
             result.push(format!(
                 "{}: {} ({})",
-                balance.symbol, balance.balance, balance.token_address
+                balance.symbol,
+                balance.formatted_balance(),
+                balance.token_address
             ));
         }
 

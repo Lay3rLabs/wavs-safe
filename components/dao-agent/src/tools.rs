@@ -1,5 +1,6 @@
+use crate::contracts::Contract;
 use crate::llm::LLMClient;
-use crate::models::SafeTransaction;
+use crate::safe::{ContractCall, SafeTransaction};
 use serde::{Deserialize, Serialize};
 
 /// Function parameter for tool calls
@@ -126,7 +127,6 @@ impl Message {
 /// Helper functions to create common tools
 pub mod builders {
     use super::*;
-    use crate::models::Contract;
     use serde_json::json;
 
     /// Create a tool to send ETH through the DAO's Safe
@@ -287,7 +287,6 @@ pub mod builders {
 /// Tool execution handlers
 pub mod handlers {
     use super::*;
-    use crate::models::ContractCall;
     use serde_json::Value;
 
     /// Execute a tool call and return the result
@@ -491,18 +490,17 @@ mod tests {
         assert_eq!(deserialized_eth.function.name, "send_eth");
 
         // Test contract tools generation
-        let contract = crate::models::Contract {
-            name: "TestToken".to_string(),
-            address: "0x1234567890123456789012345678901234567890".to_string(),
-            abi: r#"[{
+        let contract = crate::contracts::Contract::new(
+            "TestToken",
+            "0x1234567890123456789012345678901234567890",
+            r#"[{
                 "constant": false,
                 "inputs": [{"name": "to","type": "address"},{"name": "value","type": "uint256"}],
                 "name": "transfer",
                 "outputs": [{"name": "","type": "bool"}],
                 "type": "function"
-            }]"#
-            .to_string(),
-        };
+            }]"#,
+        );
 
         let contract_tools = builders::from_contract(&contract);
         assert!(!contract_tools.is_empty());
