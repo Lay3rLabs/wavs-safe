@@ -2,18 +2,6 @@
 
 **Template for getting started with developing WAVS applications and Gnosis Safe. NOT PRODUCTION READY.**
 
-TODO:
-
-- [ ] Consolidate / refactor service types
-- [ ] Better way to check result from Guard in demo
-- [ ] Gaurd should support make wasi-exec
-- [ ] See if there is a better way to encode contract ABIs using an existing lib
-- [ ] Add ipfs gateway environment variable, store config_uri in Module contract, download config
-
-Later:
-
-- [ ] Consider better guards like borg-core?
-
 Contains WAVS enabled Safe Module and Guard contracts.
 
 Reading and Resources:
@@ -102,15 +90,35 @@ wkg config --default-registry wa.dev
 
 </details>
 
-## Create Project
+<details>
+<summary>Install Ollama and Stable Diffusion</summary>
+### Install Ollama (optional)
+
+This example use an LLM configured for determinism, run locally with Ollama. The model is llama3.2, but other open source models can be used if you change the model parameter in the config.
+
+If you do not want to run a model locally, set `WAVS_ENV_OPENAI_API_KEY` with a valid Open AI API key.
+
+For more information about AVSs and deterministic AI, see our [blog post on the subject](https://www.layer.xyz/news-and-insights/deterministic-ai).
+
+You can download Ollama here: https://ollama.com/
+
+Get the llama 3.2 model.
 
 ```bash
-# If you don't have foundry: `curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup`
-forge init --template Lay3rLabs/wavs-foundry-template my-wavs --branch 0.3
+ollama pull llama3.2
 ```
 
-> [!TIP]
-> Run `make help` to see all available commands and environment variable overrides.
+In a separate terminal run Ollama in the background with:
+
+```bash
+ollama serve
+```
+
+### Notes on Production Deployments
+
+In a production AVS environment, you would need to ship an bundles that bundles WAVS, Ollama, and Stable Diffusion together into a new docker image. More information on support for WAVS sidecars will be forthcoming in a future release. For deterministic output, every AVS operator MUST use the same GPU.
+
+</details>
 
 ### Solidity
 
@@ -147,7 +155,7 @@ make wasi-build # or `make build` to include solidity compilation.
 
 ### Execute WASI component directly
 
-Test run the component locally to validate the business logic works.
+Test run the component locally to validate the business logic works. Be sure to run `make wasi-build` if you make changes.
 
 ```bash
 COMPONENT_FILENAME="dao_agent.wasm" PROMPT='We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3.' make wasi-exec
@@ -166,6 +174,34 @@ COMPONENT_FILENAME="dao_agent.wasm" PROMPT='We should donate 1 ETH to 0xDf367968
 > - Docker Desktop: Settings -> Resources -> Network -> 'Enable Host Networking'
 > - `brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect`
 
+### Environment Variables
+
+WAVS components can access specific environment variables with the `WAVS_ENV_` prefix. These variables need to be:
+
+1. Added to your local `.env` file
+2. Listed in the `host_envs` array in the `SERVICE_CONFIG` when deploying the service
+3. Used in your component code with the exact same name
+
+For the DAO agent example, the following environment variables are used:
+
+- `WAVS_ENV_OPENAI_API_KEY`: Your OpenAI API key for accessing LLM services
+- `WAVS_ENV_OPENAI_API_URL`: The endpoint URL for OpenAI API calls (defaults to "https://api.openai.com/v1/chat/completions")
+- `WAVS_ENV_IPFS_GATEWAY_URL`: IPFS gateway URL for loading configurations (defaults to "https://gateway.lighthouse.storage")
+
+Example configuration in your `.env` file:
+
+```
+WAVS_ENV_OPENAI_API_KEY=sk-your-openai-key
+WAVS_ENV_OPENAI_API_URL="https://api.openai.com/v1/chat/completions"
+WAVS_ENV_IPFS_GATEWAY_URL="https://gateway.lighthouse.storage"
+```
+
+Example `host_envs` in SERVICE_CONFIG:
+
+```
+SERVICE_CONFIG='{"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],...}'
+```
+
 ### Start Environment
 
 Start an Ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https://www.eigenlayer.xyz/) contracts to the local network.
@@ -180,7 +216,7 @@ cp .env.example .env
 make start-all
 ```
 
-## WAVS Safe Module
+## WAVS Safe Module + Agent Demo
 
 A custom Safe module that integrates with WAVS.
 
@@ -200,7 +236,8 @@ TRIGGER_ADDR=$(jq -r '.triggerContract' deployments/local.json)
 MODULE_ADDR=$(jq -r '.wavsSafeModule' deployments/local.json)
 
 # Set service config
-SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL"],"kv":[],"workflow_id":"default","component_id":"default"}'
+SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[["config_uri", "ipfs://bafkreiaeq4xvqqelateurl3clkoxtpcflurrjvh6va457f6qxj44t3gevu"]],"workflow_id":"default","component_id":"default"}'
+
 
 # Deploy the service
 COMPONENT_FILENAME=dao_agent.wasm SERVICE_TRIGGER_ADDR=$TRIGGER_ADDR SERVICE_SUBMISSION_ADDR=$MODULE_ADDR SERVICE_CONFIG=$SERVICE_CONFIG make deploy-service
@@ -222,7 +259,7 @@ forge script script/WavsSafeModule.s.sol:ViewBalance --rpc-url http://localhost:
 
 > Notice that the balance now contains the 1 ETH donation. If you don't see anything, watch the Anvil and WAVS logs during the trigger creation above to make sure the transaction is succeeding.
 
-## WAVS Safe Guard
+## WAVS Safe Guard Demo
 
 A custom Safe Guard that leverages WAVS to check whether transactions are authorized.
 
@@ -260,3 +297,7 @@ forge script script/WavsSafeGuard.s.sol:ExecuteSafeTransaction --rpc-url http://
 ```
 
 The script will automatically read the Safe address from the JSON file.
+
+```
+
+```

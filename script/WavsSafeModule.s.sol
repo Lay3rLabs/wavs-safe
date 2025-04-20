@@ -29,7 +29,10 @@ contract Deploy is Script {
 
     function run() public {
         root = vm.projectRoot();
-        deploymentsPath = string.concat(root, "/deployments/local.json");
+        deploymentsPath = string.concat(
+            root,
+            ".docker/module_deployments.json"
+        );
 
         (uint256 deployerPrivateKey, address deployer) = Utils.getPrivateKey(
             vm

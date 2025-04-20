@@ -1,10 +1,10 @@
 mod bindings;
-mod context;
+pub mod context;
 mod contracts;
 mod llm;
 mod safe;
 mod sol_interfaces;
-mod tools;
+pub mod tools;
 
 use alloy_sol_types::{SolType, SolValue};
 use anyhow::Result;
@@ -16,7 +16,6 @@ use bindings::{
 use context::DaoContext;
 use llm::LLMClient;
 use safe::SafeTransaction;
-use sol_interfaces::TransactionPayload;
 use tools::{process_tool_calls, Message};
 use wstd::runtime::block_on;
 
@@ -68,7 +67,7 @@ impl Guest for Component {
 /// Processes a prompt with LLM and returns a SafeTransaction if one should be executed
 async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String> {
     // Get the DAO context with all our configuration
-    let context = DaoContext::default();
+    let context = DaoContext::load().await?;
 
     // Create the tools for ETH transfers
     let eth_tool = tools::builders::send_eth();
@@ -80,6 +79,17 @@ async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String>
     for contract in &context.contracts {
         let contract_tools = tools::builders::from_contract(contract);
         println!("Generated {} tools from {} contract", contract_tools.len(), contract.name);
+
+        // Add debug printing for tool parameters
+        for tool in &contract_tools {
+            println!(
+                "Tool: {} - Parameters: {}",
+                tool.function.name,
+                serde_json::to_string_pretty(&tool.function.parameters)
+                    .unwrap_or("None".to_string())
+            );
+        }
+
         all_tools.extend(contract_tools);
     }
 

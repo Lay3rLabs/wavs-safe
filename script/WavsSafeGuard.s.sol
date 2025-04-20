@@ -63,7 +63,7 @@ contract WavsSafeGuardBase is Script {
         returns (address safeAddress, address guardAddress)
     {
         root = vm.projectRoot();
-        deploymentsPath = string.concat(root, "/deployments/guard.json");
+        deploymentsPath = string.concat(root, ".docker/guard_deployments.json");
 
         // Check if file exists
         try vm.readFile(deploymentsPath) returns (string memory content) {

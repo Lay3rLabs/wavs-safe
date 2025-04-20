@@ -156,7 +156,7 @@ pub mod builders {
                             "description": "Description of the transaction"
                         }
                     },
-                    "required": ["to", "value", "data", "description"]
+                    "required": ["to", "value"]
                 })),
             },
         }
@@ -165,7 +165,7 @@ pub mod builders {
     /// Generate a tool from a smart contract's ABI
     pub fn from_contract(contract: &Contract) -> Vec<Tool> {
         let mut tools = Vec::new();
-
+        println!("Generating tools from contract: {}", contract.name);
         // Parse the ABI
         let abi_value: Result<serde_json::Value, _> = serde_json::from_str(&contract.abi);
         if abi_value.is_err() {
@@ -175,6 +175,7 @@ pub mod builders {
 
         let abi = abi_value.unwrap();
 
+        println!("ABI: {:?}", abi);
         // ABI can be either an array or an object with an "abi" field
         let functions = if abi.is_array() {
             abi.as_array().unwrap()
@@ -185,14 +186,20 @@ pub mod builders {
             return tools;
         };
 
+        println!("Functions: {:?}", functions);
+
         // Process each function in the ABI
         for func in functions {
             // Skip if not a function or is not externally callable
+            // Handle both newer ABIs with stateMutability and older ABIs with constant field
             if !func.is_object()
                 || func.get("type").is_none()
                 || func["type"] != "function"
-                || func.get("stateMutability").is_none()
-                || (func["stateMutability"] != "nonpayable" && func["stateMutability"] != "payable")
+                || (func.get("stateMutability").is_none() && func.get("constant").is_none())
+                || (func.get("stateMutability").is_some()
+                    && func["stateMutability"] != "nonpayable"
+                    && func["stateMutability"] != "payable")
+                || (func.get("constant").is_some() && func["constant"] == true)
             {
                 continue;
             }
@@ -222,8 +229,8 @@ pub mod builders {
                         input.get("name").and_then(|n| n.as_str()),
                         input.get("type").and_then(|t| t.as_str()),
                     ) {
-                        // Skip internal or empty param names
-                        if param_name.is_empty() || param_name.starts_with('_') {
+                        // Only skip empty param names
+                        if param_name.is_empty() {
                             continue;
                         }
 
@@ -308,15 +315,12 @@ pub mod handlers {
         let args: Value = serde_json::from_str(&tool_call.function.arguments)
             .map_err(|e| format!("Failed to parse transaction arguments: {}", e))?;
 
-        // Create a SafeTransaction from the arguments
+        // Create a SafeTransaction from the arguments with default values for optional fields
         let transaction = SafeTransaction {
             to: args["to"].as_str().ok_or("Missing 'to' field")?.to_string(),
             value: args["value"].as_str().ok_or("Missing 'value' field")?.to_string(),
-            data: args["data"].as_str().ok_or("Missing 'data' field")?.to_string(),
-            description: args["description"]
-                .as_str()
-                .ok_or("Missing 'description' field")?
-                .to_string(),
+            data: args["data"].as_str().unwrap_or("0x").to_string(),
+            description: args["description"].as_str().unwrap_or("ETH transfer").to_string(),
             contract_call: None,
         };
 

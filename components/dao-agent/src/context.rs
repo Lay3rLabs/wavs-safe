@@ -1,10 +1,12 @@
 use crate::contracts::{Contract, TokenBalance};
 use crate::llm::LLMConfig;
 use serde::{Deserialize, Serialize};
-use std::fs;
+use std::env;
+use wavs_wasi_chain::http::{fetch_json, http_request_get};
+use wstd::http::HeaderValue;
 
 /// Context for the DAO agent's decision making
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DaoContext {
     pub safe_address: String,
     pub eth_balance: TokenBalance,
@@ -18,29 +20,100 @@ pub struct DaoContext {
 }
 
 impl DaoContext {
+    /// Load context from environment variable CONFIG_URI or use default
+    pub async fn load() -> Result<Self, String> {
+        // Check if CONFIG_URI environment variable is set
+        if let Ok(config_uri) = env::var("config_uri") {
+            println!("Loading config from URI: {}", config_uri);
+
+            Self::load_from_uri(&config_uri).await
+        } else {
+            println!("No CONFIG_URI found, using default configuration");
+            Ok(Self::default())
+        }
+    }
+
+    /// Load context from a URI
+    pub async fn load_from_uri(uri: &str) -> Result<Self, String> {
+        // Strip any quotation marks from the URI
+        let clean_uri = uri.trim_matches('"');
+
+        println!("Loading config from URI: {}", clean_uri);
+
+        // Check URI scheme
+        if let Some(uri_with_scheme) = clean_uri.strip_prefix("ipfs://") {
+            // IPFS URI scheme detected
+            Self::load_from_ipfs(uri_with_scheme).await
+        } else if clean_uri.starts_with("http://") || clean_uri.starts_with("https://") {
+            // HTTP URI scheme detected
+            Self::fetch_from_uri(clean_uri).await
+        } else {
+            // Only support http/https and ipfs URIs
+            Err(format!("Unsupported URI scheme: {}", clean_uri))
+        }
+    }
+
+    /// Load configuration from IPFS
+    async fn load_from_ipfs(cid: &str) -> Result<Self, String> {
+        let gateway_url = std::env::var("WAVS_ENV_IPFS_GATEWAY_URL").unwrap_or_else(|_| {
+            println!("WAVS_ENV_IPFS_GATEWAY_URL not set, using default");
+            "https://gateway.lighthouse.storage/ipfs".to_string()
+        });
+
+        // Strip any quotation marks from the gateway URL
+        let clean_gateway_url = gateway_url.trim_matches('"');
+
+        // Construct HTTP URL, avoiding duplicate /ipfs in the path
+        let http_url = if clean_gateway_url.ends_with("/ipfs") {
+            format!("{}/{}", clean_gateway_url, cid)
+        } else if clean_gateway_url.ends_with("/ipfs/") {
+            format!("{}{}", clean_gateway_url, cid)
+        } else if clean_gateway_url.ends_with("/") {
+            format!("{}ipfs/{}", clean_gateway_url, cid)
+        } else {
+            format!("{}/ipfs/{}", clean_gateway_url, cid)
+        };
+
+        println!("Fetching IPFS config from: {}", http_url);
+        Self::fetch_from_uri(&http_url).await
+    }
+
+    /// Fetch configuration from a HTTP/HTTPS URI
+    async fn fetch_from_uri(uri: &str) -> Result<Self, String> {
+        // Strip any quotation marks from the URI
+        let clean_uri = uri.trim_matches('"');
+
+        println!("Creating HTTP request for URI: {}", clean_uri);
+
+        // Create HTTP request
+        let mut req = http_request_get(clean_uri).map_err(|e| {
+            let error_msg = format!("Failed to create request: {}", e);
+            println!("Error: {}", error_msg);
+            error_msg
+        })?;
+
+        // Add appropriate headers for JSON content
+        req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
+
+        println!("Sending HTTP request...");
+
+        // Execute HTTP request and parse response as JSON
+        let context: DaoContext = fetch_json(req).await.unwrap();
+
+        println!("Successfully loaded configuration");
+        Ok(context)
+    }
+
     /// Create a new DaoContext from a JSON string
     pub fn from_json(json_str: &str) -> Result<Self, String> {
         serde_json::from_str(json_str)
             .map_err(|e| format!("Failed to parse context from JSON: {}", e))
     }
 
-    /// Load a DaoContext from a JSON file
-    pub fn from_file(path: &str) -> Result<Self, String> {
-        let json_str =
-            fs::read_to_string(path).map_err(|e| format!("Failed to read context file: {}", e))?;
-        Self::from_json(&json_str)
-    }
-
     /// Serialize the context to a JSON string
     pub fn to_json(&self) -> Result<String, String> {
         serde_json::to_string_pretty(self)
             .map_err(|e| format!("Failed to serialize context to JSON: {}", e))
-    }
-
-    /// Save the context to a JSON file
-    pub fn save_to_file(&self, path: &str) -> Result<(), String> {
-        let json_str = self.to_json()?;
-        fs::write(path, json_str).map_err(|e| format!("Failed to write context to file: {}", e))
     }
 
     /// Format the system prompt by filling in the template with context values
