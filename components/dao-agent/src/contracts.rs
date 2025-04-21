@@ -10,14 +10,30 @@ use std::str::FromStr;
 pub struct Contract {
     pub name: String,
     pub address: String,
-    pub abi: String, // JSON ABI string
+    pub abi: String,                 // JSON ABI string
+    pub description: Option<String>, // Optional description of what the contract does
 }
 
 /// Helper methods for working with contracts
 impl Contract {
     /// Create a new Contract instance
     pub fn new(name: &str, address: &str, abi: &str) -> Self {
-        Self { name: name.to_string(), address: address.to_string(), abi: abi.to_string() }
+        Self {
+            name: name.to_string(),
+            address: address.to_string(),
+            abi: abi.to_string(),
+            description: None,
+        }
+    }
+
+    /// Create a new Contract instance with description
+    pub fn new_with_description(name: &str, address: &str, abi: &str, description: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            address: address.to_string(),
+            abi: abi.to_string(),
+            description: Some(description.to_string()),
+        }
     }
 
     /// Parse the JSON ABI to JsonAbi struct
@@ -229,6 +245,42 @@ fn is_dynamic_type(ty: &DynSolType) -> bool {
         DynSolType::Array(_) => true,
         DynSolType::FixedArray(_, size) => *size == 0,
         _ => false,
+    }
+}
+
+/// Represents a supported token in the DAO
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SupportedToken {
+    pub address: String,
+    pub symbol: String,
+    pub decimals: u8,
+    pub description: Option<String>,
+}
+
+impl SupportedToken {
+    /// Create a new SupportedToken instance
+    pub fn new(address: &str, symbol: &str, decimals: u8) -> Self {
+        Self {
+            address: address.to_string(),
+            symbol: symbol.to_string(),
+            decimals,
+            description: None,
+        }
+    }
+
+    /// Create a new SupportedToken instance with description
+    pub fn new_with_description(
+        address: &str,
+        symbol: &str,
+        decimals: u8,
+        description: &str,
+    ) -> Self {
+        Self {
+            address: address.to_string(),
+            symbol: symbol.to_string(),
+            decimals,
+            description: Some(description.to_string()),
+        }
     }
 }
 

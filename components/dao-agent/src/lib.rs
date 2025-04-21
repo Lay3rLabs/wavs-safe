@@ -104,7 +104,7 @@ async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String>
     }
 
     // Format the system prompt using the context
-    let system_prompt = context.format_system_prompt();
+    let system_prompt = context.format_system_prompt_dynamic().await;
 
     // Create LLM client with the configuration from context
     let client = LLMClient::with_config(&context.model, context.llm_config.clone())

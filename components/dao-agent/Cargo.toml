@@ -17,6 +17,9 @@ alloy-sol-types = { workspace = true }
 alloy-primitives = { workspace = true }
 alloy-json-abi = { workspace = true }
 alloy-dyn-abi = { workspace = true }
+alloy-network = { workspace = true }
+alloy-provider = { workspace = true }
+alloy-rpc-types = { workspace = true }
 hex = { workspace = true }
 tiny-keccak = { workspace = true }
 

@@ -1,10 +1,5 @@
 # [WAVS](https://docs.wavs.xyz) Safe Example
 
-TODO:
-
-- Write up determinism notes
-- Document config_uri
-
 Contains WAVS enabled Safe Module and Guard contracts, as well as a DEFINITELY NOT PRODUCTION ready agent which controls the custom Safe Module.
 
 Reading and Resources:
@@ -160,8 +155,10 @@ make wasi-build # or `make build` to include solidity compilation.
 
 Test run the component locally to validate the business logic works. Be sure to run `make wasi-build` if you make changes.
 
+Note: the `SERVICE_CONFIG` json is used for setting environment variables and the kv store. The `kv` array is a list of key value pairs, "config_uri" is a URI that contains the agent config (the IPFS URI included below corresponds to `agent-config.example.json`). To use a different model, or change the agent configuration, you'll need to upload a new JSON somewhere (or modify the default context in `dao-agent/src/context.rs`).
+
 ```bash
-COMPONENT_FILENAME="dao_agent.wasm" PROMPT='We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3.' SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[],"workflow_id":"default","component_id":"default"}' make wasi-exec
+COMPONENT_FILENAME="dao_agent.wasm" PROMPT='We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3.' SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[["config_uri", "ipfs://bafkreiaqticxepygpav5h52kcqtid3ls2mm55i2so7edxmrdbn3z3rnyny"]],"workflow_id":"default","component_id":"default"}' make wasi-exec
 ```
 
 ## WAVS
@@ -229,7 +226,7 @@ A custom Safe module that integrates with WAVS.
 forge script script/WavsSafeModule.s.sol:Deploy --rpc-url http://localhost:8545 --broadcast
 ```
 
-This will deploy both the WavsSafeModule and Trigger contracts, and write their addresses to a JSON file in the `.docker/module_deployments.json` path.
+This will deploy both the WavsSafeModule, Trigger, and MockUSDC contracts, and write their addresses to a JSON file in the `.docker/module_deployments.json` path. The Trigger contract is meant to serve as an example, this agent could be triggered by other smart contract events.
 
 ### Deploy service component
 

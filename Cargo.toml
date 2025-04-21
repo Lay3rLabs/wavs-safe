@@ -31,7 +31,10 @@ alloy-json-abi = "0.8.13"
 alloy-primitives = "0.8.13"
 alloy-sol-macro = { version = "0.8.13", features = ["json"]}
 alloy-sol-types = "0.8.13"
-
+alloy-network = "0.11.1"
+alloy-provider = { version = "0.11.1", default-features = false, features = ["rpc-api"] }
+alloy-rpc-types = "0.11.1"
+alloy-transport-http = { version = "0.11.1", default-features = false }
 
 ## Common dependencies
 hex = "0.4.3"
