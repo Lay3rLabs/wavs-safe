@@ -87,4 +87,4 @@ Transfer 500 USDC to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3 for community gr
 
 ## License
 
-This project is licensed under MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](../../LICENSE) file for details.
