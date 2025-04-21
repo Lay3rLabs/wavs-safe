@@ -1,12 +1,12 @@
 # [WAVS](https://docs.wavs.xyz) Safe Example
 
-Contains WAVS enabled Safe Module and Guard contracts, as well as a DEFINITELY NOT PRODUCTION ready agent which controls the custom Safe Module.
+Contains WAVS-enabled Safe Module and Guard contracts, as well as a DEFINITELY NOT PRODUCTION-ready agent which controls the custom Safe Module.
 
 The DAO Agent WAVS component leverages deterministic inferencing. See the [DETERMINISM.md](./DETERMINISM.md) file for more notes on making deterministic agents and the nuances involved.
 
 Related Safe Resources:
 
-- [Safe Modules](https://docs.safe.global/advanced/smart-account-modules): documentation on Safe Modules, allowing easily extending functionality of a Safe.
+- [Safe Modules](https://docs.safe.global/advanced/smart-account-modules): documentation on Safe Modules, allowing easy extension of Safe functionality.
 - [Safe Guard](https://docs.safe.global/advanced/smart-account-guards): documentation on Safe Guards, allowing for checks on Safe transactions.
 
 ## System Requirements
@@ -93,9 +93,9 @@ wkg config --default-registry wa.dev
 <summary>Install Ollama and Stable Diffusion</summary>
 ### Install Ollama (optional)
 
-This example use an LLM configured for determinism, run locally with Ollama. The model is llama3.2, but other open source models can be used if you change the model parameter in the config.
+This example uses an LLM configured for determinism, run locally with Ollama. The model is llama3.2, but other open source models can be used if you change the model parameter in the config.
 
-If you do not want to run a model locally, set `WAVS_ENV_OPENAI_API_KEY` with a valid Open AI API key.
+If you do not want to run a model locally, set `WAVS_ENV_OPENAI_API_KEY` with a valid OpenAI API key.
 
 For more information about AVSs and deterministic AI, see our [blog post on the subject](https://www.layer.xyz/news-and-insights/deterministic-ai).
 
@@ -132,7 +132,7 @@ forge test
 
 ### Build WASI components
 
-Now build the WASI rust components into the `compiled` output directory.
+Now build the WASI Rust components into the `compiled` output directory.
 
 > [!WARNING]
 > If you get: `error: no registry configured for namespace "wavs"`
@@ -193,7 +193,7 @@ SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV
 
 ### Start Environment
 
-Start an Ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https://www.eigenlayer.xyz/) contracts to the local network.
+Start an Ethereum node (anvil), the WAVS service, and deploy [EigenLayer](https://www.eigenlayer.xyz/) contracts to the local network.
 
 ```bash
 cp .env.example .env
@@ -207,7 +207,7 @@ make start-all
 
 ### Execute WASI component directly
 
-Test run the component locally to validate the business logic works (no onchain interactions). Be sure to run `make wasi-build` if you make changes.
+Test run the component locally to validate the business logic works (no on-chain interactions). Be sure to run `make wasi-build` if you make changes.
 
 Note: the `SERVICE_CONFIG` json is used for setting environment variables and the kv store. The `kv` array is a list of key value pairs, "config_uri" is a URI that contains the agent config (the IPFS URI included below corresponds to `agent-config.example.json`). To use a different model, or change the agent configuration, you'll need to upload a new JSON somewhere (or modify the default context in `dao-agent/src/context.rs`).
 
@@ -225,7 +225,7 @@ A custom Safe module that integrates with WAVS.
 forge script script/WavsSafeModule.s.sol:Deploy --rpc-url http://localhost:8545 --broadcast
 ```
 
-This will deploy both the WavsSafeModule, Trigger, and MockUSDC contracts, and write their addresses to a JSON file in the `.docker/module_deployments.json` path. The Trigger contract is meant to serve as an example, this agent could be triggered by other smart contract events.
+This will deploy both the WavsSafeModule, Trigger, and MockUSDC contracts, and write their addresses to a JSON file in the `.docker/module_deployments.json` path. The Trigger contract is meant to serve as an example; this agent could be triggered by other smart contract events.
 
 ### Deploy service component
 
