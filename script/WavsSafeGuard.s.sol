@@ -63,7 +63,10 @@ contract WavsSafeGuardBase is Script {
         returns (address safeAddress, address guardAddress)
     {
         root = vm.projectRoot();
-        deploymentsPath = string.concat(root, ".docker/guard_deployments.json");
+        deploymentsPath = string.concat(
+            root,
+            "/.docker/guard_deployments.json"
+        );
 
         // Check if file exists
         try vm.readFile(deploymentsPath) returns (string memory content) {
@@ -145,7 +148,10 @@ contract Deploy is WavsSafeGuardBase {
 
         // Initialize deployment paths
         root = vm.projectRoot();
-        deploymentsPath = string.concat(root, "/deployments/guard.json");
+        deploymentsPath = string.concat(
+            root,
+            "/.docker/guard_deployments.json"
+        );
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -223,7 +229,7 @@ contract ApproveSafeTransaction is WavsSafeGuardBase {
         // Pack parameters into a struct to reduce stack usage
         return
             safe.getTransactionHash(
-                address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266), // to
+                address(0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3), // to
                 0.1 ether, // value
                 "", // data
                 Enum.Operation.Call, // operation
@@ -265,7 +271,7 @@ contract ExecuteSafeTransaction is WavsSafeGuardBase {
         // Pack parameters into a struct to reduce stack usage
         return
             safe.getTransactionHash(
-                address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266), // to
+                address(0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3), // to
                 0.1 ether, // value
                 "", // data
                 Enum.Operation.Call, // operation
@@ -303,7 +309,7 @@ contract ExecuteSafeTransaction is WavsSafeGuardBase {
             _getTxHash(safe)
         );
         safe.execTransaction(
-            address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266), // to
+            address(0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3), // to
             0.1 ether, // value
             "", // data
             Enum.Operation.Call, // operation
@@ -317,7 +323,7 @@ contract ExecuteSafeTransaction is WavsSafeGuardBase {
 
         console.log(
             "Executed transaction to:",
-            address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266)
+            address(0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3)
         );
 
         vm.stopBroadcast();
