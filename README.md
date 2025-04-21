@@ -161,13 +161,13 @@ make wasi-build # or `make build` to include solidity compilation.
 > - Docker Desktop: Settings -> Resources -> Network -> 'Enable Host Networking'
 > - `brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect`
 
-### Environment Variables
+### Environment Variables and Key Values
 
 WAVS components can access specific environment variables with the `WAVS_ENV_` prefix. These variables need to be:
 
 1. Added to your local `.env` file
 2. Listed in the `host_envs` array in the `SERVICE_CONFIG` when deploying the service
-3. Used in your component code with the exact same name
+3. Used in your component code
 
 For the DAO agent example, the following environment variables are used:
 
@@ -183,10 +183,12 @@ WAVS_ENV_OPENAI_API_URL="https://api.openai.com/v1/chat/completions"
 WAVS_ENV_IPFS_GATEWAY_URL="https://gateway.lighthouse.storage"
 ```
 
-Example `host_envs` in SERVICE_CONFIG:
+The Key Value pairs must be listed in the `kv` array in the `SERVICE_CONFIG` when you deploy a component. The `dao-agent` component supports a `config_uri` kv pair where it fetches the agent configuration (otherwise it uses the default config, which matches [agent-config.example.json](./agent-config.example.json)):
+
+Example `host_envs` and `kv` in SERVICE_CONFIG:
 
 ```
-SERVICE_CONFIG='{"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],...}'
+SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[["config_uri", "ipfs://bafkreiaqticxepygpav5h52kcqtid3ls2mm55i2so7edxmrdbn3z3rnyny"]],"workflow_id":"default","component_id":"default"}'
 ```
 
 ### Start Environment
