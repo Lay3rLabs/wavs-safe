@@ -277,6 +277,8 @@ forge script script/WavsSafeGuard.s.sol:Deploy --rpc-url http://localhost:8545 -
 
 This will deploy the Safe and Guard contracts, and write their addresses to a JSON file in the `.docker/guard_deployments.json` path.
 
+> **IMPORTANT**: The guard needs to be explicitly enabled on the Safe to work. The Deploy script will attempt to enable it automatically, but this may not succeed if your Safe has a threshold > 1. The script will log information about what's happening.
+
 ### Deploy service component
 
 ```bash
@@ -286,6 +288,14 @@ GUARD_ADDR=$(jq -r '.guardAddress' .docker/guard_deployments.json)
 
 # Deploy the service
 COMPONENT_FILENAME=safe_guard.wasm SERVICE_TRIGGER_ADDR=$SAFE_ADDR SERVICE_SUBMISSION_ADDR=$GUARD_ADDR TRIGGER_EVENT="ApproveHash(bytes32,address)" make deploy-service
+```
+
+### Try Executing a Transaction
+
+Executing a Safe Transaction will fail as the AVS has not approved the transaction.
+
+```bash
+forge script script/WavsSafeGuard.s.sol:ExecuteSafeTransaction --rpc-url http://localhost:8545 --broadcast
 ```
 
 ### Trigger the validation process
@@ -306,7 +316,21 @@ Now the Safe transaction is able to be executed.
 forge script script/WavsSafeGuard.s.sol:ExecuteSafeTransaction --rpc-url http://localhost:8545 --broadcast
 ```
 
-Check balance, should be 0.1 ETH higher:
+If the Guard is properly enabled, this should only succeed if the transaction was previously approved by the WAVS service.
+
+### Testing the Guard Protection
+
+To verify your guard is working properly:
+
+1. Deploy a fresh Safe and Guard
+2. Ensure the guard is properly enabled (verify with getGuard())
+3. Skip the approval step
+4. Try to execute a transaction directly
+5. The transaction should fail with `AsyncValidationRequired` error
+
+If the transaction succeeds without approval, your guard is not enabled properly.
+
+Check balance, should be 0.1 ETH higher if transaction succeeded:
 
 ```bash
 cast balance 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3 --rpc-url http://localhost:8545

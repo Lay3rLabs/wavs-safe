@@ -16,6 +16,11 @@ contract WavsSafeGuardBase is Script {
     using Strings for address;
     using Strings for uint256;
 
+    // Guard storage slot from GuardManager.sol
+    // keccak256("guard_manager.guard.address")
+    bytes32 internal constant GUARD_STORAGE_SLOT =
+        0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8;
+
     // JSON output path
     string public root;
     string public deploymentsPath;
@@ -137,14 +142,49 @@ contract WavsSafeGuardBase is Script {
         }
         return string(result);
     }
+
+    function _writeDeploymentsToJson(
+        address safeAddress,
+        address guardAddress,
+        address singleton,
+        address safeFactory
+    ) internal {
+        // Create JSON string with deployment information
+        string memory json = "{";
+
+        // Add contract addresses
+        json = appendJsonPair(json, "safeSingleton", singleton, true);
+        json = appendJsonPair(json, "safeFactory", safeFactory, false);
+        json = appendJsonPair(json, "safeAddress", safeAddress, false);
+        json = appendJsonPair(json, "guardAddress", guardAddress, false);
+
+        // Close JSON
+        json = string.concat(json, "}");
+
+        // Create directories if they don't exist
+        string memory dirPath = string.concat(root, "/deployments");
+        vm.createDir(dirPath, true);
+
+        // Write JSON to file
+        vm.writeFile(deploymentsPath, json);
+
+        console.log("Deployment information saved to:", deploymentsPath);
+    }
+
+    // Get the guard address from storage
+    function _getGuardFromStorage(
+        address safeAddress
+    ) internal view returns (address guard) {
+        bytes32 slot = GUARD_STORAGE_SLOT;
+        bytes32 value = vm.load(safeAddress, slot);
+        guard = address(uint160(uint256(value)));
+    }
 }
 
 // Deploy contracts script
 contract Deploy is WavsSafeGuardBase {
     function run() public {
-        (uint256 deployerPrivateKey, address deployer) = Utils.getPrivateKey(
-            vm
-        );
+        (uint256 deployerPrivateKey, ) = Utils.getPrivateKey(vm);
 
         // Initialize deployment paths
         root = vm.projectRoot();
@@ -185,41 +225,111 @@ contract Deploy is WavsSafeGuardBase {
         );
         console.log("Deployed WavsSafeGuard at:", address(guard));
 
-        // Write deployment information to JSON
-        _writeDeploymentsToJson(safeAddress, address(guard));
+        // Write deployment information to JSON before trying to enable the guard
+        // to ensure we save the addresses even if the enabling fails
+        _writeDeploymentsToJson(
+            safeAddress,
+            address(guard),
+            address(safeSingleton),
+            address(factory)
+        );
+
+        // Now try to enable the guard
+        _enableGuard(safeAddress, address(guard), deployerPrivateKey);
 
         vm.stopBroadcast();
     }
 
-    function _writeDeploymentsToJson(
+    // Separate function to enable guard to avoid stack too deep errors
+    function _enableGuard(
         address safeAddress,
-        address guardAddress
+        address guardAddress,
+        uint256 signerKey
     ) internal {
-        // Create JSON string with deployment information
-        string memory json = "{";
+        Safe safe = Safe(payable(safeAddress));
+        uint256 safeThreshold = safe.getThreshold();
 
-        // Add contract addresses
-        json = appendJsonPair(
-            json,
-            "safeSingleton",
-            address(safeSingleton),
-            true
+        // Create setGuard transaction data
+        bytes memory setGuardData = abi.encodeWithSignature(
+            "setGuard(address)",
+            guardAddress
         );
-        json = appendJsonPair(json, "safeFactory", address(factory), false);
-        json = appendJsonPair(json, "safeAddress", safeAddress, false);
-        json = appendJsonPair(json, "guardAddress", guardAddress, false);
 
-        // Close JSON
-        json = string.concat(json, "}");
+        // Calculate transaction hash
+        bytes32 txHash = safe.getTransactionHash(
+            safeAddress, // to: the Safe itself
+            0, // value
+            setGuardData, // data: call setGuard
+            Enum.Operation.Call, // operation
+            0, // safeTxGas
+            0, // baseGas
+            0, // gasPrice
+            address(0), // gasToken
+            payable(address(0)), // refundReceiver
+            safe.nonce() // nonce
+        );
 
-        // Create directories if they don't exist
-        string memory dirPath = string.concat(root, "/deployments");
-        vm.createDir(dirPath, true);
+        // Sign the transaction
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, txHash);
+        bytes memory signature = abi.encodePacked(r, s, v);
 
-        // Write JSON to file
-        vm.writeFile(deploymentsPath, json);
+        // If threshold > 1, approve the transaction hash
+        if (safeThreshold > 1) {
+            safe.approveHash(txHash);
+            console.log("Transaction approved by deployer");
+            console.log("Safe threshold is", safeThreshold);
+            console.log("Additional approvals may be needed from other owners");
+            console.log(
+                "Transaction hash for other owners to approve:",
+                vm.toString(txHash)
+            );
+        }
 
-        console.log("Deployment information saved to:", deploymentsPath);
+        // Try to execute the transaction
+        try
+            safe.execTransaction(
+                safeAddress, // to: the Safe itself
+                0, // value
+                setGuardData, // data: call setGuard
+                Enum.Operation.Call, // operation
+                0, // safeTxGas
+                0, // baseGas
+                0, // gasPrice
+                address(0), // gasToken
+                payable(address(0)), // refundReceiver
+                signature // signature
+            )
+        {
+            console.log("Guard successfully enabled on Safe");
+
+            // Verify the guard is set by reading the storage directly
+            address setGuard = _getGuardFromStorage(safeAddress);
+            if (setGuard == guardAddress) {
+                console.log("Verified: Guard is properly set");
+            } else {
+                console.log(
+                    "Error: Guard is set to a different address:",
+                    setGuard
+                );
+            }
+        } catch Error(string memory reason) {
+            console.log("Failed to enable guard:", reason);
+            if (safeThreshold > 1) {
+                console.log(
+                    "If this is due to threshold > 1, other owners need to approve hash:",
+                    vm.toString(txHash)
+                );
+                console.log(
+                    "Run the EnableGuard script after all owners have approved"
+                );
+            }
+        } catch {
+            console.log("Failed to enable guard with unknown error");
+            console.log(
+                "If this is due to threshold > 1, other owners need to approve hash:",
+                vm.toString(txHash)
+            );
+        }
     }
 }
 
@@ -325,6 +435,111 @@ contract ExecuteSafeTransaction is WavsSafeGuardBase {
             "Executed transaction to:",
             address(0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3)
         );
+
+        vm.stopBroadcast();
+    }
+}
+
+// Enable Guard on an existing Safe
+contract EnableGuard is WavsSafeGuardBase {
+    function run() public {
+        (uint256 ownerPrivateKey, ) = Utils.getPrivateKey(vm);
+
+        // Load deployments from JSON
+        (address safeAddress, address guardAddress) = _loadDeployments();
+        require(
+            safeAddress != address(0),
+            "Safe address not found in deployments"
+        );
+        require(
+            guardAddress != address(0),
+            "Guard address not found in deployments"
+        );
+
+        console.log("Safe address:", safeAddress);
+        console.log("Guard address:", guardAddress);
+
+        vm.startBroadcast(ownerPrivateKey);
+
+        Safe safe = Safe(payable(safeAddress));
+        uint256 threshold = safe.getThreshold();
+        console.log("Safe threshold:", threshold);
+
+        // Create setGuard transaction data
+        bytes memory setGuardData = abi.encodeWithSignature(
+            "setGuard(address)",
+            guardAddress
+        );
+
+        // Calculate transaction hash
+        bytes32 txHash = safe.getTransactionHash(
+            safeAddress, // to: the Safe itself
+            0, // value
+            setGuardData, // data: call setGuard
+            Enum.Operation.Call, // operation
+            0, // safeTxGas
+            0, // baseGas
+            0, // gasPrice
+            address(0), // gasToken
+            payable(address(0)), // refundReceiver
+            safe.nonce() // nonce
+        );
+
+        // Sign the transaction
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, txHash);
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        // If threshold > 1, approve the transaction hash
+        if (threshold > 1) {
+            safe.approveHash(txHash);
+            console.log("Transaction approved by current signer");
+            console.log("If threshold > 1, additional approvals needed");
+            console.log(
+                "Transaction hash for other signers to approve:",
+                vm.toString(txHash)
+            );
+        }
+
+        // Try to execute the transaction
+        try
+            safe.execTransaction(
+                safeAddress, // to: the Safe itself
+                0, // value
+                setGuardData, // data: call setGuard
+                Enum.Operation.Call, // operation
+                0, // safeTxGas
+                0, // baseGas
+                0, // gasPrice
+                address(0), // gasToken
+                payable(address(0)), // refundReceiver
+                signature // signature
+            )
+        {
+            console.log("Guard successfully enabled on Safe");
+
+            // Verify the guard is set by reading the storage directly
+            address setGuard = _getGuardFromStorage(safeAddress);
+            if (setGuard == guardAddress) {
+                console.log("Verified: Guard is properly set");
+            } else {
+                console.log(
+                    "Error: Guard is set to a different address:",
+                    setGuard
+                );
+            }
+        } catch Error(string memory reason) {
+            console.log("Failed to enable guard:", reason);
+            console.log(
+                "If this is due to threshold > 1, other owners need to approve hash:",
+                vm.toString(txHash)
+            );
+        } catch {
+            console.log("Failed to enable guard with unknown error");
+            console.log(
+                "If this is due to threshold > 1, other owners need to approve hash:",
+                vm.toString(txHash)
+            );
+        }
 
         vm.stopBroadcast();
     }
