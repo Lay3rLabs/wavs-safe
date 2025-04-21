@@ -1,22 +1,11 @@
-# [WAVS](https://docs.wavs.xyz) Safe Template
+# [WAVS](https://docs.wavs.xyz) Safe Example
 
-**Template for getting started with developing WAVS applications and Gnosis Safe. NOT PRODUCTION READY.**
+Contains WAVS enabled Safe Module and Guard contracts, as well as a DEFINITELY NOT PRODUCTION ready agent which controls the custom Safe Module.
 
-TODO:
+The DAO Agent WAVS component leverages deterministic inferencing. See the [DETERMINISM.md](./DETERMINISM.md) file for more notes on making deterministic agents and the nuances involved.
 
-- [ ] Refactor agent for better tool use and openai support
-- [ ] Consolidate / refactor service types
-- [ ] Better way to check result from Guard in demo
+Related Safe Resources:
 
-Later:
-
-- [ ] Consider better guards like borg-core?
-
-Contains WAVS enabled Safe Module and Guard contracts.
-
-Reading and Resources:
-
-- [Zodiac](https://www.zodiac.wiki/documentation): a bunch of useful extensions to the Safe. If you're looking for examples of extending Safe, Zodiac has a ton of them.
 - [Safe Modules](https://docs.safe.global/advanced/smart-account-modules): documentation on Safe Modules, allowing easily extending functionality of a Safe.
 - [Safe Guard](https://docs.safe.global/advanced/smart-account-guards): documentation on Safe Guards, allowing for checks on Safe transactions.
 
@@ -100,15 +89,31 @@ wkg config --default-registry wa.dev
 
 </details>
 
-## Create Project
+<details>
+<summary>Install Ollama and Stable Diffusion</summary>
+### Install Ollama (optional)
+
+This example use an LLM configured for determinism, run locally with Ollama. The model is llama3.2, but other open source models can be used if you change the model parameter in the config.
+
+If you do not want to run a model locally, set `WAVS_ENV_OPENAI_API_KEY` with a valid Open AI API key.
+
+For more information about AVSs and deterministic AI, see our [blog post on the subject](https://www.layer.xyz/news-and-insights/deterministic-ai).
+
+You can download Ollama here: https://ollama.com/
+
+Get the llama 3.2 model.
 
 ```bash
-# If you don't have foundry: `curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup`
-forge init --template Lay3rLabs/wavs-foundry-template my-wavs --branch 0.3
+ollama pull llama3.2
 ```
 
-> [!TIP]
-> Run `make help` to see all available commands and environment variable overrides.
+In a separate terminal run Ollama in the background with:
+
+```bash
+ollama serve
+```
+
+</details>
 
 ### Solidity
 
@@ -143,14 +148,6 @@ Now build the WASI rust components into the `compiled` output directory.
 make wasi-build # or `make build` to include solidity compilation.
 ```
 
-### Execute WASI component directly
-
-Test run the component locally to validate the business logic works. An ID of 1 is Bitcoin. Nothing will be saved on-chain, just the output of the component is shown. This input is formatted using `cast format-bytes32-string` in the makefile command.
-
-```bash
-COIN_MARKET_CAP_ID=1 make wasi-exec
-```
-
 ## WAVS
 
 > [!NOTE]
@@ -163,6 +160,36 @@ COIN_MARKET_CAP_ID=1 make wasi-exec
 >
 > - Docker Desktop: Settings -> Resources -> Network -> 'Enable Host Networking'
 > - `brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect`
+
+### Environment Variables and Key Values
+
+WAVS components can access specific environment variables with the `WAVS_ENV_` prefix. These variables need to be:
+
+1. Added to your local `.env` file
+2. Listed in the `host_envs` array in the `SERVICE_CONFIG` when deploying the service
+3. Used in your component code
+
+For the DAO agent example, the following environment variables are used:
+
+- `WAVS_ENV_OPENAI_API_KEY`: Your OpenAI API key for accessing LLM services
+- `WAVS_ENV_OPENAI_API_URL`: The endpoint URL for OpenAI API calls (defaults to "https://api.openai.com/v1/chat/completions")
+- `WAVS_ENV_IPFS_GATEWAY_URL`: IPFS gateway URL for loading configurations (defaults to "https://gateway.lighthouse.storage")
+
+Example configuration in your `.env` file:
+
+```
+WAVS_ENV_OPENAI_API_KEY=sk-your-openai-key
+WAVS_ENV_OPENAI_API_URL="https://api.openai.com/v1/chat/completions"
+WAVS_ENV_IPFS_GATEWAY_URL="https://gateway.lighthouse.storage"
+```
+
+The Key Value pairs must be listed in the `kv` array in the `SERVICE_CONFIG` when you deploy a component. The `dao-agent` component supports a `config_uri` kv pair where it fetches the agent configuration (otherwise it uses the default config, which matches [agent-config.example.json](./agent-config.example.json)):
+
+Example `host_envs` and `kv` in SERVICE_CONFIG:
+
+```
+SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[["config_uri", "ipfs://bafkreiaqticxepygpav5h52kcqtid3ls2mm55i2so7edxmrdbn3z3rnyny"]],"workflow_id":"default","component_id":"default"}'
+```
 
 ### Start Environment
 
@@ -178,7 +205,17 @@ cp .env.example .env
 make start-all
 ```
 
-## WAVS Safe Module
+### Execute WASI component directly
+
+Test run the component locally to validate the business logic works (no onchain interactions). Be sure to run `make wasi-build` if you make changes.
+
+Note: the `SERVICE_CONFIG` json is used for setting environment variables and the kv store. The `kv` array is a list of key value pairs, "config_uri" is a URI that contains the agent config (the IPFS URI included below corresponds to `agent-config.example.json`). To use a different model, or change the agent configuration, you'll need to upload a new JSON somewhere (or modify the default context in `dao-agent/src/context.rs`).
+
+```bash
+COMPONENT_FILENAME="dao_agent.wasm" PROMPT='We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3.' SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[["config_uri", "ipfs://bafkreiaqticxepygpav5h52kcqtid3ls2mm55i2so7edxmrdbn3z3rnyny"]],"workflow_id":"default","component_id":"default"}' make wasi-exec
+```
+
+## WAVS Safe Module + Agent Demo
 
 A custom Safe module that integrates with WAVS.
 
@@ -188,26 +225,37 @@ A custom Safe module that integrates with WAVS.
 forge script script/WavsSafeModule.s.sol:Deploy --rpc-url http://localhost:8545 --broadcast
 ```
 
-This will deploy both the WavsSafeModule and Trigger contracts, and write their addresses to a JSON file in the `deployments/local.json` path.
+This will deploy both the WavsSafeModule, Trigger, and MockUSDC contracts, and write their addresses to a JSON file in the `.docker/module_deployments.json` path. The Trigger contract is meant to serve as an example, this agent could be triggered by other smart contract events.
 
 ### Deploy service component
 
 ```bash
 # Load the addresses from the JSON file
-TRIGGER_ADDR=$(jq -r '.triggerContract' deployments/local.json)
-MODULE_ADDR=$(jq -r '.wavsSafeModule' deployments/local.json)
+TRIGGER_ADDR=$(jq -r '.triggerContract' .docker/module_deployments.json)
+MODULE_ADDR=$(jq -r '.wavsSafeModule' .docker/module_deployments.json)
+
+# Set service config
+SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[],"workflow_id":"default","component_id":"default"}'
 
 # Deploy the service
-COMPONENT_FILENAME=dao_agent.wasm SERVICE_TRIGGER_ADDR=$TRIGGER_ADDR SERVICE_SUBMISSION_ADDR=$MODULE_ADDR make deploy-service
+COMPONENT_FILENAME=dao_agent.wasm SERVICE_TRIGGER_ADDR=$TRIGGER_ADDR SERVICE_SUBMISSION_ADDR=$MODULE_ADDR SERVICE_CONFIG=$SERVICE_CONFIG make deploy-service
 ```
 
 ### Trigger the AVS to execute a transaction
+
+Test sending ETH:
 
 ```bash
 forge script script/WavsSafeModule.s.sol:AddTrigger --sig "run(string)" "We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3." --rpc-url http://localhost:8545 --broadcast
 ```
 
-The script will automatically read the Trigger contract address from the JSON file.
+Test sending an ERC20:
+
+```bash
+forge script script/WavsSafeModule.s.sol:AddTrigger --sig "run(string)" "We should donate 1 USDC to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3." --rpc-url http://localhost:8545 --broadcast
+```
+
+The script will automatically read the Trigger and MockUSDC contract addresses from the JSON file.
 
 ### Check the balance
 
@@ -215,9 +263,9 @@ The script will automatically read the Trigger contract address from the JSON fi
 forge script script/WavsSafeModule.s.sol:ViewBalance --rpc-url http://localhost:8545
 ```
 
-> Notice that the balance now contains the 1 ETH donation. If you don't see anything, watch the Anvil and WAVS logs during the trigger creation above to make sure the transaction is succeeding.
+> Notice that the balance now contains both the 1 ETH and 1 USDC donations. If you don't see anything, watch the Anvil and WAVS logs during the trigger creation above to make sure the transaction is succeeding.
 
-## WAVS Safe Guard
+## WAVS Safe Guard Demo
 
 A custom Safe Guard that leverages WAVS to check whether transactions are authorized.
 
@@ -227,14 +275,14 @@ A custom Safe Guard that leverages WAVS to check whether transactions are author
 forge script script/WavsSafeGuard.s.sol:Deploy --rpc-url http://localhost:8545 --broadcast
 ```
 
-This will deploy the Safe and Guard contracts, and write their addresses to a JSON file in the `deployments/guard.json` path.
+This will deploy the Safe and Guard contracts, and write their addresses to a JSON file in the `.docker/guard_deployments.json` path.
 
 ### Deploy service component
 
 ```bash
 # Load the addresses from the JSON file
-SAFE_ADDR=$(jq -r '.safeAddress' deployments/guard.json)
-GUARD_ADDR=$(jq -r '.guardAddress' deployments/guard.json)
+SAFE_ADDR=$(jq -r '.safeAddress' .docker/guard_deployments.json)
+GUARD_ADDR=$(jq -r '.guardAddress' .docker/guard_deployments.json)
 
 # Deploy the service
 COMPONENT_FILENAME=safe_guard.wasm SERVICE_TRIGGER_ADDR=$SAFE_ADDR SERVICE_SUBMISSION_ADDR=$GUARD_ADDR TRIGGER_EVENT="ApproveHash(bytes32,address)" make deploy-service
