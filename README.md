@@ -2,9 +2,10 @@
 
 Contains WAVS enabled Safe Module and Guard contracts, as well as a DEFINITELY NOT PRODUCTION ready agent which controls the custom Safe Module.
 
-Reading and Resources:
+The DAO Agent WAVS component leverages deterministic inferencing. See the [DETERMINISM.md](./DETERMINISM.md) file for more notes on making deterministic agents and the nuances involved.
 
-- [Zodiac](https://www.zodiac.wiki/documentation): a bunch of useful extensions to the Safe. If you're looking for examples of extending Safe, Zodiac has a ton of them.
+Related Safe Resources:
+
 - [Safe Modules](https://docs.safe.global/advanced/smart-account-modules): documentation on Safe Modules, allowing easily extending functionality of a Safe.
 - [Safe Guard](https://docs.safe.global/advanced/smart-account-guards): documentation on Safe Guards, allowing for checks on Safe transactions.
 
@@ -112,10 +113,6 @@ In a separate terminal run Ollama in the background with:
 ollama serve
 ```
 
-### Notes on Production Deployments
-
-In a production AVS environment, you would need to ship an bundles that bundles WAVS, Ollama, and Stable Diffusion together into a new docker image. More information on support for WAVS sidecars will be forthcoming in a future release. For deterministic output, every AVS operator MUST use the same GPU.
-
 </details>
 
 ### Solidity
@@ -149,16 +146,6 @@ Now build the WASI rust components into the `compiled` output directory.
 
 ```bash
 make wasi-build # or `make build` to include solidity compilation.
-```
-
-### Execute WASI component directly
-
-Test run the component locally to validate the business logic works. Be sure to run `make wasi-build` if you make changes.
-
-Note: the `SERVICE_CONFIG` json is used for setting environment variables and the kv store. The `kv` array is a list of key value pairs, "config_uri" is a URI that contains the agent config (the IPFS URI included below corresponds to `agent-config.example.json`). To use a different model, or change the agent configuration, you'll need to upload a new JSON somewhere (or modify the default context in `dao-agent/src/context.rs`).
-
-```bash
-COMPONENT_FILENAME="dao_agent.wasm" PROMPT='We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3.' SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[["config_uri", "ipfs://bafkreiaqticxepygpav5h52kcqtid3ls2mm55i2so7edxmrdbn3z3rnyny"]],"workflow_id":"default","component_id":"default"}' make wasi-exec
 ```
 
 ## WAVS
@@ -214,6 +201,16 @@ cp .env.example .env
 # This must remain running in your terminal. Use another terminal to run other commands.
 # You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
 make start-all
+```
+
+### Execute WASI component directly
+
+Test run the component locally to validate the business logic works (no onchain interactions). Be sure to run `make wasi-build` if you make changes.
+
+Note: the `SERVICE_CONFIG` json is used for setting environment variables and the kv store. The `kv` array is a list of key value pairs, "config_uri" is a URI that contains the agent config (the IPFS URI included below corresponds to `agent-config.example.json`). To use a different model, or change the agent configuration, you'll need to upload a new JSON somewhere (or modify the default context in `dao-agent/src/context.rs`).
+
+```bash
+COMPONENT_FILENAME="dao_agent.wasm" PROMPT='We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3.' SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[["config_uri", "ipfs://bafkreiaqticxepygpav5h52kcqtid3ls2mm55i2so7edxmrdbn3z3rnyny"]],"workflow_id":"default","component_id":"default"}' make wasi-exec
 ```
 
 ## WAVS Safe Module + Agent Demo
