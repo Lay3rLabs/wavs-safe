@@ -18,6 +18,7 @@ ethabi = { workspace = true }
 primitive-types = { workspace = true }
 alloy-primitives = { workspace = true }
 base64 = { workspace = true }
+alloy-provider = { workspace = true }
 
 [dev-dependencies]
 mockall = { workspace = true }

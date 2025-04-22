@@ -1,15 +1,13 @@
 #[allow(warnings)]
 mod bindings;
-mod contracts;
-mod safe;
 
-use alloy_sol_types::{sol, SolValue};
+use alloy_primitives::{Address, Uint};
+use alloy_sol_types::{sol, SolCall, SolValue};
 use bindings::{
     export,
     wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent},
     Guest, TriggerAction,
 };
-use safe::SafeTransaction;
 use wavs_wasi_chain::decode_event_log_data;
 
 sol! {
@@ -23,7 +21,14 @@ sol! {
         uint256 value;
         bytes data;
     }
+
+    interface IStrategyManager {
+        function burnShares(
+            address strategy
+        ) external;
+    }
 }
+use IStrategyManager::burnSharesCall;
 
 struct Component;
 
@@ -40,19 +45,17 @@ impl Guest for Component {
                 let BurnableSharesIncreased { strategy, .. } = decode_event_log_data!(log)
                     .map_err(|e| format!("Failed to decode event log data: {}", e))?;
 
-                // TODO: Implement the TX call to burn the shares
-                let tx = SafeTransaction {
-                    to: contract_address,
-                    value: 0,
-                    contract_call: Some(()),
-                    data: vec![],
-                };
+                // Convert contract_address to Address
+                let strategy_manager = Address::from_slice(&contract_address.raw_bytes);
 
                 // Return ABI encoded payload
-                let payload = TransactionPayload { to: contract_address, value: 0, data: vec![] };
+                let payload = TransactionPayload {
+                    to: strategy_manager,
+                    value: Uint::<256, 4>::ZERO,
+                    data: burnSharesCall { strategy }.abi_encode().into(),
+                };
 
-                // let payload_bytes = abi_encode(&payload);
-                unimplemented!()
+                Ok(Some(payload.abi_encode().into()))
             }
             _ => Err("Unsupported trigger data".to_string()),
         }

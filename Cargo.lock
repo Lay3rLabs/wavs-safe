@@ -1151,6 +1151,7 @@ name = "eigen-example"
 version = "0.3.0"
 dependencies = [
  "alloy-primitives",
+ "alloy-provider",
  "alloy-sol-types",
  "anyhow",
  "base64",

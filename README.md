@@ -335,3 +335,48 @@ Check balance, should be 0.1 ETH higher if transaction succeeded:
 ```bash
 cast balance 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3 --rpc-url http://localhost:8545
 ```
+
+# Trigger Contract Demo
+
+This repository contains a simple Solidity contract implementation of the `IStrategyManager` interface for demo purposes.
+
+## Contracts
+
+- `Trigger.sol`: Main contract that implements the `IStrategyManager` interface and emits events for burn shares.
+
+## Key Features
+
+- Implements `burnShares` function required by the interface
+- Tracks total shares burned across all strategies
+- Tracks shares burned per strategy
+- Provides a query method to get shares burned for a specific strategy
+- Includes a `triggerBurnShares` method to emit events
+
+## Running Scripts
+
+### Trigger Burn Shares
+
+To trigger the burn shares event, run:
+
+```bash
+forge script script/TriggerOperations.s.sol:TriggerBurnShares \
+  --rpc-url <YOUR_RPC_URL> \
+  --private-key <PRIVATE_KEY> \
+  --broadcast \
+  -vvv
+```
+
+Required environment variables:
+
+- `TRIGGER_ADDRESS`: The address of the deployed Trigger contract
+- `STRATEGY_ADDRESS`: The address of the strategy
+- `BURN_SHARES_AMOUNT`: The number of shares to burn
+
+Example:
+
+```bash
+export TRIGGER_ADDRESS=0x...
+export STRATEGY_ADDRESS=0x...
+export BURN_SHARES_AMOUNT=100
+forge script script/TriggerOperations.s.sol:TriggerBurnShares --rpc-url http://localhost:8545 --private-key 0x... --broadcast -vvv
+```
