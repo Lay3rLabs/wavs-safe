@@ -1147,6 +1147,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "eigen-example"
+version = "0.3.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-types",
+ "anyhow",
+ "base64",
+ "ethabi",
+ "hex",
+ "mockall",
+ "primitive-types 0.13.1",
+ "serde",
+ "serde_json",
+ "wavs-wasi-chain",
+ "wit-bindgen-rt 0.39.0",
+]
+
+[[package]]
 name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
