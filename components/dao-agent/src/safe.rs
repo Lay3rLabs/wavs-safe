@@ -7,6 +7,7 @@ use std::str::FromStr;
 // Import the TransactionPayload definition
 use crate::sol_interfaces::TransactionPayload;
 
+// TODO rename and consider moving to contracts.rs
 /// Represents a transaction to be executed through the Safe
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SafeTransaction {
@@ -18,6 +19,7 @@ pub struct SafeTransaction {
     pub description: String, // LLM's explanation of the transaction
 }
 
+// TODO maybe we can simplify this...
 /// Helper function to create a TransactionPayload from a SafeTransaction
 pub fn create_payload_from_safe_tx(tx: &SafeTransaction) -> Result<TransactionPayload, String> {
     // Parse address

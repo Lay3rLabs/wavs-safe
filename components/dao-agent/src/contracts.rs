@@ -248,6 +248,7 @@ fn is_dynamic_type(ty: &DynSolType) -> bool {
     }
 }
 
+// TODO move to context.rs
 /// Represents a supported token in the DAO
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SupportedToken {
@@ -284,6 +285,7 @@ impl SupportedToken {
     }
 }
 
+// TODO move to context.rs
 /// Represents a token balance
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TokenBalance {
