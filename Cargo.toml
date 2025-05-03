@@ -42,4 +42,5 @@ ethabi = "18.0.0"
 primitive-types = "0.13.1"
 base64 = "0.22.1"
 mockall = "0.11"
+thiserror = "1.0.47"
 tiny-keccak = { version = "2.0", features = ["keccak"] }

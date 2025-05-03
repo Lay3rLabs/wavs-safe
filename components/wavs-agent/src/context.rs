@@ -1,4 +1,5 @@
 use crate::contracts::Contract;
+use crate::errors::{AgentError, AgentResult};
 use crate::llm::LLMConfig;
 use crate::tools::Message;
 use serde::{Deserialize, Serialize};
@@ -14,8 +15,9 @@ pub struct Context {
     pub model: String,
     #[serde(default)]
     pub messages: Vec<Message>,
+    /// Any global configuration values
     #[serde(default)]
-    pub system_prompt: String,
+    pub config: std::collections::HashMap<String, String>,
 }
 
 impl Context {
@@ -103,10 +105,16 @@ impl Context {
         Ok(context)
     }
 
-    /// Create a new Context from a JSON string
-    pub fn from_json(json_str: &str) -> Result<Self, String> {
-        serde_json::from_str(json_str)
-            .map_err(|e| format!("Failed to parse context from JSON: {}", e))
+    /// Load context from JSON
+    pub fn from_json(json: &str) -> AgentResult<Self> {
+        let context: Self = serde_json::from_str(json).map_err(|e| {
+            AgentError::Configuration(format!("Failed to parse context JSON: {}", e))
+        })?;
+
+        // Validate the context
+        context.validate()?;
+
+        Ok(context)
     }
 
     /// Serialize the context to a JSON string
@@ -133,11 +141,51 @@ impl Context {
     pub fn get_contract_by_name(&self, name: &str) -> Option<&Contract> {
         self.contracts.iter().find(|c| c.name.to_lowercase() == name.to_lowercase())
     }
+
+    /// Validate the Context for required fields and logical consistency
+    pub fn validate(&self) -> AgentResult<()> {
+        // Check each contract for required fields
+        for (i, contract) in self.contracts.iter().enumerate() {
+            if contract.address.is_empty() {
+                return Err(AgentError::Configuration(format!(
+                    "Contract at index {} is missing an address",
+                    i
+                )));
+            }
+
+            if contract.abi.is_empty() {
+                return Err(AgentError::Configuration(format!(
+                    "Contract at index {} is missing ABI",
+                    i
+                )));
+            }
+
+            // Validate contract address format
+            if contract.address.len() != 42 || !contract.address.starts_with("0x") {
+                return Err(AgentError::Configuration(format!(
+                    "Contract at index {} has invalid address format: {}",
+                    i, contract.address
+                )));
+            }
+        }
+
+        // Check for any required config items (none yet, but can be added)
+
+        Ok(())
+    }
 }
 
 // Default implementation for testing and development
 impl Default for Context {
     fn default() -> Self {
+        let default_system_prompt = r#"
+            You are an agent responsible for making and executing financial transactions.
+            
+            You have several tools available to interact with smart contracts.
+            Return nothing if no action is needed.
+        "#
+        .to_string();
+
         Self {
             contracts: vec![Contract::new_with_description(
                 "USDC",
@@ -152,14 +200,8 @@ impl Default for Context {
                 .max_tokens(Some(500))
                 .context_window(Some(4096)),
             model: "llama3.2".to_string(),
-            messages: Vec::new(),
-            system_prompt: r#"
-            You are an agent responsible for making and executing financial transactions.
-            
-            You have several tools available to interact with smart contracts.
-            Return nothing if no action is needed.
-            "#
-            .to_string(),
+            messages: vec![Message::new_system(default_system_prompt)],
+            config: std::collections::HashMap::new(),
         }
     }
 }

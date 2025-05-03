@@ -1,13 +1,5 @@
 # [WAVS](https://docs.wavs.xyz) Safe Example
 
-TODO:
-
-- [ ] Break out WAVS agent into it's own package
-- [ ] Dockerize ollama
-- [ ] Maybe switch to llama.cpp (ollama uses this under the hood, but llama.cpp has more options, the trade off is you can only run one model at a time)
-- [ ] Tools should be extensible when used as a library
-- [ ] Make wavs-agent less specific to safe (more generalized)
-
 Contains WAVS-enabled Safe Module and Guard contracts, as well as a DEFINITELY NOT PRODUCTION-ready agent which controls the custom Safe Module.
 
 The DAO Agent WAVS component leverages deterministic inferencing. See the [DETERMINISM.md](./DETERMINISM.md) file for more notes on making deterministic agents and the nuances involved.

@@ -1,4 +1,5 @@
 use crate::context::Context;
+use crate::errors::{AgentError, AgentResult};
 use crate::sol_interfaces::TransactionPayload;
 use alloy_dyn_abi::{DynSolType, DynSolValue};
 use alloy_json_abi::{Function, JsonAbi};
@@ -39,8 +40,9 @@ impl Contract {
     }
 
     /// Parse the JSON ABI to JsonAbi struct
-    fn parse_abi(&self) -> Result<JsonAbi, String> {
-        serde_json::from_str(&self.abi).map_err(|e| format!("Failed to parse ABI: {}", e))
+    fn parse_abi(&self) -> AgentResult<JsonAbi> {
+        serde_json::from_str(&self.abi)
+            .map_err(|e| AgentError::Contract(format!("Failed to parse ABI: {}", e)))
     }
 
     /// Encode a function call for this contract using the ABI
@@ -48,7 +50,7 @@ impl Contract {
         &self,
         function_name: &str,
         args: &[serde_json::Value],
-    ) -> Result<Bytes, String> {
+    ) -> AgentResult<Bytes> {
         // Find the function in the parsed ABI
         let function = self.find_function(function_name)?;
 
@@ -66,14 +68,12 @@ impl Contract {
     }
 
     /// Find a function in the ABI
-    pub fn find_function(&self, function_name: &str) -> Result<Function, String> {
+    pub fn find_function(&self, function_name: &str) -> AgentResult<Function> {
         let json_abi = self.parse_abi()?;
 
-        json_abi
-            .functions()
-            .find(|f| f.name == function_name)
-            .cloned()
-            .ok_or_else(|| format!("Function '{}' not found in ABI", function_name))
+        json_abi.functions().find(|f| f.name == function_name).cloned().ok_or_else(|| {
+            AgentError::Contract(format!("Function '{}' not found in ABI", function_name))
+        })
     }
 
     /// Validate function arguments against the ABI
@@ -81,18 +81,18 @@ impl Contract {
         &self,
         function_name: &str,
         args: &[serde_json::Value],
-    ) -> Result<(), String> {
+    ) -> AgentResult<()> {
         // Find the function in the ABI
         let function = self.find_function(function_name)?;
 
         // Check argument count
         if function.inputs.len() != args.len() {
-            return Err(format!(
+            return Err(AgentError::Contract(format!(
                 "Function '{}' expects {} arguments, but {} were provided",
                 function_name,
                 function.inputs.len(),
                 args.len()
-            ));
+            )));
         }
 
         // Try encoding the arguments - if it fails, it's invalid
@@ -115,53 +115,67 @@ pub fn default_contract_call() -> Option<ContractCall> {
 }
 
 /// Convert a string to a DynSolValue based on the type
-fn json_to_sol_value(value: &serde_json::Value, ty: &DynSolType) -> Result<DynSolValue, String> {
+fn json_to_sol_value(value: &serde_json::Value, ty: &DynSolType) -> AgentResult<DynSolValue> {
     match ty {
         DynSolType::Address => {
             // Convert string address to DynSolValue::Address
-            let addr_str = value.as_str().ok_or("Address must be a string")?;
+            let addr_str = value
+                .as_str()
+                .ok_or(AgentError::Contract("Address must be a string".to_string()))?;
             let address = Address::from_str(addr_str)
-                .map_err(|_| format!("Invalid address: {}", addr_str))?;
+                .map_err(|_| AgentError::Contract(format!("Invalid address: {}", addr_str)))?;
             Ok(DynSolValue::Address(address))
         }
         DynSolType::Uint(bits) => {
             // Convert string number to DynSolValue::Uint
-            let num_str = value.as_str().ok_or("Number must be a string")?;
-            let num =
-                U256::from_str(num_str).map_err(|_| format!("Invalid number: {}", num_str))?;
+            let num_str = value
+                .as_str()
+                .ok_or(AgentError::Contract("Number must be a string".to_string()))?;
+            let num = U256::from_str(num_str)
+                .map_err(|_| AgentError::Contract(format!("Invalid number: {}", num_str)))?;
             Ok(DynSolValue::Uint(num, *bits))
         }
         DynSolType::Bool => {
             // Convert JSON boolean to DynSolValue::Bool
-            let bool_val = value.as_bool().ok_or("Expected a boolean value")?;
+            let bool_val = value
+                .as_bool()
+                .ok_or(AgentError::Contract("Expected a boolean value".to_string()))?;
             Ok(DynSolValue::Bool(bool_val))
         }
         DynSolType::String => {
             // Convert JSON string to DynSolValue::String
-            let string_val = value.as_str().ok_or("Expected a string value")?;
+            let string_val = value
+                .as_str()
+                .ok_or(AgentError::Contract("Expected a string value".to_string()))?;
             Ok(DynSolValue::String(string_val.to_string()))
         }
         DynSolType::Bytes => {
             // Convert hex string to DynSolValue::Bytes
-            let bytes_str = value.as_str().ok_or("Bytes must be a hex string")?;
+            let bytes_str = value
+                .as_str()
+                .ok_or(AgentError::Contract("Bytes must be a hex string".to_string()))?;
             if !bytes_str.starts_with("0x") {
-                return Err("Bytes must start with 0x".to_string());
+                return Err(AgentError::Contract("Bytes must start with 0x".to_string()));
             }
             let hex_str = &bytes_str[2..];
-            let bytes = hex::decode(hex_str).map_err(|_| "Invalid hex string".to_string())?;
+            let bytes = hex::decode(hex_str)
+                .map_err(|_| AgentError::Contract("Invalid hex string".to_string()))?;
             Ok(DynSolValue::Bytes(bytes))
         }
         DynSolType::FixedBytes(size) => {
             // Convert hex string to fixed-size bytes
-            let bytes_str = value.as_str().ok_or("Bytes must be a hex string")?;
+            let bytes_str = value
+                .as_str()
+                .ok_or(AgentError::Contract("Bytes must be a hex string".to_string()))?;
             if !bytes_str.starts_with("0x") {
-                return Err("Bytes must start with 0x".to_string());
+                return Err(AgentError::Contract("Bytes must start with 0x".to_string()));
             }
             let hex_str = &bytes_str[2..];
-            let bytes = hex::decode(hex_str).map_err(|_| "Invalid hex string".to_string())?;
+            let bytes = hex::decode(hex_str)
+                .map_err(|_| AgentError::Contract("Invalid hex string".to_string()))?;
 
             if bytes.len() > *size {
-                return Err(format!("Hex string too long for bytes{}", size));
+                return Err(AgentError::Contract(format!("Hex string too long for bytes{}", size)));
             }
 
             // For bytes32, create a FixedBytes<32>
@@ -176,15 +190,12 @@ fn json_to_sol_value(value: &serde_json::Value, ty: &DynSolType) -> Result<DynSo
             }
         }
         // Add handling for other types as needed
-        _ => Err(format!("Unsupported type: {:?}", ty)),
+        _ => Err(AgentError::Contract(format!("Unsupported type: {:?}", ty))),
     }
 }
 
 /// Encode function arguments using Alloy's built-in functionality
-fn encode_function_args(
-    function: &Function,
-    args: &[serde_json::Value],
-) -> Result<Vec<u8>, String> {
+fn encode_function_args(function: &Function, args: &[serde_json::Value]) -> AgentResult<Vec<u8>> {
     // If there are no arguments, return an empty vector
     if args.is_empty() {
         return Ok(Vec::new());
@@ -195,8 +206,9 @@ fn encode_function_args(
         .inputs
         .iter()
         .map(|param| {
-            DynSolType::parse(&param.ty)
-                .map_err(|e| format!("Invalid parameter type '{}': {}", param.ty, e))
+            DynSolType::parse(&param.ty).map_err(|e| {
+                AgentError::Contract(format!("Invalid parameter type '{}': {}", param.ty, e))
+            })
         })
         .collect::<Result<Vec<_>, _>>()?;
 
@@ -206,7 +218,9 @@ fn encode_function_args(
     for (i, (arg, ty)) in args.iter().zip(&param_types).enumerate() {
         match json_to_sol_value(arg, ty) {
             Ok(value) => values.push(value),
-            Err(e) => return Err(format!("Error converting argument {}: {}", i, e)),
+            Err(e) => {
+                return Err(AgentError::Contract(format!("Error converting argument {}: {}", i, e)))
+            }
         }
     }
 
@@ -239,16 +253,14 @@ fn encode_function_args(
     Ok(result)
 }
 
-/// Check if a type is dynamic (string, bytes, arrays)
+/// Check if a type is dynamic according to ABI spec
 fn is_dynamic_type(ty: &DynSolType) -> bool {
-    match ty {
-        DynSolType::String => true,
-        DynSolType::Bytes => true,
-        DynSolType::Array(_) => true,
-        DynSolType::FixedArray(_, size) => *size == 0,
-        _ => false,
-    }
+    matches!(
+        ty,
+        DynSolType::String | DynSolType::Bytes | DynSolType::Array(_) | DynSolType::Tuple(_)
+    )
 }
+
 /// Represents a transaction to be executed through a wallet
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Transaction {
@@ -260,13 +272,39 @@ pub struct Transaction {
     pub description: String, // LLM's explanation of the transaction
 }
 
+impl Transaction {
+    /// Basic validation of transaction fields
+    pub fn is_valid(&self) -> bool {
+        // Check destination address format
+        if self.to.len() != 42 || !self.to.starts_with("0x") {
+            return false;
+        }
+
+        // Check if value is a valid number
+        if U256::from_str(&self.value).is_err() {
+            return false;
+        }
+
+        // Check if contract call is coherent
+        if let Some(call) = &self.contract_call {
+            if call.function.is_empty() {
+                return false;
+            }
+        }
+
+        true
+    }
+}
+
 /// Helper function to create a TransactionPayload from a Transaction
-pub fn create_payload_from_tx(tx: &Transaction) -> Result<TransactionPayload, String> {
+pub fn create_payload_from_tx(tx: &Transaction) -> AgentResult<TransactionPayload> {
     // Parse address
-    let to: Address = tx.to.parse().map_err(|e| format!("Invalid address: {}", e))?;
+    let to: Address =
+        tx.to.parse().map_err(|e| AgentError::Transaction(format!("Invalid address: {}", e)))?;
 
     // Parse value
-    let value = U256::from_str(&tx.value).map_err(|e| format!("Invalid value: {}", e))?;
+    let value = U256::from_str(&tx.value)
+        .map_err(|e| AgentError::Transaction(format!("Invalid value: {}", e)))?;
 
     // Handle contract calls
     let data = if let Some(contract_call) = &tx.contract_call {
@@ -278,7 +316,9 @@ pub fn create_payload_from_tx(tx: &Transaction) -> Result<TransactionPayload, St
             .contracts
             .iter()
             .find(|c| c.address.to_lowercase() == tx.to.to_lowercase())
-            .ok_or_else(|| format!("Cannot find contract at address {}", tx.to))?;
+            .ok_or_else(|| {
+                AgentError::Contract(format!("Cannot find contract at address {}", tx.to))
+            })?;
 
         // Use the contract to encode the function call
         contract.encode_function_call(&contract_call.function, &contract_call.args)?
@@ -294,28 +334,30 @@ pub mod transaction_operations {
     use super::*;
 
     /// Validate a transaction
-    pub fn validate_transaction(tx: &Transaction) -> Result<(), String> {
+    pub fn validate_transaction(tx: &Transaction) -> AgentResult<()> {
         // Basic validation
         if tx.to.len() != 42 || !tx.to.starts_with("0x") {
-            return Err("Invalid destination address".to_string());
+            return Err(AgentError::Transaction("Invalid destination address".to_string()));
         }
 
         // Ensure value is a valid number
         if let Err(e) = U256::from_str(&tx.value) {
-            return Err(format!("Invalid value: {}", e));
+            return Err(AgentError::Transaction(format!("Invalid value: {}", e)));
         }
+
+        // Get context to look up contracts
+        let context = Context::default();
 
         // If there's a contract call, validate its arguments
         if let Some(contract_call) = &tx.contract_call {
-            // Get context to look up contract
-            let context = Context::default();
-
             // Find the contract
             let contract = context
                 .contracts
                 .iter()
                 .find(|c| c.address.to_lowercase() == tx.to.to_lowercase())
-                .ok_or_else(|| format!("Unknown contract at address: {}", tx.to))?;
+                .ok_or_else(|| {
+                    AgentError::Contract(format!("Unknown contract at address: {}", tx.to))
+                })?;
 
             // Validate the function call using the contract
             contract.validate_function_call(&contract_call.function, &contract_call.args)?;
