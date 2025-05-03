@@ -446,11 +446,15 @@ impl LLMClient {
         // Create the messages for the chat completion
         let mut messages = Vec::new();
 
-        // Add system message with system prompt
-        messages.push(Message::new_system(context.system_prompt.clone()));
-
-        // Add existing messages from context if any
-        messages.extend(context.messages.clone());
+        // Use existing messages from context if available
+        if !context.messages.is_empty() {
+            messages.extend(context.messages.clone());
+        } else {
+            // If no messages in the context, add a default system message
+            messages.push(Message::new_system(
+                "You are an agent responsible for making and executing transactions.".to_string(),
+            ));
+        }
 
         // Add the new user message
         messages.push(Message::new_user(prompt.to_string()));

@@ -16,7 +16,7 @@ The WAVS Agent is a flexible AI-powered autonomous agent built using WebAssembly
 
 The WAVS Agent is built around a few core components:
 
-- **Context**: Stores configuration, contracts, messages, and system prompts. This simplified structure makes it easier to customize and extend the agent's capabilities without being tied to specific use cases like DAOs.
+- **Context**: Stores configuration, contracts, and chat messages for the LLM conversation. This simplified structure makes it easier to customize and extend the agent's capabilities without being tied to specific use cases like DAOs.
 
 - **LLM Client**: Handles interactions with language models (supports OpenAI and Ollama). The client abstracts away the differences between various LLM providers, offering a consistent interface.
 
@@ -60,10 +60,16 @@ The agent loads its configuration from a JSON file, which can be specified throu
     "context_window": 4096
   },
   "model": "llama3.2",
-  "system_prompt": "You are an agent responsible for making and executing transactions. Use the available tools to interact with smart contracts.",
-  "messages": []
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an agent responsible for making and executing transactions. Use the available tools to interact with smart contracts."
+    }
+  ]
 }
 ```
+
+Note: The system prompt is now included as the first message in the `messages` array with a role of "system". This allows for more flexible conversation history management and better compatibility with LLM APIs.
 
 ## Usage as a Library
 

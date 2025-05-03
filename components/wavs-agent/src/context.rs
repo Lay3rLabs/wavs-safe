@@ -15,8 +15,6 @@ pub struct Context {
     pub model: String,
     #[serde(default)]
     pub messages: Vec<Message>,
-    #[serde(default)]
-    pub system_prompt: String,
     /// Any global configuration values
     #[serde(default)]
     pub config: std::collections::HashMap<String, String>,
@@ -180,6 +178,14 @@ impl Context {
 // Default implementation for testing and development
 impl Default for Context {
     fn default() -> Self {
+        let default_system_prompt = r#"
+            You are an agent responsible for making and executing financial transactions.
+            
+            You have several tools available to interact with smart contracts.
+            Return nothing if no action is needed.
+        "#
+        .to_string();
+
         Self {
             contracts: vec![Contract::new_with_description(
                 "USDC",
@@ -194,14 +200,7 @@ impl Default for Context {
                 .max_tokens(Some(500))
                 .context_window(Some(4096)),
             model: "llama3.2".to_string(),
-            messages: Vec::new(),
-            system_prompt: r#"
-            You are an agent responsible for making and executing financial transactions.
-            
-            You have several tools available to interact with smart contracts.
-            Return nothing if no action is needed.
-            "#
-            .to_string(),
+            messages: vec![Message::new_system(default_system_prompt)],
             config: std::collections::HashMap::new(),
         }
     }
