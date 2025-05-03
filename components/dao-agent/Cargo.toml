@@ -7,6 +7,7 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
+wavs-agent = { workspace = true }
 wavs-wasi-chain = { workspace = true }
 wstd = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

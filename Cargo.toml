@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "components/*",
+    "packages/*"
 ]
 resolver = "2"
 
@@ -19,6 +20,9 @@ wit-bindgen = "0.39.0"
 wstd = "0.5.1"
 wasi = "0.14.1"
 wavs-wasi-chain = "0.3.0"
+
+# WAVS
+wavs-agent = { path = "./packages/wavs-agent" }
 
 # Other
 serde = { version = "1.0.217", features = ["derive"] }

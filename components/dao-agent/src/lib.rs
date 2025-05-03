@@ -1,22 +1,19 @@
 mod bindings;
 pub mod context;
-mod contracts;
-mod llm;
-mod safe;
-mod sol_interfaces;
-pub mod tools;
 
 use alloy_sol_types::{SolType, SolValue};
-use anyhow::Result;
 use bindings::{
     export,
     wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent},
     Guest, TriggerAction,
 };
 use context::DaoContext;
-use llm::LLMClient;
-use safe::Transaction;
-use tools::{process_tool_calls, Message};
+use wavs_agent::llm::LlmResponse;
+use wavs_agent::{
+    contracts::{create_payload_from_tx, transaction_operations::validate_transaction},
+    errors::AgentError,
+    llm::LLMClient,
+};
 use wstd::runtime::block_on;
 
 struct Component;
@@ -33,7 +30,6 @@ impl Guest for Component {
             }
             // Fired from a raw data event (e.g. from a CLI command or from another component).
             // Note: this is just for testing ATM.
-            // TODO pass in and decode an actual event, so this can be composed with other components
             TriggerData::Raw(data) => {
                 let prompt = std::str::from_utf8(&data)
                     .map_err(|e| format!("Failed to decode prompt from bytes: {}", e))?;
@@ -43,97 +39,48 @@ impl Guest for Component {
         }?;
 
         return block_on(async move {
-            // Process prompt using LLM with tools
-            let result = process_prompt(&prompt).await?;
+            // Get the DAO context with all our configuration
+            let context = DaoContext::load().await?;
+            let llm_context = context.llm_context;
 
-            // If no transaction is needed, return None
-            if result.is_none() {
-                println!("No transaction needed");
-                return Ok(None);
+            // Create LLM client
+            let client = LLMClient::with_config(&llm_context.model, llm_context.llm_config.clone())
+                .map_err(|e| e.to_string())?;
+
+            // Process prompt
+            let llm_response = client
+                .process_prompt(&prompt, &llm_context, None, None)
+                .await
+                .map_err(|e| e.to_string())?;
+
+            // Handle the response
+            match llm_response {
+                LlmResponse::Transaction(tx) => {
+                    println!("Transaction to execute: {:?}", tx);
+
+                    // Validate the transaction first
+                    validate_transaction(&tx).map_err(|e| {
+                        AgentError::Transaction(format!("Transaction validation failed: {}", e))
+                            .to_string()
+                    })?;
+
+                    // Create the transaction payload
+                    let payload = create_payload_from_tx(&tx).map_err(|e| {
+                        AgentError::Transaction(format!("Failed to create transaction: {}", e))
+                            .to_string()
+                    })?;
+
+                    println!("Payload: {:?}", payload);
+
+                    Ok(Some(payload.abi_encode().to_vec()))
+                }
+                LlmResponse::Text(text) => {
+                    println!("LLM response: {}", text);
+                    Ok(None)
+                }
             }
-
-            // Parse the transaction JSON
-            let transaction: Transaction = result.unwrap();
-
-            // Create the transaction payload using the function from safe.rs
-            let payload = safe::create_payload_from_tx(&transaction)?;
-            println!("Payload: {:?}", payload);
-
-            Ok(Some(payload.abi_encode().to_vec()))
         });
     }
-}
-
-/// Processes a prompt with LLM and returns a Transaction if one should be executed
-async fn process_prompt(prompt: &str) -> Result<Option<Transaction>, String> {
-    // Get the DAO context with all our configuration
-    let context = DaoContext::load().await?;
-
-    // Create the tools for ETH transfers
-    let eth_tool = tools::builders::send_eth();
-
-    // Generate tools from smart contract ABIs
-    let mut all_tools = vec![eth_tool];
-
-    // Add contract-specific tools
-    for contract in &context.contracts {
-        let contract_tools = tools::builders::from_contract(contract);
-        println!("Generated {} tools from {} contract", contract_tools.len(), contract.name);
-
-        // Add debug printing for tool parameters
-        for tool in &contract_tools {
-            println!(
-                "Tool: {} - Parameters: {}",
-                tool.function.name,
-                serde_json::to_string_pretty(&tool.function.parameters)
-                    .unwrap_or("None".to_string())
-            );
-        }
-
-        all_tools.extend(contract_tools);
-    }
-
-    // Print all available tools for debugging
-    println!("Total available tools: {}", all_tools.len());
-    for tool in &all_tools {
-        println!(
-            "Tool: {} - {}",
-            tool.function.name,
-            tool.function.description.as_ref().unwrap_or(&"No description".to_string())
-        );
-    }
-
-    // Format the system prompt using the context
-    let system_prompt = context.format_system_prompt_dynamic().await;
-
-    // Create LLM client with the configuration from context
-    let client = LLMClient::with_config(&context.model, context.llm_config.clone())
-        .map_err(|e| format!("Failed to create LLM client: {}", e))?;
-
-    // Create the messages for the chat completion
-    let messages = vec![Message::new_system(system_prompt), Message::new_user(prompt.to_string())];
-
-    // Call the LLM client with all tools
-    let response = client.chat_completion(&messages, Some(&all_tools)).await?;
-
-    println!("Response: {:?}", response);
-
-    // Check if we have tool calls
-    if let Some(tool_calls) = response.tool_calls.clone() {
-        if !tool_calls.is_empty() {
-            // Process the tool calls
-            let tool_result = process_tool_calls(&client, messages, response, tool_calls).await?;
-
-            // Parse the tool result as a Transaction
-            let transaction: Transaction = serde_json::from_str(&tool_result)
-                .map_err(|e| format!("Failed to parse transaction from tool result: {}", e))?;
-
-            return Ok(Some(transaction));
-        }
-    }
-
-    // No tool calls means no action needed
-    Ok(None)
 }
 
 export!(Component with_types_in bindings);

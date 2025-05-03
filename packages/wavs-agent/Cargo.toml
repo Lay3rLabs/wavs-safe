@@ -27,8 +27,6 @@ thiserror = { workspace = true }
 [dev-dependencies]
 mockall = { workspace = true }
 
-[lib]
-crate-type = ["cdylib"]
 
 [profile.release]
 codegen-units = 1
