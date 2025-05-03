@@ -9,6 +9,7 @@ use wstd::{
 
 use crate::context::Context;
 use crate::contracts::Transaction;
+use crate::errors::{AgentError, AgentResult};
 use crate::tools::{builders, process_tool_calls, Message, Tool};
 
 /// Configuration options for LLM API requests
@@ -107,15 +108,15 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-impl From<Error> for String {
+impl From<Error> for AgentError {
     fn from(error: Error) -> Self {
-        error.to_string()
-    }
-}
-
-impl From<String> for Error {
-    fn from(error: String) -> Self {
-        Error::Other(error)
+        match error {
+            Error::EmptyModelName => AgentError::Llm("Model name cannot be empty".to_string()),
+            Error::EmptyMessages => AgentError::Llm("Messages cannot be empty".to_string()),
+            Error::InvalidProvider => AgentError::Llm("Invalid provider configuration".to_string()),
+            Error::RequestFailed(msg) => AgentError::Llm(format!("Request failed: {}", msg)),
+            Error::Other(msg) => AgentError::Llm(msg),
+        }
     }
 }
 
@@ -134,22 +135,22 @@ pub enum LlmResponse {
 
 impl LLMClient {
     /// Create a new LLM client with default configuration
-    pub fn new(model: &str) -> Result<Self, String> {
+    pub fn new(model: &str) -> AgentResult<Self> {
         Self::with_config(model, LLMConfig::default())
     }
 
     /// Create a new LLM client from a JSON configuration string
-    pub fn from_json(model: &str, json_config: &str) -> Result<Self, String> {
+    pub fn from_json(model: &str, json_config: &str) -> AgentResult<Self> {
         let config: LLMConfig = serde_json::from_str(json_config)
-            .map_err(|e| format!("Failed to parse config JSON: {}", e))?;
+            .map_err(|e| AgentError::Config(format!("Failed to parse config JSON: {}", e)))?;
         Self::with_config(model, config)
     }
 
     /// Create a new LLM client with custom configuration
-    pub fn with_config(model: &str, config: LLMConfig) -> Result<Self, String> {
+    pub fn with_config(model: &str, config: LLMConfig) -> AgentResult<Self> {
         // Validate model name
         if model.trim().is_empty() {
-            return Err("Model name cannot be empty".to_string());
+            return Err(AgentError::Llm("Model name cannot be empty".to_string()));
         }
 
         eprintln!("model: {}", model);
@@ -157,7 +158,10 @@ impl LLMClient {
         // Get API key if using OpenAI models
         let api_key = match model {
             "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
-                Some(get_required_var("WAVS_ENV_OPENAI_API_KEY")?)
+                Some(
+                    get_required_var("WAVS_ENV_OPENAI_API_KEY")
+                        .map_err(|e| AgentError::Config(e))?,
+                )
             }
             _ => None, // Local models don't need an API key
         };
@@ -190,10 +194,10 @@ impl LLMClient {
         &self,
         messages: &[Message],
         tools: Option<&[Tool]>,
-    ) -> Result<Message, String> {
+    ) -> AgentResult<Message> {
         // Validate messages
         if messages.is_empty() {
-            return Err("Messages cannot be empty".to_string());
+            return Err(AgentError::Llm("Messages cannot be empty".to_string()));
         }
 
         println!("Sending chat completion request:");
@@ -309,7 +313,7 @@ impl LLMClient {
                 String::from_utf8_lossy(&error_body)
             );
             println!("Error: {}", error_msg);
-            return Err(error_msg);
+            return Err(AgentError::Llm(error_msg));
         }
 
         // Read response body
@@ -343,7 +347,7 @@ impl LLMClient {
             resp.choices
                 .first()
                 .map(|choice| choice.message.clone())
-                .ok_or_else(|| "No response choices returned".to_string())
+                .ok_or_else(|| AgentError::Llm("No response choices returned".to_string()))
         } else {
             // Parse Ollama chat response format
             #[allow(dead_code)]
@@ -379,7 +383,7 @@ impl LLMClient {
     }
 
     /// Helper method to get just the content string from a chat completion
-    pub async fn chat_completion_text(&self, messages: &[Message]) -> Result<String, String> {
+    pub async fn chat_completion_text(&self, messages: &[Message]) -> AgentResult<String> {
         let response = self.chat_completion(messages, None).await?;
         Ok(response.content.unwrap_or_default())
     }
@@ -391,7 +395,7 @@ impl LLMClient {
         context: &Context,
         custom_tools: Option<Vec<Tool>>,
         custom_handlers: Option<&[Box<dyn crate::tools::CustomToolHandler>]>,
-    ) -> Result<LlmResponse, String> {
+    ) -> AgentResult<LlmResponse> {
         // Create the tools for ETH transfers
         let eth_tool = builders::send_eth();
 
@@ -546,7 +550,11 @@ mod tests {
 
         let result = LLMClient::from_json("llama3.2", invalid_json);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Failed to parse config JSON"));
+        let err = result.unwrap_err();
+        match err {
+            AgentError::Config(msg) => assert!(msg.contains("Failed to parse config JSON")),
+            _ => panic!("Expected Config error variant"),
+        }
     }
 
     #[test]
@@ -583,11 +591,19 @@ mod tests {
     fn test_new_client_empty_model() {
         let result = LLMClient::new("");
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Model name cannot be empty");
+        let err = result.unwrap_err();
+        match err {
+            AgentError::Llm(msg) => assert_eq!(msg, "Model name cannot be empty"),
+            _ => panic!("Expected Llm error variant"),
+        }
 
         let result = LLMClient::new("   ");
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Model name cannot be empty");
+        let err = result.unwrap_err();
+        match err {
+            AgentError::Llm(msg) => assert_eq!(msg, "Model name cannot be empty"),
+            _ => panic!("Expected Llm error variant"),
+        }
     }
 
     #[test]
@@ -595,7 +611,11 @@ mod tests {
         let client = LLMClient::new("llama3.2").unwrap();
         let result = block_on(async { client.chat_completion(&[], None).await });
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Messages cannot be empty"));
+        let err = result.unwrap_err();
+        match err {
+            AgentError::Llm(msg) => assert!(msg.contains("Messages cannot be empty")),
+            _ => panic!("Expected Llm error variant"),
+        }
     }
 
     // Integration tests that require HTTP - only run in WASI environment

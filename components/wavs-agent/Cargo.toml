@@ -14,7 +14,7 @@ serde_json = { workspace = true }
 anyhow = { workspace = true }
 wit-bindgen-rt = { workspace = true, features = ["bitflags"] }
 alloy-sol-types = { workspace = true }
-alloy-primitives = { workspace = true }
+alloy-primitives = { workspace = true, features = ["serde"] }
 alloy-json-abi = { workspace = true }
 alloy-dyn-abi = { workspace = true }
 alloy-network = { workspace = true }
@@ -22,6 +22,7 @@ alloy-provider = { workspace = true }
 alloy-rpc-types = { workspace = true }
 hex = { workspace = true }
 tiny-keccak = { workspace = true }
+thiserror = { workspace = true }
 
 [dev-dependencies]
 mockall = { workspace = true }
