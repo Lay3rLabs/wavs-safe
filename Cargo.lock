@@ -3592,6 +3592,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "wavs-agent"
+version = "0.3.0"
+dependencies = [
+ "alloy-dyn-abi",
+ "alloy-json-abi",
+ "alloy-network",
+ "alloy-primitives",
+ "alloy-provider",
+ "alloy-rpc-types",
+ "alloy-sol-types",
+ "anyhow",
+ "hex",
+ "mockall",
+ "serde",
+ "serde_json",
+ "tiny-keccak",
+ "wavs-wasi-chain",
+ "wit-bindgen-rt 0.39.0",
+ "wstd",
+]
+
+[[package]]
 name = "wavs-wasi-chain"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

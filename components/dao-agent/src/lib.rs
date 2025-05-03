@@ -15,7 +15,7 @@ use bindings::{
 };
 use context::DaoContext;
 use llm::LLMClient;
-use safe::SafeTransaction;
+use safe::Transaction;
 use tools::{process_tool_calls, Message};
 use wstd::runtime::block_on;
 
@@ -53,10 +53,10 @@ impl Guest for Component {
             }
 
             // Parse the transaction JSON
-            let transaction: SafeTransaction = result.unwrap();
+            let transaction: Transaction = result.unwrap();
 
             // Create the transaction payload using the function from safe.rs
-            let payload = safe::create_payload_from_safe_tx(&transaction)?;
+            let payload = safe::create_payload_from_tx(&transaction)?;
             println!("Payload: {:?}", payload);
 
             Ok(Some(payload.abi_encode().to_vec()))
@@ -64,8 +64,8 @@ impl Guest for Component {
     }
 }
 
-/// Processes a prompt with LLM and returns a SafeTransaction if one should be executed
-async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String> {
+/// Processes a prompt with LLM and returns a Transaction if one should be executed
+async fn process_prompt(prompt: &str) -> Result<Option<Transaction>, String> {
     // Get the DAO context with all our configuration
     let context = DaoContext::load().await?;
 
@@ -124,8 +124,8 @@ async fn process_prompt(prompt: &str) -> Result<Option<SafeTransaction>, String>
             // Process the tool calls
             let tool_result = process_tool_calls(&client, messages, response, tool_calls).await?;
 
-            // Parse the tool result as a SafeTransaction
-            let transaction: SafeTransaction = serde_json::from_str(&tool_result)
+            // Parse the tool result as a Transaction
+            let transaction: Transaction = serde_json::from_str(&tool_result)
                 .map_err(|e| format!("Failed to parse transaction from tool result: {}", e))?;
 
             return Ok(Some(transaction));

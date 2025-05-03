@@ -387,6 +387,7 @@ impl Default for DaoContext {
                 .max_tokens(Some(500))
                 .context_window(Some(4096)),
             model: "llama3.2".to_string(),
+            // TODO maybe this should just be messages?
             system_prompt_template: r#"
             You are a DAO agent responsible for making and executing financial decisions through a Gnosis Safe Module.
             

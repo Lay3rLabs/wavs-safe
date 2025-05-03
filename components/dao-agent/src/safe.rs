@@ -10,7 +10,7 @@ use crate::sol_interfaces::TransactionPayload;
 // TODO rename and consider moving to contracts.rs
 /// Represents a transaction to be executed through the Safe
 #[derive(Serialize, Deserialize, Debug)]
-pub struct SafeTransaction {
+pub struct Transaction {
     pub to: String,
     pub value: String, // Using string to handle large numbers safely
     #[serde(default = "default_contract_call")]
@@ -20,8 +20,8 @@ pub struct SafeTransaction {
 }
 
 // TODO maybe we can simplify this...
-/// Helper function to create a TransactionPayload from a SafeTransaction
-pub fn create_payload_from_safe_tx(tx: &SafeTransaction) -> Result<TransactionPayload, String> {
+/// Helper function to create a TransactionPayload from a Transaction
+pub fn create_payload_from_tx(tx: &Transaction) -> Result<TransactionPayload, String> {
     // Parse address
     let to: Address = tx.to.parse().map_err(|e| format!("Invalid address: {}", e))?;
 
@@ -54,7 +54,7 @@ pub mod operations {
     use super::*;
 
     /// Validate a Safe transaction
-    pub fn validate_transaction(tx: &SafeTransaction) -> Result<(), String> {
+    pub fn validate_transaction(tx: &Transaction) -> Result<(), String> {
         // Basic validation
         if tx.to.len() != 42 || !tx.to.starts_with("0x") {
             return Err("Invalid destination address".to_string());

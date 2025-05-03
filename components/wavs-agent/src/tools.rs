@@ -1,6 +1,5 @@
-use crate::contracts::{Contract, ContractCall};
+use crate::contracts::{Contract, ContractCall, Transaction};
 use crate::llm::LLMClient;
-use crate::safe::Transaction;
 use serde::{Deserialize, Serialize};
 
 /// Function parameter for tool calls
@@ -289,6 +288,48 @@ pub mod builders {
             _ => ("string", None), // Default to string for unknown types
         }
     }
+
+    /// Create a custom tool with the specified name, description, and parameters
+    ///
+    /// # Example
+    /// ```
+    /// use serde_json::json;
+    /// use tools::builders;
+    ///
+    /// let weather_tool = builders::custom_tool(
+    ///     "get_weather",
+    ///     "Get the current weather for a location",
+    ///     json!({
+    ///         "type": "object",
+    ///         "properties": {
+    ///             "location": {
+    ///                 "type": "string",
+    ///                 "description": "The city name or zip code"
+    ///             }
+    ///         },
+    ///         "required": ["location"]
+    ///     })
+    /// );
+    /// ```
+    pub fn custom_tool(name: &str, description: &str, parameters: serde_json::Value) -> Tool {
+        Tool {
+            tool_type: "function".to_string(),
+            function: Function {
+                name: name.to_string(),
+                description: Some(description.to_string()),
+                parameters: Some(parameters),
+            },
+        }
+    }
+}
+
+/// Handler for custom tool calls
+pub trait CustomToolHandler {
+    /// Returns true if this handler can handle the given tool name
+    fn can_handle(&self, tool_name: &str) -> bool;
+
+    /// Execute the tool call and return a result
+    fn execute(&self, tool_call: &ToolCall) -> Result<String, String>;
 }
 
 /// Tool execution handlers
@@ -297,15 +338,27 @@ pub mod handlers {
     use serde_json::Value;
 
     /// Execute a tool call and return the result
-    pub fn execute_tool_call(tool_call: &ToolCall) -> Result<String, String> {
+    pub fn execute_tool_call(
+        tool_call: &ToolCall,
+        custom_handlers: Option<&[Box<dyn CustomToolHandler>]>,
+    ) -> Result<String, String> {
         let function_name = &tool_call.function.name;
 
-        // Handle built-in tools
+        // First, check if any custom handlers can handle this tool
+        if let Some(handlers) = custom_handlers {
+            for handler in handlers {
+                if handler.can_handle(function_name) {
+                    return handler.execute(tool_call);
+                }
+            }
+        }
+
+        // If no custom handlers or none matched, use built-in handlers
         match function_name.as_str() {
             "send_eth" => parse_eth_transaction(tool_call),
             // Handle dynamically generated contract tools
             _ if function_name.starts_with("contract_") => parse_contract_function_call(tool_call),
-            _ => Ok(format!("Unknown tool: {}", function_name)),
+            _ => Err(format!("Unknown tool: {}", function_name)),
         }
     }
 
@@ -348,7 +401,7 @@ pub mod handlers {
             .map_err(|e| format!("Failed to parse function arguments: {}", e))?;
 
         // Get the contract from context to check ABI
-        let context = crate::context::DaoContext::default();
+        let context = crate::context::Context::default();
         let contract = context
             .get_contract_by_name(contract_name)
             .ok_or_else(|| format!("Unknown contract: {}", contract_name))?;
@@ -423,6 +476,7 @@ pub async fn process_tool_calls(
     initial_messages: Vec<Message>,
     response: Message,
     tool_calls: Vec<ToolCall>,
+    custom_handlers: Option<&[Box<dyn CustomToolHandler>]>,
 ) -> Result<String, String> {
     println!("Processing tool calls...");
 
@@ -435,7 +489,7 @@ pub async fn process_tool_calls(
     // Process each tool call and collect the results
     let mut tool_results = Vec::new();
     for tool_call in &tool_calls {
-        let tool_result = handlers::execute_tool_call(tool_call)?;
+        let tool_result = handlers::execute_tool_call(tool_call, custom_handlers)?;
         println!("Tool result: {}", tool_result);
         tool_results.push(tool_result);
     }
