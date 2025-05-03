@@ -366,3 +366,274 @@ pub mod transaction_operations {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use alloy_primitives::Bytes;
+    use serde_json::json;
+
+    #[test]
+    fn test_contract_creation() {
+        // Test basic constructor
+        let contract = Contract::new(
+            "TestContract",
+            "0x1234567890123456789012345678901234567890",
+            "[{\"name\":\"test\",\"type\":\"function\",\"inputs\":[],\"outputs\":[]}]",
+        );
+
+        assert_eq!(contract.name, "TestContract");
+        assert_eq!(contract.address, "0x1234567890123456789012345678901234567890");
+        assert_eq!(
+            contract.abi,
+            "[{\"name\":\"test\",\"type\":\"function\",\"inputs\":[],\"outputs\":[]}]"
+        );
+        assert!(contract.description.is_none());
+
+        // Test constructor with description
+        let contract_with_desc = Contract::new_with_description(
+            "TestContract",
+            "0x1234567890123456789012345678901234567890",
+            "[{\"name\":\"test\",\"type\":\"function\",\"inputs\":[],\"outputs\":[]}]",
+            "Test contract description",
+        );
+
+        assert_eq!(contract_with_desc.name, "TestContract");
+        assert_eq!(contract_with_desc.address, "0x1234567890123456789012345678901234567890");
+        assert_eq!(contract_with_desc.description.unwrap(), "Test contract description");
+    }
+
+    #[test]
+    fn test_parse_abi() {
+        // Valid ABI
+        let contract = Contract::new(
+            "TestContract",
+            "0x1234567890123456789012345678901234567890",
+            r#"[{
+                "name": "transfer",
+                "type": "function",
+                "inputs": [
+                    {"name": "to", "type": "address"},
+                    {"name": "amount", "type": "uint256"}
+                ],
+                "outputs": [{"name": "", "type": "bool"}]
+            }]"#,
+        );
+
+        let abi_result = contract.parse_abi();
+        assert!(abi_result.is_ok());
+        let abi = abi_result.unwrap();
+
+        // Check that the ABI was parsed successfully
+        let functions: Vec<_> = abi.functions().collect();
+        assert_eq!(functions.len(), 1);
+        assert_eq!(functions[0].name, "transfer");
+
+        // Invalid ABI (malformed JSON)
+        let invalid_contract = Contract::new(
+            "TestContract",
+            "0x1234567890123456789012345678901234567890",
+            "{invalid-json",
+        );
+
+        let invalid_abi = invalid_contract.parse_abi();
+        assert!(invalid_abi.is_err());
+    }
+
+    #[test]
+    fn test_find_function() {
+        let contract = Contract::new(
+            "TestContract",
+            "0x1234567890123456789012345678901234567890",
+            r#"[{
+                "name": "transfer",
+                "type": "function",
+                "inputs": [
+                    {"name": "to", "type": "address"},
+                    {"name": "amount", "type": "uint256"}
+                ],
+                "outputs": [{"name": "", "type": "bool"}]
+            },
+            {
+                "name": "balanceOf",
+                "type": "function",
+                "inputs": [
+                    {"name": "account", "type": "address"}
+                ],
+                "outputs": [{"name": "", "type": "uint256"}]
+            }]"#,
+        );
+
+        // Find existing function
+        let transfer_result = contract.find_function("transfer");
+        assert!(transfer_result.is_ok());
+        let transfer = transfer_result.unwrap();
+        assert_eq!(transfer.name, "transfer");
+        assert_eq!(transfer.inputs.len(), 2);
+
+        // Find another existing function
+        let balance_result = contract.find_function("balanceOf");
+        assert!(balance_result.is_ok());
+        let balance = balance_result.unwrap();
+        assert_eq!(balance.name, "balanceOf");
+        assert_eq!(balance.inputs.len(), 1);
+
+        // Function not found
+        let missing_result = contract.find_function("nonExistentFunction");
+        assert!(missing_result.is_err());
+    }
+
+    #[test]
+    fn test_validate_function_call() {
+        let contract = Contract::new(
+            "TestContract",
+            "0x1234567890123456789012345678901234567890",
+            r#"[{
+                "name": "transfer",
+                "type": "function",
+                "inputs": [
+                    {"name": "to", "type": "address"},
+                    {"name": "amount", "type": "uint256"}
+                ],
+                "outputs": [{"name": "", "type": "bool"}]
+            }]"#,
+        );
+
+        // Valid arguments
+        let valid_args = vec![
+            json!("0x1234567890123456789012345678901234567890"),
+            json!("1000000000000000000"), // 1 ETH in wei
+        ];
+        let result = contract.validate_function_call("transfer", &valid_args);
+        assert!(result.is_ok());
+
+        // Wrong number of arguments
+        let too_few_args = vec![json!("0x1234567890123456789012345678901234567890")];
+        let result = contract.validate_function_call("transfer", &too_few_args);
+        assert!(result.is_err());
+
+        // Wrong argument type (e.g., invalid address)
+        let invalid_args = vec![json!("not-an-address"), json!("1000000000000000000")];
+        let result = contract.validate_function_call("transfer", &invalid_args);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_transaction_is_valid() {
+        // Valid transaction
+        let valid_tx = Transaction {
+            to: "0x1234567890123456789012345678901234567890".to_string(),
+            value: "1000000000000000000".to_string(), // 1 ETH
+            contract_call: Some(ContractCall {
+                function: "transfer".to_string(),
+                args: vec![
+                    json!("0x0987654321098765432109876543210987654321"),
+                    json!("500000000000000000"), // 0.5 ETH
+                ],
+            }),
+            data: "0x".to_string(),
+            description: "Test transaction".to_string(),
+        };
+        assert!(valid_tx.is_valid());
+
+        // Invalid address
+        let invalid_address_tx = Transaction {
+            to: "invalid-address".to_string(),
+            value: "1000000000000000000".to_string(),
+            contract_call: None,
+            data: "0x".to_string(),
+            description: "Invalid address transaction".to_string(),
+        };
+        assert!(!invalid_address_tx.is_valid());
+
+        // Invalid value
+        let invalid_value_tx = Transaction {
+            to: "0x1234567890123456789012345678901234567890".to_string(),
+            value: "not-a-number".to_string(),
+            contract_call: None,
+            data: "0x".to_string(),
+            description: "Invalid value transaction".to_string(),
+        };
+        assert!(!invalid_value_tx.is_valid());
+
+        // Invalid contract call (empty function name)
+        let invalid_call_tx = Transaction {
+            to: "0x1234567890123456789012345678901234567890".to_string(),
+            value: "0".to_string(),
+            contract_call: Some(ContractCall { function: "".to_string(), args: vec![] }),
+            data: "0x".to_string(),
+            description: "Invalid contract call transaction".to_string(),
+        };
+        assert!(!invalid_call_tx.is_valid());
+    }
+
+    #[test]
+    fn test_json_to_sol_value() {
+        use alloy_dyn_abi::DynSolType;
+
+        // Test address conversion
+        let addr_type = DynSolType::Address;
+        let addr_json = json!("0x1234567890123456789012345678901234567890");
+        let addr_result = json_to_sol_value(&addr_json, &addr_type);
+        assert!(addr_result.is_ok());
+
+        // Test uint conversion
+        let uint_type = DynSolType::Uint(256);
+        let uint_json = json!("1000000000000000000");
+        let uint_result = json_to_sol_value(&uint_json, &uint_type);
+        assert!(uint_result.is_ok());
+
+        // Test bool conversion
+        let bool_type = DynSolType::Bool;
+        let bool_json = json!(true);
+        let bool_result = json_to_sol_value(&bool_json, &bool_type);
+        assert!(bool_result.is_ok());
+
+        // Test string conversion
+        let string_type = DynSolType::String;
+        let string_json = json!("test string");
+        let string_result = json_to_sol_value(&string_json, &string_type);
+        assert!(string_result.is_ok());
+
+        // Test bytes conversion
+        let bytes_type = DynSolType::Bytes;
+        let bytes_json = json!("0x1234");
+        let bytes_result = json_to_sol_value(&bytes_json, &bytes_type);
+        assert!(bytes_result.is_ok());
+
+        // Test fixed bytes conversion
+        let fixed_bytes_type = DynSolType::FixedBytes(32);
+        let fixed_bytes_json =
+            json!("0x1234567890123456789012345678901234567890123456789012345678901234");
+        let fixed_bytes_result = json_to_sol_value(&fixed_bytes_json, &fixed_bytes_type);
+        assert!(fixed_bytes_result.is_ok());
+
+        // Test invalid input type (e.g., number for address)
+        let addr_invalid_json = json!(12345);
+        let addr_invalid_result = json_to_sol_value(&addr_invalid_json, &addr_type);
+        assert!(addr_invalid_result.is_err());
+    }
+
+    #[test]
+    fn test_is_dynamic_type() {
+        use alloy_dyn_abi::DynSolType;
+
+        // Test dynamic types
+        assert!(is_dynamic_type(&DynSolType::String));
+        assert!(is_dynamic_type(&DynSolType::Bytes));
+        assert!(is_dynamic_type(&DynSolType::Array(Box::new(DynSolType::Uint(256)))));
+        assert!(is_dynamic_type(&DynSolType::Tuple(vec![
+            DynSolType::Uint(256),
+            DynSolType::Address
+        ])));
+
+        // Test static types
+        assert!(!is_dynamic_type(&DynSolType::Address));
+        assert!(!is_dynamic_type(&DynSolType::Uint(256)));
+        assert!(!is_dynamic_type(&DynSolType::Bool));
+        assert!(!is_dynamic_type(&DynSolType::FixedBytes(32)));
+    }
+
+    // Note: create_payload_from_tx and validate_transaction functions depend on Context
+    // and would need more complex mocking for comprehensive testing
+}

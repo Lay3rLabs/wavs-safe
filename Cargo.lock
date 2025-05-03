@@ -991,6 +991,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tiny-keccak",
+ "wavs-agent",
  "wavs-wasi-chain",
  "wit-bindgen-rt 0.39.0",
  "wstd",

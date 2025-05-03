@@ -205,3 +205,189 @@ impl Default for Context {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tools::Message;
+
+    #[test]
+    fn test_context_from_json() {
+        // Valid context JSON
+        let json = r#"{
+            "contracts": [
+                {
+                    "name": "TestContract",
+                    "address": "0x1234567890123456789012345678901234567890",
+                    "abi": "[{\"name\":\"test\",\"type\":\"function\",\"inputs\":[],\"outputs\":[]}]",
+                    "description": "Test contract"
+                }
+            ],
+            "llm_config": {
+                "temperature": 0.7,
+                "top_p": 0.9,
+                "seed": 123,
+                "max_tokens": 500,
+                "context_window": 4096
+            },
+            "model": "test-model",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "Test system message"
+                }
+            ],
+            "config": {
+                "test_key": "test_value"
+            }
+        }"#;
+
+        let context = Context::from_json(json).unwrap();
+
+        // Verify loaded values
+        assert_eq!(context.contracts.len(), 1);
+        assert_eq!(context.contracts[0].name, "TestContract");
+        assert_eq!(context.contracts[0].address, "0x1234567890123456789012345678901234567890");
+        assert_eq!(context.model, "test-model");
+        assert_eq!(context.llm_config.temperature, 0.7);
+        assert_eq!(context.llm_config.top_p, 0.9);
+        assert_eq!(context.llm_config.seed, 123);
+        assert_eq!(context.llm_config.max_tokens, Some(500));
+        assert_eq!(context.llm_config.context_window, Some(4096));
+        assert_eq!(context.messages.len(), 1);
+        assert_eq!(context.messages[0].role, "system");
+        assert_eq!(context.messages[0].content.as_ref().unwrap(), "Test system message");
+        assert_eq!(context.config.get("test_key").unwrap(), "test_value");
+    }
+
+    #[test]
+    fn test_context_validation() {
+        // Valid context
+        let valid_context = Context {
+            contracts: vec![Contract::new(
+                "TestContract",
+                "0x1234567890123456789012345678901234567890",
+                "[{\"name\":\"test\",\"type\":\"function\",\"inputs\":[],\"outputs\":[]}]",
+            )],
+            llm_config: LLMConfig::default(),
+            model: "test-model".to_string(),
+            messages: vec![Message::new_system("Test system message".to_string())],
+            config: std::collections::HashMap::new(),
+        };
+
+        assert!(valid_context.validate().is_ok());
+
+        // Invalid contract address
+        let invalid_address_context = Context {
+            contracts: vec![Contract::new(
+                "TestContract",
+                "invalid-address",
+                "[{\"name\":\"test\",\"type\":\"function\",\"inputs\":[],\"outputs\":[]}]",
+            )],
+            llm_config: LLMConfig::default(),
+            model: "test-model".to_string(),
+            messages: vec![],
+            config: std::collections::HashMap::new(),
+        };
+
+        assert!(invalid_address_context.validate().is_err());
+
+        // Empty ABI
+        let empty_abi_context = Context {
+            contracts: vec![Contract::new(
+                "TestContract",
+                "0x1234567890123456789012345678901234567890",
+                "",
+            )],
+            llm_config: LLMConfig::default(),
+            model: "test-model".to_string(),
+            messages: vec![],
+            config: std::collections::HashMap::new(),
+        };
+
+        assert!(empty_abi_context.validate().is_err());
+    }
+
+    #[test]
+    fn test_get_contract_by_name() {
+        let context = Context {
+            contracts: vec![
+                Contract::new(
+                    "Contract1",
+                    "0x1111111111111111111111111111111111111111",
+                    "[{\"name\":\"test\",\"type\":\"function\",\"inputs\":[],\"outputs\":[]}]",
+                ),
+                Contract::new(
+                    "Contract2",
+                    "0x2222222222222222222222222222222222222222",
+                    "[{\"name\":\"test\",\"type\":\"function\",\"inputs\":[],\"outputs\":[]}]",
+                ),
+            ],
+            llm_config: LLMConfig::default(),
+            model: "test-model".to_string(),
+            messages: vec![],
+            config: std::collections::HashMap::new(),
+        };
+
+        // Test exact match
+        let contract = context.get_contract_by_name("Contract1");
+        assert!(contract.is_some());
+        assert_eq!(contract.unwrap().name, "Contract1");
+
+        // Test case insensitive match
+        let contract = context.get_contract_by_name("contract2");
+        assert!(contract.is_some());
+        assert_eq!(contract.unwrap().name, "Contract2");
+
+        // Test non-existent contract
+        let contract = context.get_contract_by_name("NonExistentContract");
+        assert!(contract.is_none());
+    }
+
+    #[test]
+    fn test_format_contract_descriptions() {
+        let context = Context {
+            contracts: vec![
+                Contract::new_with_description(
+                    "Contract1",
+                    "0x1111111111111111111111111111111111111111",
+                    "[{\"name\":\"test\",\"type\":\"function\",\"inputs\":[],\"outputs\":[]}]",
+                    "First test contract",
+                ),
+                Contract::new_with_description(
+                    "Contract2",
+                    "0x2222222222222222222222222222222222222222",
+                    "[{\"name\":\"test\",\"type\":\"function\",\"inputs\":[],\"outputs\":[]}]",
+                    "Second test contract",
+                ),
+            ],
+            llm_config: LLMConfig::default(),
+            model: "test-model".to_string(),
+            messages: vec![],
+            config: std::collections::HashMap::new(),
+        };
+
+        let descriptions = context.format_contract_descriptions();
+
+        // Check that the descriptions contain the contract names, addresses, and ABIs
+        assert!(descriptions.contains("Contract1"));
+        assert!(descriptions.contains("0x1111111111111111111111111111111111111111"));
+        assert!(descriptions.contains("Contract2"));
+        assert!(descriptions.contains("0x2222222222222222222222222222222222222222"));
+
+        // Check that descriptions are separated
+        assert!(descriptions.contains("\n\n"));
+    }
+
+    #[test]
+    fn test_default_context() {
+        let context = Context::default();
+
+        // Check that default context has reasonable values
+        assert!(!context.contracts.is_empty());
+        assert_eq!(context.model, "llama3.2");
+        assert!(!context.messages.is_empty());
+        assert_eq!(context.messages[0].role, "system");
+        assert!(context.messages[0].content.is_some());
+    }
+}
