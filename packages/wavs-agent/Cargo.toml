@@ -34,7 +34,3 @@ opt-level = "s"
 debug = false
 strip = true
 lto = true
-
-[package.metadata.component]
-package = "component:wavs-agent"
-target = "wavs:worker/layer-trigger-world@0.3.0"

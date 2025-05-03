@@ -1,4 +1,3 @@
-mod bindings;
 pub mod context;
 pub mod contracts;
 pub mod errors;
