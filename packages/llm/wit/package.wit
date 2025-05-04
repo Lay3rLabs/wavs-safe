@@ -1,4 +1,4 @@
-package wavs:agent;
+package wavs:agent@0.0.1;
 
 /// Main world definition for the wavs-agent component
 world wavs-agent {

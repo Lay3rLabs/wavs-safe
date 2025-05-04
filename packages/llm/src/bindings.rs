@@ -230,7 +230,7 @@ pub mod wavs {
                     unreachable!();
                     #[cfg(target_arch = "wasm32")]
                     {
-                        #[link(wasm_import_module = "wavs:agent/types")]
+                        #[link(wasm_import_module = "wavs:agent/types@0.0.1")]
                         extern "C" {
                             #[link_name = "[resource-drop]custom-tool-handler"]
                             fn drop(_: u32);
@@ -385,7 +385,7 @@ pub mod wavs {
                         let ptr0 = vec0.as_ptr().cast::<u8>();
                         let len0 = vec0.len();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/types")]
+                        #[link(wasm_import_module = "wavs:agent/types@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]custom-tool-handler.can-handle"]
                             fn wit_import(_: i32, _: *mut u8, _: usize) -> i32;
@@ -436,7 +436,7 @@ pub mod wavs {
                         let len5 = vec5.len();
                         let ptr6 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/types")]
+                        #[link(wasm_import_module = "wavs:agent/types@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]custom-tool-handler.execute"]
                             fn wit_import(
@@ -557,7 +557,7 @@ pub mod wavs {
                     unreachable!();
                     #[cfg(target_arch = "wasm32")]
                     {
-                        #[link(wasm_import_module = "wavs:agent/client")]
+                        #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
                         extern "C" {
                             #[link_name = "[resource-drop]llm-client"]
                             fn drop(_: u32);
@@ -581,7 +581,7 @@ pub mod wavs {
                         let len0 = vec0.len();
                         let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/client")]
+                        #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]llm-client.new"]
                             fn wit_import(_: i32, _: *mut u8, _: usize, _: *mut u8);
@@ -820,7 +820,7 @@ pub mod wavs {
                         let len1 = vec1.len();
                         let ptr2 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/client")]
+                        #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]llm-client.from-json"]
                             fn wit_import(
@@ -1092,7 +1092,7 @@ pub mod wavs {
                         };
                         let ptr4 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/client")]
+                        #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]llm-client.with-config"]
                             fn wit_import(
@@ -1357,7 +1357,7 @@ pub mod wavs {
                         );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/client")]
+                        #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]llm-client.get-model"]
                             fn wit_import(_: i32, _: *mut u8);
@@ -1387,7 +1387,7 @@ pub mod wavs {
                         );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/client")]
+                        #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]llm-client.get-config"]
                             fn wit_import(_: i32, _: *mut u8);
@@ -1652,7 +1652,7 @@ pub mod wavs {
                         };
                         let ptr21 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/client")]
+                        #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]llm-client.chat-completion"]
                             fn wit_import(
@@ -2177,7 +2177,7 @@ pub mod wavs {
                         }
                         let ptr13 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/client")]
+                        #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]llm-client.chat-completion-text"]
                             fn wit_import(_: i32, _: *mut u8, _: usize, _: *mut u8);
@@ -2805,7 +2805,7 @@ pub mod wavs {
                         };
                         let ptr36 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/client")]
+                        #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]llm-client.process-prompt"]
                             fn wit_import(_: *mut u8, _: *mut u8);
@@ -3180,7 +3180,7 @@ pub mod wavs {
                     unreachable!();
                     #[cfg(target_arch = "wasm32")]
                     {
-                        #[link(wasm_import_module = "wavs:agent/config")]
+                        #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
                         extern "C" {
                             #[link_name = "[resource-drop]llm-options-funcs"]
                             fn drop(_: u32);
@@ -3218,7 +3218,7 @@ pub mod wavs {
                     unreachable!();
                     #[cfg(target_arch = "wasm32")]
                     {
-                        #[link(wasm_import_module = "wavs:agent/config")]
+                        #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
                         extern "C" {
                             #[link_name = "[resource-drop]config-manager"]
                             fn drop(_: u32);
@@ -3239,7 +3239,7 @@ pub mod wavs {
                         );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/config")]
+                        #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]llm-options-funcs.new"]
                             fn wit_import(_: i32, _: *mut u8);
@@ -3296,7 +3296,7 @@ pub mod wavs {
                         );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/config")]
+                        #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]llm-options-funcs.temperature"]
                             fn wit_import(_: i32, _: f32, _: *mut u8);
@@ -3353,7 +3353,7 @@ pub mod wavs {
                         );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/config")]
+                        #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]llm-options-funcs.top-p"]
                             fn wit_import(_: i32, _: f32, _: *mut u8);
@@ -3410,7 +3410,7 @@ pub mod wavs {
                         );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/config")]
+                        #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]llm-options-funcs.seed"]
                             fn wit_import(_: i32, _: i32, _: *mut u8);
@@ -3471,7 +3471,7 @@ pub mod wavs {
                         };
                         let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/config")]
+                        #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]llm-options-funcs.max-tokens"]
                             fn wit_import(_: i32, _: i32, _: i32, _: *mut u8);
@@ -3532,7 +3532,7 @@ pub mod wavs {
                         };
                         let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/config")]
+                        #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]llm-options-funcs.context-window"]
                             fn wit_import(_: i32, _: i32, _: i32, _: *mut u8);
@@ -3589,7 +3589,7 @@ pub mod wavs {
                         );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/config")]
+                        #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]config-manager.load"]
                             fn wit_import(_: i32, _: *mut u8);
@@ -3918,7 +3918,7 @@ pub mod wavs {
                         let len0 = vec0.len();
                         let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/config")]
+                        #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]config-manager.load-from-uri"]
                             fn wit_import(_: i32, _: *mut u8, _: usize, _: *mut u8);
@@ -4247,7 +4247,7 @@ pub mod wavs {
                         let len0 = vec0.len();
                         let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/config")]
+                        #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]config-manager.from-json"]
                             fn wit_import(_: i32, _: *mut u8, _: usize, _: *mut u8);
@@ -4752,7 +4752,7 @@ pub mod wavs {
                         );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/config")]
+                        #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]config-manager.to-json"]
                             fn wit_import(_: i32, _: *mut u8);
@@ -4809,7 +4809,7 @@ pub mod wavs {
                         );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/config")]
+                        #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]config-manager.format-contract-descriptions"]
                             fn wit_import(_: i32, _: *mut u8);
@@ -4842,7 +4842,7 @@ pub mod wavs {
                         let len0 = vec0.len();
                         let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/config")]
+                        #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]config-manager.get-contract-by-name"]
                             fn wit_import(_: i32, _: *mut u8, _: usize, _: *mut u8);
@@ -4925,7 +4925,7 @@ pub mod wavs {
                         );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/config")]
+                        #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]config-manager.validate"]
                             fn wit_import(_: i32, _: *mut u8);
@@ -5178,7 +5178,7 @@ pub mod wavs {
                     unreachable!();
                     #[cfg(target_arch = "wasm32")]
                     {
-                        #[link(wasm_import_module = "wavs:agent/contracts")]
+                        #[link(wasm_import_module = "wavs:agent/contracts@0.0.1")]
                         extern "C" {
                             #[link_name = "[resource-drop]contract-manager"]
                             fn drop(_: u32);
@@ -5216,7 +5216,7 @@ pub mod wavs {
                     unreachable!();
                     #[cfg(target_arch = "wasm32")]
                     {
-                        #[link(wasm_import_module = "wavs:agent/contracts")]
+                        #[link(wasm_import_module = "wavs:agent/contracts@0.0.1")]
                         extern "C" {
                             #[link_name = "[resource-drop]transaction-manager"]
                             fn drop(_: u32);
@@ -5246,7 +5246,7 @@ pub mod wavs {
                         let len2 = vec2.len();
                         let ptr3 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/contracts")]
+                        #[link(wasm_import_module = "wavs:agent/contracts@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]contract-manager.new"]
                             fn wit_import(
@@ -5352,7 +5352,7 @@ pub mod wavs {
                         let len3 = vec3.len();
                         let ptr4 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/contracts")]
+                        #[link(wasm_import_module = "wavs:agent/contracts@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]contract-manager.new-with-description"]
                             fn wit_import(
@@ -5473,7 +5473,7 @@ pub mod wavs {
                         };
                         let ptr6 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/contracts")]
+                        #[link(wasm_import_module = "wavs:agent/contracts@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]contract-manager.parse-abi"]
                             fn wit_import(
@@ -5802,7 +5802,7 @@ pub mod wavs {
                         }
                         let ptr9 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/contracts")]
+                        #[link(wasm_import_module = "wavs:agent/contracts@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]contract-manager.encode-function-call"]
                             fn wit_import(
@@ -6115,7 +6115,7 @@ pub mod wavs {
                         let len6 = vec6.len();
                         let ptr7 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/contracts")]
+                        #[link(wasm_import_module = "wavs:agent/contracts@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]contract-manager.find-function"]
                             fn wit_import(
@@ -6450,7 +6450,7 @@ pub mod wavs {
                         }
                         let ptr9 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/contracts")]
+                        #[link(wasm_import_module = "wavs:agent/contracts@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]contract-manager.validate-function-call"]
                             fn wit_import(
@@ -6788,7 +6788,7 @@ pub mod wavs {
                         let ptr9 = vec9.as_ptr().cast::<u8>();
                         let len9 = vec9.len();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/contracts")]
+                        #[link(wasm_import_module = "wavs:agent/contracts@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]transaction-manager.is-valid"]
                             fn wit_import(
@@ -6934,7 +6934,7 @@ pub mod wavs {
                         let len9 = vec9.len();
                         let ptr10 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/contracts")]
+                        #[link(wasm_import_module = "wavs:agent/contracts@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]transaction-manager.validate-transaction"]
                             fn wit_import(
@@ -7283,7 +7283,7 @@ pub mod wavs {
                         let len9 = vec9.len();
                         let ptr10 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/contracts")]
+                        #[link(wasm_import_module = "wavs:agent/contracts@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]transaction-manager.create-payload-from-tx"]
                             fn wit_import(
@@ -7602,7 +7602,7 @@ pub mod wavs {
                     unreachable!();
                     #[cfg(target_arch = "wasm32")]
                     {
-                        #[link(wasm_import_module = "wavs:agent/tools")]
+                        #[link(wasm_import_module = "wavs:agent/tools@0.0.1")]
                         extern "C" {
                             #[link_name = "[resource-drop]tools-builder"]
                             fn drop(_: u32);
@@ -7623,7 +7623,7 @@ pub mod wavs {
                         );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/tools")]
+                        #[link(wasm_import_module = "wavs:agent/tools@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]tools-builder.send-eth-tool"]
                             fn wit_import(_: i32, _: *mut u8);
@@ -7727,7 +7727,7 @@ pub mod wavs {
                         };
                         let ptr6 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/tools")]
+                        #[link(wasm_import_module = "wavs:agent/tools@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]tools-builder.tools-from-contract"]
                             fn wit_import(
@@ -7875,7 +7875,7 @@ pub mod wavs {
                         let len2 = vec2.len();
                         let ptr3 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/tools")]
+                        #[link(wasm_import_module = "wavs:agent/tools@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]tools-builder.custom-tool"]
                             fn wit_import(
@@ -8033,7 +8033,7 @@ pub mod wavs {
                         };
                         let ptr8 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/tools")]
+                        #[link(wasm_import_module = "wavs:agent/tools@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]tools-builder.execute-tool-call"]
                             fn wit_import(
@@ -8161,7 +8161,7 @@ pub mod wavs {
                         let len5 = vec5.len();
                         let ptr6 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/tools")]
+                        #[link(wasm_import_module = "wavs:agent/tools@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]tools-builder.parse-eth-transaction"]
                             fn wit_import(
@@ -8589,7 +8589,7 @@ pub mod wavs {
                         };
                         let ptr34 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/tools")]
+                        #[link(wasm_import_module = "wavs:agent/tools@0.0.1")]
                         extern "C" {
                             #[link_name = "[method]tools-builder.process-tool-calls"]
                             fn wit_import(_: *mut u8, _: *mut u8);
@@ -8754,13 +8754,13 @@ pub mod exports {
                 }
                 impl std::error::Error for AgentError {}
                 #[doc(hidden)]
-                macro_rules! __export_wavs_agent_errors_cabi {
+                macro_rules! __export_wavs_agent_errors_0_0_1_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = {};
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_wavs_agent_errors_cabi;
+                pub(crate) use __export_wavs_agent_errors_0_0_1_cabi;
             }
             #[allow(dead_code, clippy::all)]
             pub mod types {
@@ -8978,7 +8978,9 @@ pub mod exports {
                         unreachable!();
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/types")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/types@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-drop]custom-tool-handler"]
                                 fn drop(_: u32);
@@ -9234,7 +9236,9 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/types")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/types@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-new]custom-tool-handler"]
                                 fn new(_: *mut u8) -> u32;
@@ -9254,7 +9258,9 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/types")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/types@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-rep]custom-tool-handler"]
                                 fn rep(_: u32) -> *mut u8;
@@ -9271,39 +9277,40 @@ pub mod exports {
                     ) -> Result<_rt::String, _rt::String>;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_wavs_agent_types_cabi {
+                macro_rules! __export_wavs_agent_types_0_0_1_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[export_name =
-                        "wavs:agent/types#[method]custom-tool-handler.can-handle"] unsafe
-                        extern "C" fn export_method_custom_tool_handler_can_handle(arg0 :
-                        * mut u8, arg1 : * mut u8, arg2 : usize,) -> i32 {
-                        $($path_to_types)*::
+                        "wavs:agent/types@0.0.1#[method]custom-tool-handler.can-handle"]
+                        unsafe extern "C" fn
+                        export_method_custom_tool_handler_can_handle(arg0 : * mut u8,
+                        arg1 : * mut u8, arg2 : usize,) -> i32 { $($path_to_types)*::
                         _export_method_custom_tool_handler_can_handle_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::CustomToolHandler > (arg0, arg1,
                         arg2) } #[export_name =
-                        "wavs:agent/types#[method]custom-tool-handler.execute"] unsafe
-                        extern "C" fn export_method_custom_tool_handler_execute(arg0 : *
-                        mut u8, arg1 : * mut u8, arg2 : usize, arg3 : * mut u8, arg4 :
-                        usize, arg5 : * mut u8, arg6 : usize, arg7 : * mut u8, arg8 :
-                        usize,) -> * mut u8 { $($path_to_types)*::
+                        "wavs:agent/types@0.0.1#[method]custom-tool-handler.execute"]
+                        unsafe extern "C" fn
+                        export_method_custom_tool_handler_execute(arg0 : * mut u8, arg1 :
+                        * mut u8, arg2 : usize, arg3 : * mut u8, arg4 : usize, arg5 : *
+                        mut u8, arg6 : usize, arg7 : * mut u8, arg8 : usize,) -> * mut u8
+                        { $($path_to_types)*::
                         _export_method_custom_tool_handler_execute_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::CustomToolHandler > (arg0, arg1,
                         arg2, arg3, arg4, arg5, arg6, arg7, arg8) } #[export_name =
-                        "cabi_post_wavs:agent/types#[method]custom-tool-handler.execute"]
+                        "cabi_post_wavs:agent/types@0.0.1#[method]custom-tool-handler.execute"]
                         unsafe extern "C" fn
                         _post_return_method_custom_tool_handler_execute(arg0 : * mut u8,)
                         { $($path_to_types)*::
                         __post_return_method_custom_tool_handler_execute::<<$ty as
                         $($path_to_types)*:: Guest >::CustomToolHandler > (arg0) } const
                         _ : () = { #[doc(hidden)] #[export_name =
-                        "wavs:agent/types#[dtor]custom-tool-handler"]
+                        "wavs:agent/types@0.0.1#[dtor]custom-tool-handler"]
                         #[allow(non_snake_case)] unsafe extern "C" fn dtor(rep : * mut
                         u8) { $($path_to_types)*:: CustomToolHandler::dtor::< <$ty as
                         $($path_to_types)*:: Guest >::CustomToolHandler > (rep) } }; };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_wavs_agent_types_cabi;
+                pub(crate) use __export_wavs_agent_types_0_0_1_cabi;
                 #[repr(align(4))]
                 struct _RetArea([::core::mem::MaybeUninit<u8>; 12]);
                 static mut _RET_AREA: _RetArea = _RetArea(
@@ -9437,7 +9444,9 @@ pub mod exports {
                         unreachable!();
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/client")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/client@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-drop]llm-client"]
                                 fn drop(_: u32);
@@ -11979,7 +11988,9 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/client")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/client@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-new]llm-client"]
                                 fn new(_: *mut u8) -> u32;
@@ -11999,7 +12010,9 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/client")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/client@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-rep]llm-client"]
                                 fn rep(_: u32) -> *mut u8;
@@ -12046,76 +12059,79 @@ pub mod exports {
                     ) -> Result<LlmResponse, AgentError>;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_wavs_agent_client_cabi {
+                macro_rules! __export_wavs_agent_client_0_0_1_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[export_name =
-                        "wavs:agent/client#[method]llm-client.new"] unsafe extern "C" fn
-                        export_method_llm_client_new(arg0 : * mut u8, arg1 : * mut u8,
-                        arg2 : usize,) -> * mut u8 { $($path_to_types)*::
+                        "wavs:agent/client@0.0.1#[method]llm-client.new"] unsafe extern
+                        "C" fn export_method_llm_client_new(arg0 : * mut u8, arg1 : * mut
+                        u8, arg2 : usize,) -> * mut u8 { $($path_to_types)*::
                         _export_method_llm_client_new_cabi::<<$ty as $($path_to_types)*::
                         Guest >::LlmClient > (arg0, arg1, arg2) } #[export_name =
-                        "cabi_post_wavs:agent/client#[method]llm-client.new"] unsafe
-                        extern "C" fn _post_return_method_llm_client_new(arg0 : * mut
-                        u8,) { $($path_to_types)*::
+                        "cabi_post_wavs:agent/client@0.0.1#[method]llm-client.new"]
+                        unsafe extern "C" fn _post_return_method_llm_client_new(arg0 : *
+                        mut u8,) { $($path_to_types)*::
                         __post_return_method_llm_client_new::<<$ty as
                         $($path_to_types)*:: Guest >::LlmClient > (arg0) } #[export_name
-                        = "wavs:agent/client#[method]llm-client.from-json"] unsafe extern
-                        "C" fn export_method_llm_client_from_json(arg0 : * mut u8, arg1 :
-                        * mut u8, arg2 : usize, arg3 : * mut u8, arg4 : usize,) -> * mut
-                        u8 { $($path_to_types)*::
+                        = "wavs:agent/client@0.0.1#[method]llm-client.from-json"] unsafe
+                        extern "C" fn export_method_llm_client_from_json(arg0 : * mut u8,
+                        arg1 : * mut u8, arg2 : usize, arg3 : * mut u8, arg4 : usize,) ->
+                        * mut u8 { $($path_to_types)*::
                         _export_method_llm_client_from_json_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::LlmClient > (arg0, arg1, arg2,
                         arg3, arg4) } #[export_name =
-                        "cabi_post_wavs:agent/client#[method]llm-client.from-json"]
+                        "cabi_post_wavs:agent/client@0.0.1#[method]llm-client.from-json"]
                         unsafe extern "C" fn
                         _post_return_method_llm_client_from_json(arg0 : * mut u8,) {
                         $($path_to_types)*::
                         __post_return_method_llm_client_from_json::<<$ty as
                         $($path_to_types)*:: Guest >::LlmClient > (arg0) } #[export_name
-                        = "wavs:agent/client#[method]llm-client.with-config"] unsafe
-                        extern "C" fn export_method_llm_client_with_config(arg0 : * mut
-                        u8, arg1 : * mut u8, arg2 : usize, arg3 : f32, arg4 : f32, arg5 :
-                        i32, arg6 : i32, arg7 : i32, arg8 : i32, arg9 : i32,) -> * mut u8
-                        { $($path_to_types)*::
+                        = "wavs:agent/client@0.0.1#[method]llm-client.with-config"]
+                        unsafe extern "C" fn export_method_llm_client_with_config(arg0 :
+                        * mut u8, arg1 : * mut u8, arg2 : usize, arg3 : f32, arg4 : f32,
+                        arg5 : i32, arg6 : i32, arg7 : i32, arg8 : i32, arg9 : i32,) -> *
+                        mut u8 { $($path_to_types)*::
                         _export_method_llm_client_with_config_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::LlmClient > (arg0, arg1, arg2,
                         arg3, arg4, arg5, arg6, arg7, arg8, arg9) } #[export_name =
-                        "cabi_post_wavs:agent/client#[method]llm-client.with-config"]
+                        "cabi_post_wavs:agent/client@0.0.1#[method]llm-client.with-config"]
                         unsafe extern "C" fn
                         _post_return_method_llm_client_with_config(arg0 : * mut u8,) {
                         $($path_to_types)*::
                         __post_return_method_llm_client_with_config::<<$ty as
                         $($path_to_types)*:: Guest >::LlmClient > (arg0) } #[export_name
-                        = "wavs:agent/client#[method]llm-client.get-model"] unsafe extern
-                        "C" fn export_method_llm_client_get_model(arg0 : * mut u8,) -> *
-                        mut u8 { $($path_to_types)*::
+                        = "wavs:agent/client@0.0.1#[method]llm-client.get-model"] unsafe
+                        extern "C" fn export_method_llm_client_get_model(arg0 : * mut
+                        u8,) -> * mut u8 { $($path_to_types)*::
                         _export_method_llm_client_get_model_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::LlmClient > (arg0) } #[export_name
-                        = "cabi_post_wavs:agent/client#[method]llm-client.get-model"]
+                        =
+                        "cabi_post_wavs:agent/client@0.0.1#[method]llm-client.get-model"]
                         unsafe extern "C" fn
                         _post_return_method_llm_client_get_model(arg0 : * mut u8,) {
                         $($path_to_types)*::
                         __post_return_method_llm_client_get_model::<<$ty as
                         $($path_to_types)*:: Guest >::LlmClient > (arg0) } #[export_name
-                        = "wavs:agent/client#[method]llm-client.get-config"] unsafe
+                        = "wavs:agent/client@0.0.1#[method]llm-client.get-config"] unsafe
                         extern "C" fn export_method_llm_client_get_config(arg0 : * mut
                         u8,) -> * mut u8 { $($path_to_types)*::
                         _export_method_llm_client_get_config_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::LlmClient > (arg0) } #[export_name
-                        = "wavs:agent/client#[method]llm-client.chat-completion"] unsafe
-                        extern "C" fn export_method_llm_client_chat_completion(arg0 : *
-                        mut u8, arg1 : * mut u8, arg2 : usize, arg3 : i32, arg4 : * mut
-                        u8, arg5 : usize,) -> * mut u8 { $($path_to_types)*::
+                        = "wavs:agent/client@0.0.1#[method]llm-client.chat-completion"]
+                        unsafe extern "C" fn
+                        export_method_llm_client_chat_completion(arg0 : * mut u8, arg1 :
+                        * mut u8, arg2 : usize, arg3 : i32, arg4 : * mut u8, arg5 :
+                        usize,) -> * mut u8 { $($path_to_types)*::
                         _export_method_llm_client_chat_completion_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::LlmClient > (arg0, arg1, arg2,
                         arg3, arg4, arg5) } #[export_name =
-                        "cabi_post_wavs:agent/client#[method]llm-client.chat-completion"]
+                        "cabi_post_wavs:agent/client@0.0.1#[method]llm-client.chat-completion"]
                         unsafe extern "C" fn
                         _post_return_method_llm_client_chat_completion(arg0 : * mut u8,)
                         { $($path_to_types)*::
                         __post_return_method_llm_client_chat_completion::<<$ty as
                         $($path_to_types)*:: Guest >::LlmClient > (arg0) } #[export_name
-                        = "wavs:agent/client#[method]llm-client.chat-completion-text"]
+                        =
+                        "wavs:agent/client@0.0.1#[method]llm-client.chat-completion-text"]
                         unsafe extern "C" fn
                         export_method_llm_client_chat_completion_text(arg0 : * mut u8,
                         arg1 : * mut u8, arg2 : usize,) -> * mut u8 {
@@ -12123,33 +12139,33 @@ pub mod exports {
                         _export_method_llm_client_chat_completion_text_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::LlmClient > (arg0, arg1, arg2) }
                         #[export_name =
-                        "cabi_post_wavs:agent/client#[method]llm-client.chat-completion-text"]
+                        "cabi_post_wavs:agent/client@0.0.1#[method]llm-client.chat-completion-text"]
                         unsafe extern "C" fn
                         _post_return_method_llm_client_chat_completion_text(arg0 : * mut
                         u8,) { $($path_to_types)*::
                         __post_return_method_llm_client_chat_completion_text::<<$ty as
                         $($path_to_types)*:: Guest >::LlmClient > (arg0) } #[export_name
-                        = "wavs:agent/client#[method]llm-client.process-prompt"] unsafe
-                        extern "C" fn export_method_llm_client_process_prompt(arg0 : *
-                        mut u8,) -> * mut u8 { $($path_to_types)*::
+                        = "wavs:agent/client@0.0.1#[method]llm-client.process-prompt"]
+                        unsafe extern "C" fn export_method_llm_client_process_prompt(arg0
+                        : * mut u8,) -> * mut u8 { $($path_to_types)*::
                         _export_method_llm_client_process_prompt_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::LlmClient > (arg0) } #[export_name
                         =
-                        "cabi_post_wavs:agent/client#[method]llm-client.process-prompt"]
+                        "cabi_post_wavs:agent/client@0.0.1#[method]llm-client.process-prompt"]
                         unsafe extern "C" fn
                         _post_return_method_llm_client_process_prompt(arg0 : * mut u8,) {
                         $($path_to_types)*::
                         __post_return_method_llm_client_process_prompt::<<$ty as
                         $($path_to_types)*:: Guest >::LlmClient > (arg0) } const _ : () =
                         { #[doc(hidden)] #[export_name =
-                        "wavs:agent/client#[dtor]llm-client"] #[allow(non_snake_case)]
-                        unsafe extern "C" fn dtor(rep : * mut u8) { $($path_to_types)*::
-                        LlmClient::dtor::< <$ty as $($path_to_types)*:: Guest
-                        >::LlmClient > (rep) } }; };
+                        "wavs:agent/client@0.0.1#[dtor]llm-client"]
+                        #[allow(non_snake_case)] unsafe extern "C" fn dtor(rep : * mut
+                        u8) { $($path_to_types)*:: LlmClient::dtor::< <$ty as
+                        $($path_to_types)*:: Guest >::LlmClient > (rep) } }; };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_wavs_agent_client_cabi;
+                pub(crate) use __export_wavs_agent_client_0_0_1_cabi;
                 #[repr(align(4))]
                 struct _RetArea([::core::mem::MaybeUninit<u8>; 60]);
                 static mut _RET_AREA: _RetArea = _RetArea(
@@ -12281,7 +12297,9 @@ pub mod exports {
                         unreachable!();
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/config")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/config@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-drop]llm-options-funcs"]
                                 fn drop(_: u32);
@@ -12403,7 +12421,9 @@ pub mod exports {
                         unreachable!();
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/config")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/config@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-drop]config-manager"]
                                 fn drop(_: u32);
@@ -14561,7 +14581,9 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/config")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/config@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-new]llm-options-funcs"]
                                 fn new(_: *mut u8) -> u32;
@@ -14581,7 +14603,9 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/config")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/config@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-rep]llm-options-funcs"]
                                 fn rep(_: u32) -> *mut u8;
@@ -14615,7 +14639,9 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/config")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/config@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-new]config-manager"]
                                 fn new(_: *mut u8) -> u32;
@@ -14635,7 +14661,9 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/config")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/config@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-rep]config-manager"]
                                 fn rep(_: u32) -> *mut u8;
@@ -14665,115 +14693,116 @@ pub mod exports {
                     fn validate(&self) -> Result<(), AgentError>;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_wavs_agent_config_cabi {
+                macro_rules! __export_wavs_agent_config_0_0_1_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[export_name =
-                        "wavs:agent/config#[method]llm-options-funcs.new"] unsafe extern
-                        "C" fn export_method_llm_options_funcs_new(arg0 : * mut u8,) -> *
-                        mut u8 { $($path_to_types)*::
+                        "wavs:agent/config@0.0.1#[method]llm-options-funcs.new"] unsafe
+                        extern "C" fn export_method_llm_options_funcs_new(arg0 : * mut
+                        u8,) -> * mut u8 { $($path_to_types)*::
                         _export_method_llm_options_funcs_new_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::LlmOptionsFuncs > (arg0) }
                         #[export_name =
-                        "wavs:agent/config#[method]llm-options-funcs.temperature"] unsafe
-                        extern "C" fn export_method_llm_options_funcs_temperature(arg0 :
-                        * mut u8, arg1 : f32,) -> * mut u8 { $($path_to_types)*::
+                        "wavs:agent/config@0.0.1#[method]llm-options-funcs.temperature"]
+                        unsafe extern "C" fn
+                        export_method_llm_options_funcs_temperature(arg0 : * mut u8, arg1
+                        : f32,) -> * mut u8 { $($path_to_types)*::
                         _export_method_llm_options_funcs_temperature_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::LlmOptionsFuncs > (arg0, arg1) }
                         #[export_name =
-                        "wavs:agent/config#[method]llm-options-funcs.top-p"] unsafe
+                        "wavs:agent/config@0.0.1#[method]llm-options-funcs.top-p"] unsafe
                         extern "C" fn export_method_llm_options_funcs_top_p(arg0 : * mut
                         u8, arg1 : f32,) -> * mut u8 { $($path_to_types)*::
                         _export_method_llm_options_funcs_top_p_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::LlmOptionsFuncs > (arg0, arg1) }
                         #[export_name =
-                        "wavs:agent/config#[method]llm-options-funcs.seed"] unsafe extern
-                        "C" fn export_method_llm_options_funcs_seed(arg0 : * mut u8, arg1
-                        : i32,) -> * mut u8 { $($path_to_types)*::
+                        "wavs:agent/config@0.0.1#[method]llm-options-funcs.seed"] unsafe
+                        extern "C" fn export_method_llm_options_funcs_seed(arg0 : * mut
+                        u8, arg1 : i32,) -> * mut u8 { $($path_to_types)*::
                         _export_method_llm_options_funcs_seed_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::LlmOptionsFuncs > (arg0, arg1) }
                         #[export_name =
-                        "wavs:agent/config#[method]llm-options-funcs.max-tokens"] unsafe
-                        extern "C" fn export_method_llm_options_funcs_max_tokens(arg0 : *
-                        mut u8, arg1 : i32, arg2 : i32,) -> * mut u8 {
-                        $($path_to_types)*::
+                        "wavs:agent/config@0.0.1#[method]llm-options-funcs.max-tokens"]
+                        unsafe extern "C" fn
+                        export_method_llm_options_funcs_max_tokens(arg0 : * mut u8, arg1
+                        : i32, arg2 : i32,) -> * mut u8 { $($path_to_types)*::
                         _export_method_llm_options_funcs_max_tokens_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::LlmOptionsFuncs > (arg0, arg1,
                         arg2) } #[export_name =
-                        "wavs:agent/config#[method]llm-options-funcs.context-window"]
+                        "wavs:agent/config@0.0.1#[method]llm-options-funcs.context-window"]
                         unsafe extern "C" fn
                         export_method_llm_options_funcs_context_window(arg0 : * mut u8,
                         arg1 : i32, arg2 : i32,) -> * mut u8 { $($path_to_types)*::
                         _export_method_llm_options_funcs_context_window_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::LlmOptionsFuncs > (arg0, arg1,
                         arg2) } #[export_name =
-                        "wavs:agent/config#[method]config-manager.load"] unsafe extern
-                        "C" fn export_method_config_manager_load(arg0 : * mut u8,) -> *
-                        mut u8 { $($path_to_types)*::
+                        "wavs:agent/config@0.0.1#[method]config-manager.load"] unsafe
+                        extern "C" fn export_method_config_manager_load(arg0 : * mut u8,)
+                        -> * mut u8 { $($path_to_types)*::
                         _export_method_config_manager_load_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::ConfigManager > (arg0) }
                         #[export_name =
-                        "cabi_post_wavs:agent/config#[method]config-manager.load"] unsafe
-                        extern "C" fn _post_return_method_config_manager_load(arg0 : *
-                        mut u8,) { $($path_to_types)*::
+                        "cabi_post_wavs:agent/config@0.0.1#[method]config-manager.load"]
+                        unsafe extern "C" fn _post_return_method_config_manager_load(arg0
+                        : * mut u8,) { $($path_to_types)*::
                         __post_return_method_config_manager_load::<<$ty as
                         $($path_to_types)*:: Guest >::ConfigManager > (arg0) }
                         #[export_name =
-                        "wavs:agent/config#[method]config-manager.load-from-uri"] unsafe
-                        extern "C" fn export_method_config_manager_load_from_uri(arg0 : *
-                        mut u8, arg1 : * mut u8, arg2 : usize,) -> * mut u8 {
-                        $($path_to_types)*::
+                        "wavs:agent/config@0.0.1#[method]config-manager.load-from-uri"]
+                        unsafe extern "C" fn
+                        export_method_config_manager_load_from_uri(arg0 : * mut u8, arg1
+                        : * mut u8, arg2 : usize,) -> * mut u8 { $($path_to_types)*::
                         _export_method_config_manager_load_from_uri_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::ConfigManager > (arg0, arg1, arg2)
                         } #[export_name =
-                        "cabi_post_wavs:agent/config#[method]config-manager.load-from-uri"]
+                        "cabi_post_wavs:agent/config@0.0.1#[method]config-manager.load-from-uri"]
                         unsafe extern "C" fn
                         _post_return_method_config_manager_load_from_uri(arg0 : * mut
                         u8,) { $($path_to_types)*::
                         __post_return_method_config_manager_load_from_uri::<<$ty as
                         $($path_to_types)*:: Guest >::ConfigManager > (arg0) }
                         #[export_name =
-                        "wavs:agent/config#[method]config-manager.from-json"] unsafe
-                        extern "C" fn export_method_config_manager_from_json(arg0 : * mut
-                        u8, arg1 : * mut u8, arg2 : usize,) -> * mut u8 {
+                        "wavs:agent/config@0.0.1#[method]config-manager.from-json"]
+                        unsafe extern "C" fn export_method_config_manager_from_json(arg0
+                        : * mut u8, arg1 : * mut u8, arg2 : usize,) -> * mut u8 {
                         $($path_to_types)*::
                         _export_method_config_manager_from_json_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::ConfigManager > (arg0, arg1, arg2)
                         } #[export_name =
-                        "cabi_post_wavs:agent/config#[method]config-manager.from-json"]
+                        "cabi_post_wavs:agent/config@0.0.1#[method]config-manager.from-json"]
                         unsafe extern "C" fn
                         _post_return_method_config_manager_from_json(arg0 : * mut u8,) {
                         $($path_to_types)*::
                         __post_return_method_config_manager_from_json::<<$ty as
                         $($path_to_types)*:: Guest >::ConfigManager > (arg0) }
                         #[export_name =
-                        "wavs:agent/config#[method]config-manager.to-json"] unsafe extern
-                        "C" fn export_method_config_manager_to_json(arg0 : * mut u8,) ->
-                        * mut u8 { $($path_to_types)*::
+                        "wavs:agent/config@0.0.1#[method]config-manager.to-json"] unsafe
+                        extern "C" fn export_method_config_manager_to_json(arg0 : * mut
+                        u8,) -> * mut u8 { $($path_to_types)*::
                         _export_method_config_manager_to_json_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::ConfigManager > (arg0) }
                         #[export_name =
-                        "cabi_post_wavs:agent/config#[method]config-manager.to-json"]
+                        "cabi_post_wavs:agent/config@0.0.1#[method]config-manager.to-json"]
                         unsafe extern "C" fn
                         _post_return_method_config_manager_to_json(arg0 : * mut u8,) {
                         $($path_to_types)*::
                         __post_return_method_config_manager_to_json::<<$ty as
                         $($path_to_types)*:: Guest >::ConfigManager > (arg0) }
                         #[export_name =
-                        "wavs:agent/config#[method]config-manager.format-contract-descriptions"]
+                        "wavs:agent/config@0.0.1#[method]config-manager.format-contract-descriptions"]
                         unsafe extern "C" fn
                         export_method_config_manager_format_contract_descriptions(arg0 :
                         * mut u8,) -> * mut u8 { $($path_to_types)*::
                         _export_method_config_manager_format_contract_descriptions_cabi::<<$ty
                         as $($path_to_types)*:: Guest >::ConfigManager > (arg0) }
                         #[export_name =
-                        "cabi_post_wavs:agent/config#[method]config-manager.format-contract-descriptions"]
+                        "cabi_post_wavs:agent/config@0.0.1#[method]config-manager.format-contract-descriptions"]
                         unsafe extern "C" fn
                         _post_return_method_config_manager_format_contract_descriptions(arg0
                         : * mut u8,) { $($path_to_types)*::
                         __post_return_method_config_manager_format_contract_descriptions::<<$ty
                         as $($path_to_types)*:: Guest >::ConfigManager > (arg0) }
                         #[export_name =
-                        "wavs:agent/config#[method]config-manager.get-contract-by-name"]
+                        "wavs:agent/config@0.0.1#[method]config-manager.get-contract-by-name"]
                         unsafe extern "C" fn
                         export_method_config_manager_get_contract_by_name(arg0 : * mut
                         u8, arg1 : * mut u8, arg2 : usize,) -> * mut u8 {
@@ -14781,39 +14810,39 @@ pub mod exports {
                         _export_method_config_manager_get_contract_by_name_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::ConfigManager > (arg0, arg1, arg2)
                         } #[export_name =
-                        "cabi_post_wavs:agent/config#[method]config-manager.get-contract-by-name"]
+                        "cabi_post_wavs:agent/config@0.0.1#[method]config-manager.get-contract-by-name"]
                         unsafe extern "C" fn
                         _post_return_method_config_manager_get_contract_by_name(arg0 : *
                         mut u8,) { $($path_to_types)*::
                         __post_return_method_config_manager_get_contract_by_name::<<$ty
                         as $($path_to_types)*:: Guest >::ConfigManager > (arg0) }
                         #[export_name =
-                        "wavs:agent/config#[method]config-manager.validate"] unsafe
+                        "wavs:agent/config@0.0.1#[method]config-manager.validate"] unsafe
                         extern "C" fn export_method_config_manager_validate(arg0 : * mut
                         u8,) -> * mut u8 { $($path_to_types)*::
                         _export_method_config_manager_validate_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::ConfigManager > (arg0) }
                         #[export_name =
-                        "cabi_post_wavs:agent/config#[method]config-manager.validate"]
+                        "cabi_post_wavs:agent/config@0.0.1#[method]config-manager.validate"]
                         unsafe extern "C" fn
                         _post_return_method_config_manager_validate(arg0 : * mut u8,) {
                         $($path_to_types)*::
                         __post_return_method_config_manager_validate::<<$ty as
                         $($path_to_types)*:: Guest >::ConfigManager > (arg0) } const _ :
                         () = { #[doc(hidden)] #[export_name =
-                        "wavs:agent/config#[dtor]llm-options-funcs"]
+                        "wavs:agent/config@0.0.1#[dtor]llm-options-funcs"]
                         #[allow(non_snake_case)] unsafe extern "C" fn dtor(rep : * mut
                         u8) { $($path_to_types)*:: LlmOptionsFuncs::dtor::< <$ty as
                         $($path_to_types)*:: Guest >::LlmOptionsFuncs > (rep) } }; const
                         _ : () = { #[doc(hidden)] #[export_name =
-                        "wavs:agent/config#[dtor]config-manager"]
+                        "wavs:agent/config@0.0.1#[dtor]config-manager"]
                         #[allow(non_snake_case)] unsafe extern "C" fn dtor(rep : * mut
                         u8) { $($path_to_types)*:: ConfigManager::dtor::< <$ty as
                         $($path_to_types)*:: Guest >::ConfigManager > (rep) } }; };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_wavs_agent_config_cabi;
+                pub(crate) use __export_wavs_agent_config_0_0_1_cabi;
                 #[repr(align(4))]
                 struct _RetArea([::core::mem::MaybeUninit<u8>; 64]);
                 static mut _RET_AREA: _RetArea = _RetArea(
@@ -14944,7 +14973,9 @@ pub mod exports {
                         unreachable!();
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/contracts")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/contracts@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-drop]contract-manager"]
                                 fn drop(_: u32);
@@ -15068,7 +15099,9 @@ pub mod exports {
                         unreachable!();
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/contracts")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/contracts@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-drop]transaction-manager"]
                                 fn drop(_: u32);
@@ -17061,7 +17094,9 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/contracts")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/contracts@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-new]contract-manager"]
                                 fn new(_: *mut u8) -> u32;
@@ -17081,7 +17116,9 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/contracts")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/contracts@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-rep]contract-manager"]
                                 fn rep(_: u32) -> *mut u8;
@@ -17143,7 +17180,9 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/contracts")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/contracts@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-new]transaction-manager"]
                                 fn new(_: *mut u8) -> u32;
@@ -17163,7 +17202,9 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/contracts")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/contracts@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-rep]transaction-manager"]
                                 fn rep(_: u32) -> *mut u8;
@@ -17185,10 +17226,10 @@ pub mod exports {
                     ) -> Result<_rt::String, AgentError>;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_wavs_agent_contracts_cabi {
+                macro_rules! __export_wavs_agent_contracts_0_0_1_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[export_name =
-                        "wavs:agent/contracts#[method]contract-manager.new"] unsafe
+                        "wavs:agent/contracts@0.0.1#[method]contract-manager.new"] unsafe
                         extern "C" fn export_method_contract_manager_new(arg0 : * mut u8,
                         arg1 : * mut u8, arg2 : usize, arg3 : * mut u8, arg4 : usize,
                         arg5 : * mut u8, arg6 : usize,) -> * mut u8 {
@@ -17196,14 +17237,14 @@ pub mod exports {
                         _export_method_contract_manager_new_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::ContractManager > (arg0, arg1,
                         arg2, arg3, arg4, arg5, arg6) } #[export_name =
-                        "cabi_post_wavs:agent/contracts#[method]contract-manager.new"]
+                        "cabi_post_wavs:agent/contracts@0.0.1#[method]contract-manager.new"]
                         unsafe extern "C" fn
                         _post_return_method_contract_manager_new(arg0 : * mut u8,) {
                         $($path_to_types)*::
                         __post_return_method_contract_manager_new::<<$ty as
                         $($path_to_types)*:: Guest >::ContractManager > (arg0) }
                         #[export_name =
-                        "wavs:agent/contracts#[method]contract-manager.new-with-description"]
+                        "wavs:agent/contracts@0.0.1#[method]contract-manager.new-with-description"]
                         unsafe extern "C" fn
                         export_method_contract_manager_new_with_description(arg0 : * mut
                         u8, arg1 : * mut u8, arg2 : usize, arg3 : * mut u8, arg4 : usize,
@@ -17212,29 +17253,30 @@ pub mod exports {
                         _export_method_contract_manager_new_with_description_cabi::<<$ty
                         as $($path_to_types)*:: Guest >::ContractManager > (arg0, arg1,
                         arg2, arg3, arg4, arg5, arg6, arg7, arg8) } #[export_name =
-                        "cabi_post_wavs:agent/contracts#[method]contract-manager.new-with-description"]
+                        "cabi_post_wavs:agent/contracts@0.0.1#[method]contract-manager.new-with-description"]
                         unsafe extern "C" fn
                         _post_return_method_contract_manager_new_with_description(arg0 :
                         * mut u8,) { $($path_to_types)*::
                         __post_return_method_contract_manager_new_with_description::<<$ty
                         as $($path_to_types)*:: Guest >::ContractManager > (arg0) }
                         #[export_name =
-                        "wavs:agent/contracts#[method]contract-manager.parse-abi"] unsafe
-                        extern "C" fn export_method_contract_manager_parse_abi(arg0 : *
-                        mut u8, arg1 : * mut u8, arg2 : usize, arg3 : * mut u8, arg4 :
-                        usize, arg5 : * mut u8, arg6 : usize, arg7 : i32, arg8 : * mut
-                        u8, arg9 : usize,) -> * mut u8 { $($path_to_types)*::
+                        "wavs:agent/contracts@0.0.1#[method]contract-manager.parse-abi"]
+                        unsafe extern "C" fn
+                        export_method_contract_manager_parse_abi(arg0 : * mut u8, arg1 :
+                        * mut u8, arg2 : usize, arg3 : * mut u8, arg4 : usize, arg5 : *
+                        mut u8, arg6 : usize, arg7 : i32, arg8 : * mut u8, arg9 : usize,)
+                        -> * mut u8 { $($path_to_types)*::
                         _export_method_contract_manager_parse_abi_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::ContractManager > (arg0, arg1,
                         arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) } #[export_name =
-                        "cabi_post_wavs:agent/contracts#[method]contract-manager.parse-abi"]
+                        "cabi_post_wavs:agent/contracts@0.0.1#[method]contract-manager.parse-abi"]
                         unsafe extern "C" fn
                         _post_return_method_contract_manager_parse_abi(arg0 : * mut u8,)
                         { $($path_to_types)*::
                         __post_return_method_contract_manager_parse_abi::<<$ty as
                         $($path_to_types)*:: Guest >::ContractManager > (arg0) }
                         #[export_name =
-                        "wavs:agent/contracts#[method]contract-manager.encode-function-call"]
+                        "wavs:agent/contracts@0.0.1#[method]contract-manager.encode-function-call"]
                         unsafe extern "C" fn
                         export_method_contract_manager_encode_function_call(arg0 : * mut
                         u8, arg1 : * mut u8, arg2 : usize, arg3 : * mut u8, arg4 : usize,
@@ -17245,14 +17287,14 @@ pub mod exports {
                         as $($path_to_types)*:: Guest >::ContractManager > (arg0, arg1,
                         arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11,
                         arg12, arg13) } #[export_name =
-                        "cabi_post_wavs:agent/contracts#[method]contract-manager.encode-function-call"]
+                        "cabi_post_wavs:agent/contracts@0.0.1#[method]contract-manager.encode-function-call"]
                         unsafe extern "C" fn
                         _post_return_method_contract_manager_encode_function_call(arg0 :
                         * mut u8,) { $($path_to_types)*::
                         __post_return_method_contract_manager_encode_function_call::<<$ty
                         as $($path_to_types)*:: Guest >::ContractManager > (arg0) }
                         #[export_name =
-                        "wavs:agent/contracts#[method]contract-manager.find-function"]
+                        "wavs:agent/contracts@0.0.1#[method]contract-manager.find-function"]
                         unsafe extern "C" fn
                         export_method_contract_manager_find_function(arg0 : * mut u8,
                         arg1 : * mut u8, arg2 : usize, arg3 : * mut u8, arg4 : usize,
@@ -17263,14 +17305,14 @@ pub mod exports {
                         $($path_to_types)*:: Guest >::ContractManager > (arg0, arg1,
                         arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) }
                         #[export_name =
-                        "cabi_post_wavs:agent/contracts#[method]contract-manager.find-function"]
+                        "cabi_post_wavs:agent/contracts@0.0.1#[method]contract-manager.find-function"]
                         unsafe extern "C" fn
                         _post_return_method_contract_manager_find_function(arg0 : * mut
                         u8,) { $($path_to_types)*::
                         __post_return_method_contract_manager_find_function::<<$ty as
                         $($path_to_types)*:: Guest >::ContractManager > (arg0) }
                         #[export_name =
-                        "wavs:agent/contracts#[method]contract-manager.validate-function-call"]
+                        "wavs:agent/contracts@0.0.1#[method]contract-manager.validate-function-call"]
                         unsafe extern "C" fn
                         export_method_contract_manager_validate_function_call(arg0 : *
                         mut u8, arg1 : * mut u8, arg2 : usize, arg3 : * mut u8, arg4 :
@@ -17281,14 +17323,14 @@ pub mod exports {
                         as $($path_to_types)*:: Guest >::ContractManager > (arg0, arg1,
                         arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11,
                         arg12, arg13) } #[export_name =
-                        "cabi_post_wavs:agent/contracts#[method]contract-manager.validate-function-call"]
+                        "cabi_post_wavs:agent/contracts@0.0.1#[method]contract-manager.validate-function-call"]
                         unsafe extern "C" fn
                         _post_return_method_contract_manager_validate_function_call(arg0
                         : * mut u8,) { $($path_to_types)*::
                         __post_return_method_contract_manager_validate_function_call::<<$ty
                         as $($path_to_types)*:: Guest >::ContractManager > (arg0) }
                         #[export_name =
-                        "wavs:agent/contracts#[method]transaction-manager.is-valid"]
+                        "wavs:agent/contracts@0.0.1#[method]transaction-manager.is-valid"]
                         unsafe extern "C" fn
                         export_method_transaction_manager_is_valid(arg0 : * mut u8, arg1
                         : * mut u8, arg2 : usize, arg3 : * mut u8, arg4 : usize, arg5 :
@@ -17299,7 +17341,7 @@ pub mod exports {
                         $($path_to_types)*:: Guest >::TransactionManager > (arg0, arg1,
                         arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11,
                         arg12, arg13) } #[export_name =
-                        "wavs:agent/contracts#[method]transaction-manager.validate-transaction"]
+                        "wavs:agent/contracts@0.0.1#[method]transaction-manager.validate-transaction"]
                         unsafe extern "C" fn
                         export_method_transaction_manager_validate_transaction(arg0 : *
                         mut u8, arg1 : * mut u8, arg2 : usize, arg3 : * mut u8, arg4 :
@@ -17310,14 +17352,14 @@ pub mod exports {
                         as $($path_to_types)*:: Guest >::TransactionManager > (arg0,
                         arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10,
                         arg11, arg12, arg13) } #[export_name =
-                        "cabi_post_wavs:agent/contracts#[method]transaction-manager.validate-transaction"]
+                        "cabi_post_wavs:agent/contracts@0.0.1#[method]transaction-manager.validate-transaction"]
                         unsafe extern "C" fn
                         _post_return_method_transaction_manager_validate_transaction(arg0
                         : * mut u8,) { $($path_to_types)*::
                         __post_return_method_transaction_manager_validate_transaction::<<$ty
                         as $($path_to_types)*:: Guest >::TransactionManager > (arg0) }
                         #[export_name =
-                        "wavs:agent/contracts#[method]transaction-manager.create-payload-from-tx"]
+                        "wavs:agent/contracts@0.0.1#[method]transaction-manager.create-payload-from-tx"]
                         unsafe extern "C" fn
                         export_method_transaction_manager_create_payload_from_tx(arg0 : *
                         mut u8, arg1 : * mut u8, arg2 : usize, arg3 : * mut u8, arg4 :
@@ -17328,26 +17370,26 @@ pub mod exports {
                         as $($path_to_types)*:: Guest >::TransactionManager > (arg0,
                         arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10,
                         arg11, arg12, arg13) } #[export_name =
-                        "cabi_post_wavs:agent/contracts#[method]transaction-manager.create-payload-from-tx"]
+                        "cabi_post_wavs:agent/contracts@0.0.1#[method]transaction-manager.create-payload-from-tx"]
                         unsafe extern "C" fn
                         _post_return_method_transaction_manager_create_payload_from_tx(arg0
                         : * mut u8,) { $($path_to_types)*::
                         __post_return_method_transaction_manager_create_payload_from_tx::<<$ty
                         as $($path_to_types)*:: Guest >::TransactionManager > (arg0) }
                         const _ : () = { #[doc(hidden)] #[export_name =
-                        "wavs:agent/contracts#[dtor]contract-manager"]
+                        "wavs:agent/contracts@0.0.1#[dtor]contract-manager"]
                         #[allow(non_snake_case)] unsafe extern "C" fn dtor(rep : * mut
                         u8) { $($path_to_types)*:: ContractManager::dtor::< <$ty as
                         $($path_to_types)*:: Guest >::ContractManager > (rep) } }; const
                         _ : () = { #[doc(hidden)] #[export_name =
-                        "wavs:agent/contracts#[dtor]transaction-manager"]
+                        "wavs:agent/contracts@0.0.1#[dtor]transaction-manager"]
                         #[allow(non_snake_case)] unsafe extern "C" fn dtor(rep : * mut
                         u8) { $($path_to_types)*:: TransactionManager::dtor::< <$ty as
                         $($path_to_types)*:: Guest >::TransactionManager > (rep) } }; };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_wavs_agent_contracts_cabi;
+                pub(crate) use __export_wavs_agent_contracts_0_0_1_cabi;
                 #[repr(align(4))]
                 struct _RetArea([::core::mem::MaybeUninit<u8>; 36]);
                 static mut _RET_AREA: _RetArea = _RetArea(
@@ -17483,7 +17525,9 @@ pub mod exports {
                         unreachable!();
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/tools")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/tools@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-drop]tools-builder"]
                                 fn drop(_: u32);
@@ -18453,7 +18497,9 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/tools")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/tools@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-new]tools-builder"]
                                 fn new(_: *mut u8) -> u32;
@@ -18473,7 +18519,9 @@ pub mod exports {
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
-                            #[link(wasm_import_module = "[export]wavs:agent/tools")]
+                            #[link(
+                                wasm_import_module = "[export]wavs:agent/tools@0.0.1"
+                            )]
                             extern "C" {
                                 #[link_name = "[resource-rep]tools-builder"]
                                 fn rep(_: u32) -> *mut u8;
@@ -18514,23 +18562,24 @@ pub mod exports {
                     ) -> Result<_rt::String, _rt::String>;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_wavs_agent_tools_cabi {
+                macro_rules! __export_wavs_agent_tools_0_0_1_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[export_name =
-                        "wavs:agent/tools#[method]tools-builder.send-eth-tool"] unsafe
-                        extern "C" fn export_method_tools_builder_send_eth_tool(arg0 : *
-                        mut u8,) -> * mut u8 { $($path_to_types)*::
+                        "wavs:agent/tools@0.0.1#[method]tools-builder.send-eth-tool"]
+                        unsafe extern "C" fn
+                        export_method_tools_builder_send_eth_tool(arg0 : * mut u8,) -> *
+                        mut u8 { $($path_to_types)*::
                         _export_method_tools_builder_send_eth_tool_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::ToolsBuilder > (arg0) }
                         #[export_name =
-                        "cabi_post_wavs:agent/tools#[method]tools-builder.send-eth-tool"]
+                        "cabi_post_wavs:agent/tools@0.0.1#[method]tools-builder.send-eth-tool"]
                         unsafe extern "C" fn
                         _post_return_method_tools_builder_send_eth_tool(arg0 : * mut u8,)
                         { $($path_to_types)*::
                         __post_return_method_tools_builder_send_eth_tool::<<$ty as
                         $($path_to_types)*:: Guest >::ToolsBuilder > (arg0) }
                         #[export_name =
-                        "wavs:agent/tools#[method]tools-builder.tools-from-contract"]
+                        "wavs:agent/tools@0.0.1#[method]tools-builder.tools-from-contract"]
                         unsafe extern "C" fn
                         export_method_tools_builder_tools_from_contract(arg0 : * mut u8,
                         arg1 : * mut u8, arg2 : usize, arg3 : * mut u8, arg4 : usize,
@@ -18539,29 +18588,29 @@ pub mod exports {
                         _export_method_tools_builder_tools_from_contract_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::ToolsBuilder > (arg0, arg1, arg2,
                         arg3, arg4, arg5, arg6, arg7, arg8, arg9) } #[export_name =
-                        "cabi_post_wavs:agent/tools#[method]tools-builder.tools-from-contract"]
+                        "cabi_post_wavs:agent/tools@0.0.1#[method]tools-builder.tools-from-contract"]
                         unsafe extern "C" fn
                         _post_return_method_tools_builder_tools_from_contract(arg0 : *
                         mut u8,) { $($path_to_types)*::
                         __post_return_method_tools_builder_tools_from_contract::<<$ty as
                         $($path_to_types)*:: Guest >::ToolsBuilder > (arg0) }
                         #[export_name =
-                        "wavs:agent/tools#[method]tools-builder.custom-tool"] unsafe
-                        extern "C" fn export_method_tools_builder_custom_tool(arg0 : *
-                        mut u8, arg1 : * mut u8, arg2 : usize, arg3 : * mut u8, arg4 :
-                        usize, arg5 : * mut u8, arg6 : usize,) -> * mut u8 {
+                        "wavs:agent/tools@0.0.1#[method]tools-builder.custom-tool"]
+                        unsafe extern "C" fn export_method_tools_builder_custom_tool(arg0
+                        : * mut u8, arg1 : * mut u8, arg2 : usize, arg3 : * mut u8, arg4
+                        : usize, arg5 : * mut u8, arg6 : usize,) -> * mut u8 {
                         $($path_to_types)*::
                         _export_method_tools_builder_custom_tool_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::ToolsBuilder > (arg0, arg1, arg2,
                         arg3, arg4, arg5, arg6) } #[export_name =
-                        "cabi_post_wavs:agent/tools#[method]tools-builder.custom-tool"]
+                        "cabi_post_wavs:agent/tools@0.0.1#[method]tools-builder.custom-tool"]
                         unsafe extern "C" fn
                         _post_return_method_tools_builder_custom_tool(arg0 : * mut u8,) {
                         $($path_to_types)*::
                         __post_return_method_tools_builder_custom_tool::<<$ty as
                         $($path_to_types)*:: Guest >::ToolsBuilder > (arg0) }
                         #[export_name =
-                        "wavs:agent/tools#[method]tools-builder.execute-tool-call"]
+                        "wavs:agent/tools@0.0.1#[method]tools-builder.execute-tool-call"]
                         unsafe extern "C" fn
                         export_method_tools_builder_execute_tool_call(arg0 : * mut u8,
                         arg1 : * mut u8, arg2 : usize, arg3 : * mut u8, arg4 : usize,
@@ -18572,14 +18621,14 @@ pub mod exports {
                         $($path_to_types)*:: Guest >::ToolsBuilder > (arg0, arg1, arg2,
                         arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) }
                         #[export_name =
-                        "cabi_post_wavs:agent/tools#[method]tools-builder.execute-tool-call"]
+                        "cabi_post_wavs:agent/tools@0.0.1#[method]tools-builder.execute-tool-call"]
                         unsafe extern "C" fn
                         _post_return_method_tools_builder_execute_tool_call(arg0 : * mut
                         u8,) { $($path_to_types)*::
                         __post_return_method_tools_builder_execute_tool_call::<<$ty as
                         $($path_to_types)*:: Guest >::ToolsBuilder > (arg0) }
                         #[export_name =
-                        "wavs:agent/tools#[method]tools-builder.parse-eth-transaction"]
+                        "wavs:agent/tools@0.0.1#[method]tools-builder.parse-eth-transaction"]
                         unsafe extern "C" fn
                         export_method_tools_builder_parse_eth_transaction(arg0 : * mut
                         u8, arg1 : * mut u8, arg2 : usize, arg3 : * mut u8, arg4 : usize,
@@ -18588,35 +18637,35 @@ pub mod exports {
                         _export_method_tools_builder_parse_eth_transaction_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::ToolsBuilder > (arg0, arg1, arg2,
                         arg3, arg4, arg5, arg6, arg7, arg8) } #[export_name =
-                        "cabi_post_wavs:agent/tools#[method]tools-builder.parse-eth-transaction"]
+                        "cabi_post_wavs:agent/tools@0.0.1#[method]tools-builder.parse-eth-transaction"]
                         unsafe extern "C" fn
                         _post_return_method_tools_builder_parse_eth_transaction(arg0 : *
                         mut u8,) { $($path_to_types)*::
                         __post_return_method_tools_builder_parse_eth_transaction::<<$ty
                         as $($path_to_types)*:: Guest >::ToolsBuilder > (arg0) }
                         #[export_name =
-                        "wavs:agent/tools#[method]tools-builder.process-tool-calls"]
+                        "wavs:agent/tools@0.0.1#[method]tools-builder.process-tool-calls"]
                         unsafe extern "C" fn
                         export_method_tools_builder_process_tool_calls(arg0 : * mut u8,)
                         -> * mut u8 { $($path_to_types)*::
                         _export_method_tools_builder_process_tool_calls_cabi::<<$ty as
                         $($path_to_types)*:: Guest >::ToolsBuilder > (arg0) }
                         #[export_name =
-                        "cabi_post_wavs:agent/tools#[method]tools-builder.process-tool-calls"]
+                        "cabi_post_wavs:agent/tools@0.0.1#[method]tools-builder.process-tool-calls"]
                         unsafe extern "C" fn
                         _post_return_method_tools_builder_process_tool_calls(arg0 : * mut
                         u8,) { $($path_to_types)*::
                         __post_return_method_tools_builder_process_tool_calls::<<$ty as
                         $($path_to_types)*:: Guest >::ToolsBuilder > (arg0) } const _ :
                         () = { #[doc(hidden)] #[export_name =
-                        "wavs:agent/tools#[dtor]tools-builder"] #[allow(non_snake_case)]
-                        unsafe extern "C" fn dtor(rep : * mut u8) { $($path_to_types)*::
-                        ToolsBuilder::dtor::< <$ty as $($path_to_types)*:: Guest
-                        >::ToolsBuilder > (rep) } }; };
+                        "wavs:agent/tools@0.0.1#[dtor]tools-builder"]
+                        #[allow(non_snake_case)] unsafe extern "C" fn dtor(rep : * mut
+                        u8) { $($path_to_types)*:: ToolsBuilder::dtor::< <$ty as
+                        $($path_to_types)*:: Guest >::ToolsBuilder > (rep) } }; };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_wavs_agent_tools_cabi;
+                pub(crate) use __export_wavs_agent_tools_0_0_1_cabi;
                 #[repr(align(4))]
                 struct _RetArea([::core::mem::MaybeUninit<u8>; 40]);
                 static mut _RET_AREA: _RetArea = _RetArea(
@@ -18843,45 +18892,46 @@ macro_rules! __export_wavs_agent_impl {
     };
     ($ty:ident with_types_in $($path_to_types_root:tt)*) => {
         $($path_to_types_root)*::
-        exports::wavs::agent::errors::__export_wavs_agent_errors_cabi!($ty with_types_in
-        $($path_to_types_root)*:: exports::wavs::agent::errors);
+        exports::wavs::agent::errors::__export_wavs_agent_errors_0_0_1_cabi!($ty
+        with_types_in $($path_to_types_root)*:: exports::wavs::agent::errors);
         $($path_to_types_root)*::
-        exports::wavs::agent::types::__export_wavs_agent_types_cabi!($ty with_types_in
-        $($path_to_types_root)*:: exports::wavs::agent::types); $($path_to_types_root)*::
-        exports::wavs::agent::client::__export_wavs_agent_client_cabi!($ty with_types_in
-        $($path_to_types_root)*:: exports::wavs::agent::client);
+        exports::wavs::agent::types::__export_wavs_agent_types_0_0_1_cabi!($ty
+        with_types_in $($path_to_types_root)*:: exports::wavs::agent::types);
         $($path_to_types_root)*::
-        exports::wavs::agent::config::__export_wavs_agent_config_cabi!($ty with_types_in
-        $($path_to_types_root)*:: exports::wavs::agent::config);
+        exports::wavs::agent::client::__export_wavs_agent_client_0_0_1_cabi!($ty
+        with_types_in $($path_to_types_root)*:: exports::wavs::agent::client);
         $($path_to_types_root)*::
-        exports::wavs::agent::contracts::__export_wavs_agent_contracts_cabi!($ty
+        exports::wavs::agent::config::__export_wavs_agent_config_0_0_1_cabi!($ty
+        with_types_in $($path_to_types_root)*:: exports::wavs::agent::config);
+        $($path_to_types_root)*::
+        exports::wavs::agent::contracts::__export_wavs_agent_contracts_0_0_1_cabi!($ty
         with_types_in $($path_to_types_root)*:: exports::wavs::agent::contracts);
         $($path_to_types_root)*::
-        exports::wavs::agent::tools::__export_wavs_agent_tools_cabi!($ty with_types_in
-        $($path_to_types_root)*:: exports::wavs::agent::tools);
+        exports::wavs::agent::tools::__export_wavs_agent_tools_0_0_1_cabi!($ty
+        with_types_in $($path_to_types_root)*:: exports::wavs::agent::tools);
     };
 }
 #[doc(inline)]
 pub(crate) use __export_wavs_agent_impl as export;
 #[cfg(target_arch = "wasm32")]
-#[link_section = "component-type:wit-bindgen:0.35.0:wavs:agent:wavs-agent:encoded world"]
+#[link_section = "component-type:wit-bindgen:0.35.0:wavs:agent@0.0.1:wavs-agent:encoded world"]
 #[doc(hidden)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 8987] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\x9aE\x01A\x02\x01A%\x01\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 9065] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xe8E\x01A\x02\x01A%\x01\
 B\x02\x01q\x0d\x03api\x01s\0\x04http\x01s\0\x10external-service\x01s\0\x06config\
 \x01s\0\x08contract\x01s\0\x0dconfiguration\x01s\0\x0fcontext-loading\x01s\0\x12\
 context-validation\x01s\0\x03llm\x01s\0\x02io\x01s\0\x0btransaction\x01s\0\x04ut\
-f8\x01s\0\x05other\x01s\0\x04\0\x0bagent-error\x03\0\0\x03\0\x11wavs:agent/error\
-s\x05\0\x01B)\x01ks\x01r\x03\x04name\0\x0bdescription\0\x0eparameter-type\0\x04\0\
-\x12function-parameter\x03\0\x01\x01r\x03\x04names\x0bdescription\0\x0aparameter\
-s\0\x04\0\x08function\x03\0\x03\x01r\x02\x09tool-types\x08function\x04\x04\0\x04\
-tool\x03\0\x05\x01r\x02\x04names\x09argumentss\x04\0\x12tool-call-function\x03\0\
-\x07\x01r\x03\x02ids\x09tool-types\x08function\x08\x04\0\x09tool-call\x03\0\x09\x01\
-p\x0a\x01k\x0b\x01r\x05\x04roles\x07content\0\x0atool-calls\x0c\x0ctool-call-id\0\
-\x04name\0\x04\0\x07message\x03\0\x0d\x04\0\x13custom-tool-handler\x03\x01\x01ky\
-\x01r\x05\x0btemperaturev\x05top-pv\x04seedy\x0amax-tokens\x10\x0econtext-window\
-\x10\x04\0\x0bllm-options\x03\0\x11\x01r\x04\x04names\x07addresss\x03abis\x0bdes\
-cription\0\x04\0\x08contract\x03\0\x13\x01p\x14\x01p\x0e\x01o\x02ss\x01p\x17\x01\
+f8\x01s\0\x05other\x01s\0\x04\0\x0bagent-error\x03\0\0\x03\0\x17wavs:agent/error\
+s@0.0.1\x05\0\x01B)\x01ks\x01r\x03\x04name\0\x0bdescription\0\x0eparameter-type\0\
+\x04\0\x12function-parameter\x03\0\x01\x01r\x03\x04names\x0bdescription\0\x0apar\
+ameters\0\x04\0\x08function\x03\0\x03\x01r\x02\x09tool-types\x08function\x04\x04\
+\0\x04tool\x03\0\x05\x01r\x02\x04names\x09argumentss\x04\0\x12tool-call-function\
+\x03\0\x07\x01r\x03\x02ids\x09tool-types\x08function\x08\x04\0\x09tool-call\x03\0\
+\x09\x01p\x0a\x01k\x0b\x01r\x05\x04roles\x07content\0\x0atool-calls\x0c\x0ctool-\
+call-id\0\x04name\0\x04\0\x07message\x03\0\x0d\x04\0\x13custom-tool-handler\x03\x01\
+\x01ky\x01r\x05\x0btemperaturev\x05top-pv\x04seedy\x0amax-tokens\x10\x0econtext-\
+window\x10\x04\0\x0bllm-options\x03\0\x11\x01r\x04\x04names\x07addresss\x03abis\x0b\
+description\0\x04\0\x08contract\x03\0\x13\x01p\x14\x01p\x0e\x01o\x02ss\x01p\x17\x01\
 r\x05\x09contracts\x15\x0allm-config\x12\x05models\x08messages\x16\x06config\x18\
 \x04\0\x06config\x03\0\x19\x01ps\x01r\x02\x08functions\x04args\x1b\x04\0\x0dcont\
 ract-call\x03\0\x1c\x01k\x1d\x01r\x05\x02tos\x05values\x0dcontract-call\x1e\x04d\
@@ -18889,14 +18939,14 @@ atas\x0bdescriptions\x04\0\x0btransaction\x03\0\x1f\x01q\x02\x0btransaction\x01\
 \0\x04text\x01s\0\x04\0\x0cllm-response\x03\0!\x01h\x0f\x01@\x02\x04self#\x09too\
 l-names\0\x7f\x04\0&[method]custom-tool-handler.can-handle\x01$\x01j\x01s\x01s\x01\
 @\x02\x04self#\x09tool-call\x0a\0%\x04\0#[method]custom-tool-handler.execute\x01\
-&\x03\0\x10wavs:agent/types\x05\x01\x02\x03\0\0\x0bagent-error\x02\x03\0\x01\x07\
-message\x02\x03\0\x01\x04tool\x02\x03\0\x01\x09tool-call\x02\x03\0\x01\x13custom\
--tool-handler\x02\x03\0\x01\x0cllm-response\x02\x03\0\x01\x0btransaction\x02\x03\
-\0\x01\x06config\x02\x03\0\x01\x0bllm-options\x01B/\x02\x03\x02\x01\x02\x04\0\x0b\
-agent-error\x03\0\0\x02\x03\x02\x01\x03\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\
-\x04\x04\0\x04tool\x03\0\x04\x02\x03\x02\x01\x05\x04\0\x09tool-call\x03\0\x06\x02\
-\x03\x02\x01\x06\x04\0\x13custom-tool-handler\x03\0\x08\x02\x03\x02\x01\x07\x04\0\
-\x0cllm-response\x03\0\x0a\x02\x03\x02\x01\x08\x04\0\x0btransaction\x03\0\x0c\x02\
+&\x03\0\x16wavs:agent/types@0.0.1\x05\x01\x02\x03\0\0\x0bagent-error\x02\x03\0\x01\
+\x07message\x02\x03\0\x01\x04tool\x02\x03\0\x01\x09tool-call\x02\x03\0\x01\x13cu\
+stom-tool-handler\x02\x03\0\x01\x0cllm-response\x02\x03\0\x01\x0btransaction\x02\
+\x03\0\x01\x06config\x02\x03\0\x01\x0bllm-options\x01B/\x02\x03\x02\x01\x02\x04\0\
+\x0bagent-error\x03\0\0\x02\x03\x02\x01\x03\x04\0\x07message\x03\0\x02\x02\x03\x02\
+\x01\x04\x04\0\x04tool\x03\0\x04\x02\x03\x02\x01\x05\x04\0\x09tool-call\x03\0\x06\
+\x02\x03\x02\x01\x06\x04\0\x13custom-tool-handler\x03\0\x08\x02\x03\x02\x01\x07\x04\
+\0\x0cllm-response\x03\0\x0a\x02\x03\x02\x01\x08\x04\0\x0btransaction\x03\0\x0c\x02\
 \x03\x02\x01\x09\x04\0\x06config\x03\0\x0e\x02\x03\x02\x01\x0a\x04\0\x0bllm-opti\
 ons\x03\0\x10\x04\0\x0allm-client\x03\x01\x01h\x12\x01i\x12\x01j\x01\x14\x01\x01\
 \x01@\x02\x04self\x13\x05models\0\x15\x04\0\x16[method]llm-client.new\x01\x16\x01\
@@ -18909,154 +18959,154 @@ elf\x13\x08messages\x1b\x05tools\x1d\0\x1e\x04\0\"[method]llm-client.chat-comple
 tion\x01\x1f\x01j\x01s\x01\x01\x01@\x02\x04self\x13\x08messages\x1b\0\x20\x04\0'\
 [method]llm-client.chat-completion-text\x01!\x01i\x09\x01p\"\x01k#\x01j\x01\x0b\x01\
 \x01\x01@\x05\x04self\x13\x06prompts\x06config\x0f\x0ccustom-tools\x1d\x0fcustom\
--handlers$\0%\x04\0![method]llm-client.process-prompt\x01&\x03\0\x11wavs:agent/c\
-lient\x05\x0b\x02\x03\0\x01\x08contract\x01B.\x02\x03\x02\x01\x02\x04\0\x0bagent\
--error\x03\0\0\x02\x03\x02\x01\x03\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\x09\
-\x04\0\x06config\x03\0\x04\x02\x03\x02\x01\x0a\x04\0\x0bllm-options\x03\0\x06\x02\
-\x03\x02\x01\x0c\x04\0\x08contract\x03\0\x08\x04\0\x11llm-options-funcs\x03\x01\x04\
-\0\x0econfig-manager\x03\x01\x01h\x0a\x01@\x01\x04self\x0c\0\x07\x04\0\x1d[metho\
-d]llm-options-funcs.new\x01\x0d\x01@\x02\x04self\x0c\x04tempv\0\x07\x04\0%[metho\
-d]llm-options-funcs.temperature\x01\x0e\x01@\x02\x04self\x0c\x05top-pv\0\x07\x04\
-\0\x1f[method]llm-options-funcs.top-p\x01\x0f\x01@\x02\x04self\x0c\x04seedy\0\x07\
-\x04\0\x1e[method]llm-options-funcs.seed\x01\x10\x01ky\x01@\x02\x04self\x0c\x0am\
-ax-tokens\x11\0\x07\x04\0$[method]llm-options-funcs.max-tokens\x01\x12\x01@\x02\x04\
-self\x0c\x0econtext-window\x11\0\x07\x04\0([method]llm-options-funcs.context-win\
-dow\x01\x13\x01h\x0b\x01j\x01\x05\x01s\x01@\x01\x04self\x14\0\x15\x04\0\x1b[meth\
-od]config-manager.load\x01\x16\x01@\x02\x04self\x14\x03uris\0\x15\x04\0$[method]\
-config-manager.load-from-uri\x01\x17\x01j\x01\x05\x01\x01\x01@\x02\x04self\x14\x04\
-jsons\0\x18\x04\0\x20[method]config-manager.from-json\x01\x19\x01j\x01s\x01s\x01\
-@\x01\x04self\x14\0\x1a\x04\0\x1e[method]config-manager.to-json\x01\x1b\x01@\x01\
-\x04self\x14\0s\x04\03[method]config-manager.format-contract-descriptions\x01\x1c\
-\x01k\x09\x01@\x02\x04self\x14\x04names\0\x1d\x04\0+[method]config-manager.get-c\
-ontract-by-name\x01\x1e\x01j\0\x01\x01\x01@\x01\x04self\x14\0\x1f\x04\0\x1f[meth\
-od]config-manager.validate\x01\x20\x03\0\x11wavs:agent/config\x05\x0d\x02\x03\0\x01\
-\x0dcontract-call\x01B#\x02\x03\x02\x01\x02\x04\0\x0bagent-error\x03\0\0\x02\x03\
-\x02\x01\x0c\x04\0\x08contract\x03\0\x02\x02\x03\x02\x01\x0e\x04\0\x0dcontract-c\
-all\x03\0\x04\x02\x03\x02\x01\x08\x04\0\x0btransaction\x03\0\x06\x04\0\x10contra\
-ct-manager\x03\x01\x04\0\x13transaction-manager\x03\x01\x01h\x08\x01@\x04\x04sel\
-f\x0a\x04names\x07addresss\x03abis\0\x03\x04\0\x1c[method]contract-manager.new\x01\
-\x0b\x01@\x05\x04self\x0a\x04names\x07addresss\x03abis\x0bdescriptions\0\x03\x04\
-\0-[method]contract-manager.new-with-description\x01\x0c\x01j\x01s\x01\x01\x01@\x02\
-\x04self\x0a\x08contract\x03\0\x0d\x04\0\"[method]contract-manager.parse-abi\x01\
-\x0e\x01ps\x01p}\x01j\x01\x10\x01\x01\x01@\x04\x04self\x0a\x08contract\x03\x0dfu\
-nction-names\x04args\x0f\0\x11\x04\0-[method]contract-manager.encode-function-ca\
-ll\x01\x12\x01@\x03\x04self\x0a\x08contract\x03\x0dfunction-names\0\x0d\x04\0&[m\
-ethod]contract-manager.find-function\x01\x13\x01j\0\x01\x01\x01@\x04\x04self\x0a\
-\x08contract\x03\x0dfunction-names\x04args\x0f\0\x14\x04\0/[method]contract-mana\
-ger.validate-function-call\x01\x15\x01h\x09\x01@\x02\x04self\x16\x0btransaction\x07\
-\0\x7f\x04\0$[method]transaction-manager.is-valid\x01\x17\x01@\x02\x04self\x16\x0b\
-transaction\x07\0\x14\x04\00[method]transaction-manager.validate-transaction\x01\
-\x18\x01@\x02\x04self\x16\x0btransaction\x07\0\x0d\x04\02[method]transaction-man\
-ager.create-payload-from-tx\x01\x19\x03\0\x14wavs:agent/contracts\x05\x0f\x02\x03\
-\0\x02\x0allm-client\x02\x03\0\x01\x08function\x01B$\x02\x03\x02\x01\x10\x04\0\x0a\
-llm-client\x03\0\0\x02\x03\x02\x01\x03\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\
-\x04\x04\0\x04tool\x03\0\x04\x02\x03\x02\x01\x05\x04\0\x09tool-call\x03\0\x06\x02\
-\x03\x02\x01\x11\x04\0\x08function\x03\0\x08\x02\x03\x02\x01\x06\x04\0\x13custom\
--tool-handler\x03\0\x0a\x02\x03\x02\x01\x0c\x04\0\x08contract\x03\0\x0c\x04\0\x0d\
-tools-builder\x03\x01\x01h\x0e\x01@\x01\x04self\x0f\0\x05\x04\0#[method]tools-bu\
-ilder.send-eth-tool\x01\x10\x01p\x05\x01@\x02\x04self\x0f\x08contract\x0d\0\x11\x04\
-\0)[method]tools-builder.tools-from-contract\x01\x12\x01@\x04\x04self\x0f\x04nam\
-es\x0bdescriptions\x0aparameterss\0\x05\x04\0![method]tools-builder.custom-tool\x01\
-\x13\x01i\x0b\x01p\x14\x01k\x15\x01j\x01s\x01s\x01@\x03\x04self\x0f\x09tool-call\
-\x07\x0fcustom-handlers\x16\0\x17\x04\0'[method]tools-builder.execute-tool-call\x01\
-\x18\x01@\x02\x04self\x0f\x09tool-call\x07\0\x17\x04\0+[method]tools-builder.par\
-se-eth-transaction\x01\x19\x01i\x01\x01p\x03\x01p\x07\x01@\x06\x04self\x0f\x06cl\
-ient\x1a\x10initial-messages\x1b\x08response\x03\x0atool-calls\x1c\x0fcustom-han\
-dlers\x16\0\x17\x04\0([method]tools-builder.process-tool-calls\x01\x1d\x03\0\x10\
-wavs:agent/tools\x05\x12\x01B\x02\x01q\x0d\x03api\x01s\0\x04http\x01s\0\x10exter\
-nal-service\x01s\0\x06config\x01s\0\x08contract\x01s\0\x0dconfiguration\x01s\0\x0f\
-context-loading\x01s\0\x12context-validation\x01s\0\x03llm\x01s\0\x02io\x01s\0\x0b\
-transaction\x01s\0\x04utf8\x01s\0\x05other\x01s\0\x04\0\x0bagent-error\x03\0\0\x04\
-\0\x11wavs:agent/errors\x05\x13\x01B)\x01ks\x01r\x03\x04name\0\x0bdescription\0\x0e\
-parameter-type\0\x04\0\x12function-parameter\x03\0\x01\x01r\x03\x04names\x0bdesc\
-ription\0\x0aparameters\0\x04\0\x08function\x03\0\x03\x01r\x02\x09tool-types\x08\
-function\x04\x04\0\x04tool\x03\0\x05\x01r\x02\x04names\x09argumentss\x04\0\x12to\
-ol-call-function\x03\0\x07\x01r\x03\x02ids\x09tool-types\x08function\x08\x04\0\x09\
-tool-call\x03\0\x09\x01p\x0a\x01k\x0b\x01r\x05\x04roles\x07content\0\x0atool-cal\
-ls\x0c\x0ctool-call-id\0\x04name\0\x04\0\x07message\x03\0\x0d\x04\0\x13custom-to\
-ol-handler\x03\x01\x01ky\x01r\x05\x0btemperaturev\x05top-pv\x04seedy\x0amax-toke\
-ns\x10\x0econtext-window\x10\x04\0\x0bllm-options\x03\0\x11\x01r\x04\x04names\x07\
-addresss\x03abis\x0bdescription\0\x04\0\x08contract\x03\0\x13\x01p\x14\x01p\x0e\x01\
-o\x02ss\x01p\x17\x01r\x05\x09contracts\x15\x0allm-config\x12\x05models\x08messag\
-es\x16\x06config\x18\x04\0\x06config\x03\0\x19\x01ps\x01r\x02\x08functions\x04ar\
-gs\x1b\x04\0\x0dcontract-call\x03\0\x1c\x01k\x1d\x01r\x05\x02tos\x05values\x0dco\
-ntract-call\x1e\x04datas\x0bdescriptions\x04\0\x0btransaction\x03\0\x1f\x01q\x02\
-\x0btransaction\x01\x20\0\x04text\x01s\0\x04\0\x0cllm-response\x03\0!\x01h\x0f\x01\
-@\x02\x04self#\x09tool-names\0\x7f\x04\0&[method]custom-tool-handler.can-handle\x01\
-$\x01j\x01s\x01s\x01@\x02\x04self#\x09tool-call\x0a\0%\x04\0#[method]custom-tool\
--handler.execute\x01&\x04\0\x10wavs:agent/types\x05\x14\x01B/\x02\x03\x02\x01\x02\
-\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x03\x04\0\x07message\x03\0\x02\x02\
-\x03\x02\x01\x04\x04\0\x04tool\x03\0\x04\x02\x03\x02\x01\x05\x04\0\x09tool-call\x03\
-\0\x06\x02\x03\x02\x01\x06\x04\0\x13custom-tool-handler\x03\0\x08\x02\x03\x02\x01\
-\x07\x04\0\x0cllm-response\x03\0\x0a\x02\x03\x02\x01\x08\x04\0\x0btransaction\x03\
-\0\x0c\x02\x03\x02\x01\x09\x04\0\x06config\x03\0\x0e\x02\x03\x02\x01\x0a\x04\0\x0b\
-llm-options\x03\0\x10\x04\0\x0allm-client\x03\x01\x01h\x12\x01i\x12\x01j\x01\x14\
-\x01\x01\x01@\x02\x04self\x13\x05models\0\x15\x04\0\x16[method]llm-client.new\x01\
-\x16\x01@\x03\x04self\x13\x05models\x0bjson-configs\0\x15\x04\0\x1c[method]llm-c\
-lient.from-json\x01\x17\x01@\x03\x04self\x13\x05models\x06config\x11\0\x15\x04\0\
-\x1e[method]llm-client.with-config\x01\x18\x01@\x01\x04self\x13\0s\x04\0\x1c[met\
-hod]llm-client.get-model\x01\x19\x01@\x01\x04self\x13\0\x11\x04\0\x1d[method]llm\
--client.get-config\x01\x1a\x01p\x03\x01p\x05\x01k\x1c\x01j\x01\x03\x01\x01\x01@\x03\
-\x04self\x13\x08messages\x1b\x05tools\x1d\0\x1e\x04\0\"[method]llm-client.chat-c\
-ompletion\x01\x1f\x01j\x01s\x01\x01\x01@\x02\x04self\x13\x08messages\x1b\0\x20\x04\
-\0'[method]llm-client.chat-completion-text\x01!\x01i\x09\x01p\"\x01k#\x01j\x01\x0b\
-\x01\x01\x01@\x05\x04self\x13\x06prompts\x06config\x0f\x0ccustom-tools\x1d\x0fcu\
-stom-handlers$\0%\x04\0![method]llm-client.process-prompt\x01&\x04\0\x11wavs:age\
-nt/client\x05\x15\x01B.\x02\x03\x02\x01\x02\x04\0\x0bagent-error\x03\0\0\x02\x03\
-\x02\x01\x03\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\x09\x04\0\x06config\x03\0\
-\x04\x02\x03\x02\x01\x0a\x04\0\x0bllm-options\x03\0\x06\x02\x03\x02\x01\x0c\x04\0\
-\x08contract\x03\0\x08\x04\0\x11llm-options-funcs\x03\x01\x04\0\x0econfig-manage\
-r\x03\x01\x01h\x0a\x01@\x01\x04self\x0c\0\x07\x04\0\x1d[method]llm-options-funcs\
-.new\x01\x0d\x01@\x02\x04self\x0c\x04tempv\0\x07\x04\0%[method]llm-options-funcs\
-.temperature\x01\x0e\x01@\x02\x04self\x0c\x05top-pv\0\x07\x04\0\x1f[method]llm-o\
-ptions-funcs.top-p\x01\x0f\x01@\x02\x04self\x0c\x04seedy\0\x07\x04\0\x1e[method]\
-llm-options-funcs.seed\x01\x10\x01ky\x01@\x02\x04self\x0c\x0amax-tokens\x11\0\x07\
-\x04\0$[method]llm-options-funcs.max-tokens\x01\x12\x01@\x02\x04self\x0c\x0econt\
-ext-window\x11\0\x07\x04\0([method]llm-options-funcs.context-window\x01\x13\x01h\
-\x0b\x01j\x01\x05\x01s\x01@\x01\x04self\x14\0\x15\x04\0\x1b[method]config-manage\
-r.load\x01\x16\x01@\x02\x04self\x14\x03uris\0\x15\x04\0$[method]config-manager.l\
-oad-from-uri\x01\x17\x01j\x01\x05\x01\x01\x01@\x02\x04self\x14\x04jsons\0\x18\x04\
-\0\x20[method]config-manager.from-json\x01\x19\x01j\x01s\x01s\x01@\x01\x04self\x14\
-\0\x1a\x04\0\x1e[method]config-manager.to-json\x01\x1b\x01@\x01\x04self\x14\0s\x04\
-\03[method]config-manager.format-contract-descriptions\x01\x1c\x01k\x09\x01@\x02\
-\x04self\x14\x04names\0\x1d\x04\0+[method]config-manager.get-contract-by-name\x01\
-\x1e\x01j\0\x01\x01\x01@\x01\x04self\x14\0\x1f\x04\0\x1f[method]config-manager.v\
-alidate\x01\x20\x04\0\x11wavs:agent/config\x05\x16\x01B#\x02\x03\x02\x01\x02\x04\
-\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x0c\x04\0\x08contract\x03\0\x02\x02\x03\
-\x02\x01\x0e\x04\0\x0dcontract-call\x03\0\x04\x02\x03\x02\x01\x08\x04\0\x0btrans\
-action\x03\0\x06\x04\0\x10contract-manager\x03\x01\x04\0\x13transaction-manager\x03\
-\x01\x01h\x08\x01@\x04\x04self\x0a\x04names\x07addresss\x03abis\0\x03\x04\0\x1c[\
-method]contract-manager.new\x01\x0b\x01@\x05\x04self\x0a\x04names\x07addresss\x03\
-abis\x0bdescriptions\0\x03\x04\0-[method]contract-manager.new-with-description\x01\
-\x0c\x01j\x01s\x01\x01\x01@\x02\x04self\x0a\x08contract\x03\0\x0d\x04\0\"[method\
-]contract-manager.parse-abi\x01\x0e\x01ps\x01p}\x01j\x01\x10\x01\x01\x01@\x04\x04\
-self\x0a\x08contract\x03\x0dfunction-names\x04args\x0f\0\x11\x04\0-[method]contr\
-act-manager.encode-function-call\x01\x12\x01@\x03\x04self\x0a\x08contract\x03\x0d\
-function-names\0\x0d\x04\0&[method]contract-manager.find-function\x01\x13\x01j\0\
-\x01\x01\x01@\x04\x04self\x0a\x08contract\x03\x0dfunction-names\x04args\x0f\0\x14\
-\x04\0/[method]contract-manager.validate-function-call\x01\x15\x01h\x09\x01@\x02\
-\x04self\x16\x0btransaction\x07\0\x7f\x04\0$[method]transaction-manager.is-valid\
-\x01\x17\x01@\x02\x04self\x16\x0btransaction\x07\0\x14\x04\00[method]transaction\
--manager.validate-transaction\x01\x18\x01@\x02\x04self\x16\x0btransaction\x07\0\x0d\
-\x04\02[method]transaction-manager.create-payload-from-tx\x01\x19\x04\0\x14wavs:\
-agent/contracts\x05\x17\x01B$\x02\x03\x02\x01\x10\x04\0\x0allm-client\x03\0\0\x02\
-\x03\x02\x01\x03\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\x04\x04\0\x04tool\x03\
-\0\x04\x02\x03\x02\x01\x05\x04\0\x09tool-call\x03\0\x06\x02\x03\x02\x01\x11\x04\0\
-\x08function\x03\0\x08\x02\x03\x02\x01\x06\x04\0\x13custom-tool-handler\x03\0\x0a\
-\x02\x03\x02\x01\x0c\x04\0\x08contract\x03\0\x0c\x04\0\x0dtools-builder\x03\x01\x01\
-h\x0e\x01@\x01\x04self\x0f\0\x05\x04\0#[method]tools-builder.send-eth-tool\x01\x10\
-\x01p\x05\x01@\x02\x04self\x0f\x08contract\x0d\0\x11\x04\0)[method]tools-builder\
-.tools-from-contract\x01\x12\x01@\x04\x04self\x0f\x04names\x0bdescriptions\x0apa\
-rameterss\0\x05\x04\0![method]tools-builder.custom-tool\x01\x13\x01i\x0b\x01p\x14\
-\x01k\x15\x01j\x01s\x01s\x01@\x03\x04self\x0f\x09tool-call\x07\x0fcustom-handler\
-s\x16\0\x17\x04\0'[method]tools-builder.execute-tool-call\x01\x18\x01@\x02\x04se\
-lf\x0f\x09tool-call\x07\0\x17\x04\0+[method]tools-builder.parse-eth-transaction\x01\
-\x19\x01i\x01\x01p\x03\x01p\x07\x01@\x06\x04self\x0f\x06client\x1a\x10initial-me\
-ssages\x1b\x08response\x03\x0atool-calls\x1c\x0fcustom-handlers\x16\0\x17\x04\0(\
-[method]tools-builder.process-tool-calls\x01\x1d\x04\0\x10wavs:agent/tools\x05\x18\
-\x04\0\x15wavs:agent/wavs-agent\x04\0\x0b\x10\x01\0\x0awavs-agent\x03\0\0\0G\x09\
-producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.220.0\x10wit-bindgen-rus\
-t\x060.35.0";
+-handlers$\0%\x04\0![method]llm-client.process-prompt\x01&\x03\0\x17wavs:agent/c\
+lient@0.0.1\x05\x0b\x02\x03\0\x01\x08contract\x01B.\x02\x03\x02\x01\x02\x04\0\x0b\
+agent-error\x03\0\0\x02\x03\x02\x01\x03\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\
+\x09\x04\0\x06config\x03\0\x04\x02\x03\x02\x01\x0a\x04\0\x0bllm-options\x03\0\x06\
+\x02\x03\x02\x01\x0c\x04\0\x08contract\x03\0\x08\x04\0\x11llm-options-funcs\x03\x01\
+\x04\0\x0econfig-manager\x03\x01\x01h\x0a\x01@\x01\x04self\x0c\0\x07\x04\0\x1d[m\
+ethod]llm-options-funcs.new\x01\x0d\x01@\x02\x04self\x0c\x04tempv\0\x07\x04\0%[m\
+ethod]llm-options-funcs.temperature\x01\x0e\x01@\x02\x04self\x0c\x05top-pv\0\x07\
+\x04\0\x1f[method]llm-options-funcs.top-p\x01\x0f\x01@\x02\x04self\x0c\x04seedy\0\
+\x07\x04\0\x1e[method]llm-options-funcs.seed\x01\x10\x01ky\x01@\x02\x04self\x0c\x0a\
+max-tokens\x11\0\x07\x04\0$[method]llm-options-funcs.max-tokens\x01\x12\x01@\x02\
+\x04self\x0c\x0econtext-window\x11\0\x07\x04\0([method]llm-options-funcs.context\
+-window\x01\x13\x01h\x0b\x01j\x01\x05\x01s\x01@\x01\x04self\x14\0\x15\x04\0\x1b[\
+method]config-manager.load\x01\x16\x01@\x02\x04self\x14\x03uris\0\x15\x04\0$[met\
+hod]config-manager.load-from-uri\x01\x17\x01j\x01\x05\x01\x01\x01@\x02\x04self\x14\
+\x04jsons\0\x18\x04\0\x20[method]config-manager.from-json\x01\x19\x01j\x01s\x01s\
+\x01@\x01\x04self\x14\0\x1a\x04\0\x1e[method]config-manager.to-json\x01\x1b\x01@\
+\x01\x04self\x14\0s\x04\03[method]config-manager.format-contract-descriptions\x01\
+\x1c\x01k\x09\x01@\x02\x04self\x14\x04names\0\x1d\x04\0+[method]config-manager.g\
+et-contract-by-name\x01\x1e\x01j\0\x01\x01\x01@\x01\x04self\x14\0\x1f\x04\0\x1f[\
+method]config-manager.validate\x01\x20\x03\0\x17wavs:agent/config@0.0.1\x05\x0d\x02\
+\x03\0\x01\x0dcontract-call\x01B#\x02\x03\x02\x01\x02\x04\0\x0bagent-error\x03\0\
+\0\x02\x03\x02\x01\x0c\x04\0\x08contract\x03\0\x02\x02\x03\x02\x01\x0e\x04\0\x0d\
+contract-call\x03\0\x04\x02\x03\x02\x01\x08\x04\0\x0btransaction\x03\0\x06\x04\0\
+\x10contract-manager\x03\x01\x04\0\x13transaction-manager\x03\x01\x01h\x08\x01@\x04\
+\x04self\x0a\x04names\x07addresss\x03abis\0\x03\x04\0\x1c[method]contract-manage\
+r.new\x01\x0b\x01@\x05\x04self\x0a\x04names\x07addresss\x03abis\x0bdescriptions\0\
+\x03\x04\0-[method]contract-manager.new-with-description\x01\x0c\x01j\x01s\x01\x01\
+\x01@\x02\x04self\x0a\x08contract\x03\0\x0d\x04\0\"[method]contract-manager.pars\
+e-abi\x01\x0e\x01ps\x01p}\x01j\x01\x10\x01\x01\x01@\x04\x04self\x0a\x08contract\x03\
+\x0dfunction-names\x04args\x0f\0\x11\x04\0-[method]contract-manager.encode-funct\
+ion-call\x01\x12\x01@\x03\x04self\x0a\x08contract\x03\x0dfunction-names\0\x0d\x04\
+\0&[method]contract-manager.find-function\x01\x13\x01j\0\x01\x01\x01@\x04\x04sel\
+f\x0a\x08contract\x03\x0dfunction-names\x04args\x0f\0\x14\x04\0/[method]contract\
+-manager.validate-function-call\x01\x15\x01h\x09\x01@\x02\x04self\x16\x0btransac\
+tion\x07\0\x7f\x04\0$[method]transaction-manager.is-valid\x01\x17\x01@\x02\x04se\
+lf\x16\x0btransaction\x07\0\x14\x04\00[method]transaction-manager.validate-trans\
+action\x01\x18\x01@\x02\x04self\x16\x0btransaction\x07\0\x0d\x04\02[method]trans\
+action-manager.create-payload-from-tx\x01\x19\x03\0\x1awavs:agent/contracts@0.0.\
+1\x05\x0f\x02\x03\0\x02\x0allm-client\x02\x03\0\x01\x08function\x01B$\x02\x03\x02\
+\x01\x10\x04\0\x0allm-client\x03\0\0\x02\x03\x02\x01\x03\x04\0\x07message\x03\0\x02\
+\x02\x03\x02\x01\x04\x04\0\x04tool\x03\0\x04\x02\x03\x02\x01\x05\x04\0\x09tool-c\
+all\x03\0\x06\x02\x03\x02\x01\x11\x04\0\x08function\x03\0\x08\x02\x03\x02\x01\x06\
+\x04\0\x13custom-tool-handler\x03\0\x0a\x02\x03\x02\x01\x0c\x04\0\x08contract\x03\
+\0\x0c\x04\0\x0dtools-builder\x03\x01\x01h\x0e\x01@\x01\x04self\x0f\0\x05\x04\0#\
+[method]tools-builder.send-eth-tool\x01\x10\x01p\x05\x01@\x02\x04self\x0f\x08con\
+tract\x0d\0\x11\x04\0)[method]tools-builder.tools-from-contract\x01\x12\x01@\x04\
+\x04self\x0f\x04names\x0bdescriptions\x0aparameterss\0\x05\x04\0![method]tools-b\
+uilder.custom-tool\x01\x13\x01i\x0b\x01p\x14\x01k\x15\x01j\x01s\x01s\x01@\x03\x04\
+self\x0f\x09tool-call\x07\x0fcustom-handlers\x16\0\x17\x04\0'[method]tools-build\
+er.execute-tool-call\x01\x18\x01@\x02\x04self\x0f\x09tool-call\x07\0\x17\x04\0+[\
+method]tools-builder.parse-eth-transaction\x01\x19\x01i\x01\x01p\x03\x01p\x07\x01\
+@\x06\x04self\x0f\x06client\x1a\x10initial-messages\x1b\x08response\x03\x0atool-\
+calls\x1c\x0fcustom-handlers\x16\0\x17\x04\0([method]tools-builder.process-tool-\
+calls\x01\x1d\x03\0\x16wavs:agent/tools@0.0.1\x05\x12\x01B\x02\x01q\x0d\x03api\x01\
+s\0\x04http\x01s\0\x10external-service\x01s\0\x06config\x01s\0\x08contract\x01s\0\
+\x0dconfiguration\x01s\0\x0fcontext-loading\x01s\0\x12context-validation\x01s\0\x03\
+llm\x01s\0\x02io\x01s\0\x0btransaction\x01s\0\x04utf8\x01s\0\x05other\x01s\0\x04\
+\0\x0bagent-error\x03\0\0\x04\0\x17wavs:agent/errors@0.0.1\x05\x13\x01B)\x01ks\x01\
+r\x03\x04name\0\x0bdescription\0\x0eparameter-type\0\x04\0\x12function-parameter\
+\x03\0\x01\x01r\x03\x04names\x0bdescription\0\x0aparameters\0\x04\0\x08function\x03\
+\0\x03\x01r\x02\x09tool-types\x08function\x04\x04\0\x04tool\x03\0\x05\x01r\x02\x04\
+names\x09argumentss\x04\0\x12tool-call-function\x03\0\x07\x01r\x03\x02ids\x09too\
+l-types\x08function\x08\x04\0\x09tool-call\x03\0\x09\x01p\x0a\x01k\x0b\x01r\x05\x04\
+roles\x07content\0\x0atool-calls\x0c\x0ctool-call-id\0\x04name\0\x04\0\x07messag\
+e\x03\0\x0d\x04\0\x13custom-tool-handler\x03\x01\x01ky\x01r\x05\x0btemperaturev\x05\
+top-pv\x04seedy\x0amax-tokens\x10\x0econtext-window\x10\x04\0\x0bllm-options\x03\
+\0\x11\x01r\x04\x04names\x07addresss\x03abis\x0bdescription\0\x04\0\x08contract\x03\
+\0\x13\x01p\x14\x01p\x0e\x01o\x02ss\x01p\x17\x01r\x05\x09contracts\x15\x0allm-co\
+nfig\x12\x05models\x08messages\x16\x06config\x18\x04\0\x06config\x03\0\x19\x01ps\
+\x01r\x02\x08functions\x04args\x1b\x04\0\x0dcontract-call\x03\0\x1c\x01k\x1d\x01\
+r\x05\x02tos\x05values\x0dcontract-call\x1e\x04datas\x0bdescriptions\x04\0\x0btr\
+ansaction\x03\0\x1f\x01q\x02\x0btransaction\x01\x20\0\x04text\x01s\0\x04\0\x0cll\
+m-response\x03\0!\x01h\x0f\x01@\x02\x04self#\x09tool-names\0\x7f\x04\0&[method]c\
+ustom-tool-handler.can-handle\x01$\x01j\x01s\x01s\x01@\x02\x04self#\x09tool-call\
+\x0a\0%\x04\0#[method]custom-tool-handler.execute\x01&\x04\0\x16wavs:agent/types\
+@0.0.1\x05\x14\x01B/\x02\x03\x02\x01\x02\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\
+\x01\x03\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\x04\x04\0\x04tool\x03\0\x04\x02\
+\x03\x02\x01\x05\x04\0\x09tool-call\x03\0\x06\x02\x03\x02\x01\x06\x04\0\x13custo\
+m-tool-handler\x03\0\x08\x02\x03\x02\x01\x07\x04\0\x0cllm-response\x03\0\x0a\x02\
+\x03\x02\x01\x08\x04\0\x0btransaction\x03\0\x0c\x02\x03\x02\x01\x09\x04\0\x06con\
+fig\x03\0\x0e\x02\x03\x02\x01\x0a\x04\0\x0bllm-options\x03\0\x10\x04\0\x0allm-cl\
+ient\x03\x01\x01h\x12\x01i\x12\x01j\x01\x14\x01\x01\x01@\x02\x04self\x13\x05mode\
+ls\0\x15\x04\0\x16[method]llm-client.new\x01\x16\x01@\x03\x04self\x13\x05models\x0b\
+json-configs\0\x15\x04\0\x1c[method]llm-client.from-json\x01\x17\x01@\x03\x04sel\
+f\x13\x05models\x06config\x11\0\x15\x04\0\x1e[method]llm-client.with-config\x01\x18\
+\x01@\x01\x04self\x13\0s\x04\0\x1c[method]llm-client.get-model\x01\x19\x01@\x01\x04\
+self\x13\0\x11\x04\0\x1d[method]llm-client.get-config\x01\x1a\x01p\x03\x01p\x05\x01\
+k\x1c\x01j\x01\x03\x01\x01\x01@\x03\x04self\x13\x08messages\x1b\x05tools\x1d\0\x1e\
+\x04\0\"[method]llm-client.chat-completion\x01\x1f\x01j\x01s\x01\x01\x01@\x02\x04\
+self\x13\x08messages\x1b\0\x20\x04\0'[method]llm-client.chat-completion-text\x01\
+!\x01i\x09\x01p\"\x01k#\x01j\x01\x0b\x01\x01\x01@\x05\x04self\x13\x06prompts\x06\
+config\x0f\x0ccustom-tools\x1d\x0fcustom-handlers$\0%\x04\0![method]llm-client.p\
+rocess-prompt\x01&\x04\0\x17wavs:agent/client@0.0.1\x05\x15\x01B.\x02\x03\x02\x01\
+\x02\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x03\x04\0\x07message\x03\0\x02\
+\x02\x03\x02\x01\x09\x04\0\x06config\x03\0\x04\x02\x03\x02\x01\x0a\x04\0\x0bllm-\
+options\x03\0\x06\x02\x03\x02\x01\x0c\x04\0\x08contract\x03\0\x08\x04\0\x11llm-o\
+ptions-funcs\x03\x01\x04\0\x0econfig-manager\x03\x01\x01h\x0a\x01@\x01\x04self\x0c\
+\0\x07\x04\0\x1d[method]llm-options-funcs.new\x01\x0d\x01@\x02\x04self\x0c\x04te\
+mpv\0\x07\x04\0%[method]llm-options-funcs.temperature\x01\x0e\x01@\x02\x04self\x0c\
+\x05top-pv\0\x07\x04\0\x1f[method]llm-options-funcs.top-p\x01\x0f\x01@\x02\x04se\
+lf\x0c\x04seedy\0\x07\x04\0\x1e[method]llm-options-funcs.seed\x01\x10\x01ky\x01@\
+\x02\x04self\x0c\x0amax-tokens\x11\0\x07\x04\0$[method]llm-options-funcs.max-tok\
+ens\x01\x12\x01@\x02\x04self\x0c\x0econtext-window\x11\0\x07\x04\0([method]llm-o\
+ptions-funcs.context-window\x01\x13\x01h\x0b\x01j\x01\x05\x01s\x01@\x01\x04self\x14\
+\0\x15\x04\0\x1b[method]config-manager.load\x01\x16\x01@\x02\x04self\x14\x03uris\
+\0\x15\x04\0$[method]config-manager.load-from-uri\x01\x17\x01j\x01\x05\x01\x01\x01\
+@\x02\x04self\x14\x04jsons\0\x18\x04\0\x20[method]config-manager.from-json\x01\x19\
+\x01j\x01s\x01s\x01@\x01\x04self\x14\0\x1a\x04\0\x1e[method]config-manager.to-js\
+on\x01\x1b\x01@\x01\x04self\x14\0s\x04\03[method]config-manager.format-contract-\
+descriptions\x01\x1c\x01k\x09\x01@\x02\x04self\x14\x04names\0\x1d\x04\0+[method]\
+config-manager.get-contract-by-name\x01\x1e\x01j\0\x01\x01\x01@\x01\x04self\x14\0\
+\x1f\x04\0\x1f[method]config-manager.validate\x01\x20\x04\0\x17wavs:agent/config\
+@0.0.1\x05\x16\x01B#\x02\x03\x02\x01\x02\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\
+\x01\x0c\x04\0\x08contract\x03\0\x02\x02\x03\x02\x01\x0e\x04\0\x0dcontract-call\x03\
+\0\x04\x02\x03\x02\x01\x08\x04\0\x0btransaction\x03\0\x06\x04\0\x10contract-mana\
+ger\x03\x01\x04\0\x13transaction-manager\x03\x01\x01h\x08\x01@\x04\x04self\x0a\x04\
+names\x07addresss\x03abis\0\x03\x04\0\x1c[method]contract-manager.new\x01\x0b\x01\
+@\x05\x04self\x0a\x04names\x07addresss\x03abis\x0bdescriptions\0\x03\x04\0-[meth\
+od]contract-manager.new-with-description\x01\x0c\x01j\x01s\x01\x01\x01@\x02\x04s\
+elf\x0a\x08contract\x03\0\x0d\x04\0\"[method]contract-manager.parse-abi\x01\x0e\x01\
+ps\x01p}\x01j\x01\x10\x01\x01\x01@\x04\x04self\x0a\x08contract\x03\x0dfunction-n\
+ames\x04args\x0f\0\x11\x04\0-[method]contract-manager.encode-function-call\x01\x12\
+\x01@\x03\x04self\x0a\x08contract\x03\x0dfunction-names\0\x0d\x04\0&[method]cont\
+ract-manager.find-function\x01\x13\x01j\0\x01\x01\x01@\x04\x04self\x0a\x08contra\
+ct\x03\x0dfunction-names\x04args\x0f\0\x14\x04\0/[method]contract-manager.valida\
+te-function-call\x01\x15\x01h\x09\x01@\x02\x04self\x16\x0btransaction\x07\0\x7f\x04\
+\0$[method]transaction-manager.is-valid\x01\x17\x01@\x02\x04self\x16\x0btransact\
+ion\x07\0\x14\x04\00[method]transaction-manager.validate-transaction\x01\x18\x01\
+@\x02\x04self\x16\x0btransaction\x07\0\x0d\x04\02[method]transaction-manager.cre\
+ate-payload-from-tx\x01\x19\x04\0\x1awavs:agent/contracts@0.0.1\x05\x17\x01B$\x02\
+\x03\x02\x01\x10\x04\0\x0allm-client\x03\0\0\x02\x03\x02\x01\x03\x04\0\x07messag\
+e\x03\0\x02\x02\x03\x02\x01\x04\x04\0\x04tool\x03\0\x04\x02\x03\x02\x01\x05\x04\0\
+\x09tool-call\x03\0\x06\x02\x03\x02\x01\x11\x04\0\x08function\x03\0\x08\x02\x03\x02\
+\x01\x06\x04\0\x13custom-tool-handler\x03\0\x0a\x02\x03\x02\x01\x0c\x04\0\x08con\
+tract\x03\0\x0c\x04\0\x0dtools-builder\x03\x01\x01h\x0e\x01@\x01\x04self\x0f\0\x05\
+\x04\0#[method]tools-builder.send-eth-tool\x01\x10\x01p\x05\x01@\x02\x04self\x0f\
+\x08contract\x0d\0\x11\x04\0)[method]tools-builder.tools-from-contract\x01\x12\x01\
+@\x04\x04self\x0f\x04names\x0bdescriptions\x0aparameterss\0\x05\x04\0![method]to\
+ols-builder.custom-tool\x01\x13\x01i\x0b\x01p\x14\x01k\x15\x01j\x01s\x01s\x01@\x03\
+\x04self\x0f\x09tool-call\x07\x0fcustom-handlers\x16\0\x17\x04\0'[method]tools-b\
+uilder.execute-tool-call\x01\x18\x01@\x02\x04self\x0f\x09tool-call\x07\0\x17\x04\
+\0+[method]tools-builder.parse-eth-transaction\x01\x19\x01i\x01\x01p\x03\x01p\x07\
+\x01@\x06\x04self\x0f\x06client\x1a\x10initial-messages\x1b\x08response\x03\x0at\
+ool-calls\x1c\x0fcustom-handlers\x16\0\x17\x04\0([method]tools-builder.process-t\
+ool-calls\x01\x1d\x04\0\x16wavs:agent/tools@0.0.1\x05\x18\x04\0\x1bwavs:agent/wa\
+vs-agent@0.0.1\x04\0\x0b\x10\x01\0\x0awavs-agent\x03\0\0\0G\x09producers\x01\x0c\
+processed-by\x02\x0dwit-component\x070.220.0\x10wit-bindgen-rust\x060.35.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

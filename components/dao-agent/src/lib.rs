@@ -9,8 +9,11 @@ use bindings::{
 };
 use context::DaoContext;
 use serde_json;
-use wavs_llm::{process_prompt_with_client, types::LlmResponse};
-use wstd::runtime::block_on;
+use wavs_llm::{
+    client::LlmClientImpl,
+    traits::GuestLlmClient,
+    types::{LlmOptions, LlmResponse},
+};
 
 struct Component;
 
@@ -34,43 +37,43 @@ impl Guest for Component {
             _ => Err("Unsupported trigger data".to_string()),
         }?;
 
-        return block_on(async move {
-            // Get the DAO context with all our configuration
-            let context = DaoContext::load().await?;
-            let llm_context = context.llm_context.clone();
+        // Get the DAO context with all our configuration
+        let context = DaoContext::load()?;
+        let llm_context = context.llm_context.clone();
 
-            // Create LLM client implementation
-            let llm_client_impl = context.create_llm_client_impl();
+        // Create LLM client implementation
+        let llm_client_impl = LlmClientImpl::create_configured(
+            llm_context.model.clone(),
+            llm_context.llm_config.clone(),
+        );
 
-            // Use the helper function to process the prompt
-            let result = process_prompt_with_client(
-                &llm_client_impl,
-                llm_context.model.clone(),
-                prompt,
-                llm_context,
-                None,
-                None,
-            )
-            .map_err(|e| e.to_string())?;
+        // Use the helper function to process the prompt
+        let result = LlmClientImpl::process_prompt(
+            &llm_client_impl,
+            prompt,
+            llm_context.clone(),
+            None,
+            None,
+        )
+        .map_err(|e| e.to_string())?;
 
-            // Handle the response
-            match result {
-                LlmResponse::Transaction(tx) => {
-                    println!("Transaction to execute: {:?}", tx);
+        // Handle the response
+        match result {
+            LlmResponse::Transaction(tx) => {
+                println!("Transaction to execute: {:?}", tx);
 
-                    // Serialize transaction for execution
-                    let payload = serde_json::to_vec(&tx)
-                        .map_err(|e| format!("Failed to serialize transaction: {}", e))?;
-                    println!("Payload: {:?}", payload);
+                // Serialize transaction for execution
+                let payload = serde_json::to_vec(&tx)
+                    .map_err(|e| format!("Failed to serialize transaction: {}", e))?;
+                println!("Payload: {:?}", payload);
 
-                    Ok(Some(payload))
-                }
-                LlmResponse::Text(text) => {
-                    println!("LLM response: {}", text);
-                    Ok(None)
-                }
+                Ok(Some(payload))
             }
-        });
+            LlmResponse::Text(text) => {
+                println!("LLM response: {}", text);
+                Ok(None)
+            }
+        }
     }
 }
 

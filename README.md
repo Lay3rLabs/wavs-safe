@@ -89,32 +89,6 @@ wkg config --default-registry wa.dev
 
 </details>
 
-<details>
-<summary>Install Ollama and Stable Diffusion</summary>
-### Install Ollama (optional)
-
-This example uses an LLM configured for determinism, run locally with Ollama. The model is llama3.2, but other open source models can be used if you change the model parameter in the config.
-
-If you do not want to run a model locally, set `WAVS_ENV_OPENAI_API_KEY` with a valid OpenAI API key.
-
-For more information about AVSs and deterministic AI, see our [blog post on the subject](https://www.layer.xyz/news-and-insights/deterministic-ai).
-
-You can download Ollama here: https://ollama.com/
-
-Get the llama 3.2 model.
-
-```bash
-ollama pull llama3.2
-```
-
-In a separate terminal run Ollama in the background with:
-
-```bash
-ollama serve
-```
-
-</details>
-
 ### Solidity
 
 Install the required packages to build the Solidity contracts. This project supports both [submodules](./.gitmodules) and [npm packages](./package.json).
@@ -235,7 +209,7 @@ TRIGGER_ADDR=$(jq -r '.triggerContract' .docker/module_deployments.json)
 MODULE_ADDR=$(jq -r '.wavsSafeModule' .docker/module_deployments.json)
 
 # Set service config
-SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[["config_uri", "ipfs://bafkreiaqticxepygpav5h52kcqtid3ls2mm55i2so7edxmrdbn3z3rnyny"]],"workflow_id":"default","component_id":"default"}'
+SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[],"workflow_id":"default","component_id":"default"}'
 
 # Deploy the service
 COMPONENT_FILENAME=dao_agent.wasm SERVICE_TRIGGER_ADDR=$TRIGGER_ADDR SERVICE_SUBMISSION_ADDR=$MODULE_ADDR SERVICE_CONFIG=$SERVICE_CONFIG make deploy-service

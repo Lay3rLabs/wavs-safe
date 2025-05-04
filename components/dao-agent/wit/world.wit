@@ -1,23 +1,39 @@
 package component:dao-agent;
 
-// // Import the existing layer-trigger-world interface
-// use wavs:worker/layer-trigger-world@0.3.0;
+// /// Define our world that will be a layer-trigger-world implementation
+// world dao-agent {
+//   // Import the LLM interfaces from wavs:agent
+//   include wavs:agent/wavs-agent@0.0.1;
+//   include wavs:worker/layer-trigger-world@0.3.0;
+//   // export wavs:worker/layer-trigger-world@0.3.0;
+//   // include wavs:agent/config@0.0.1;
+//   // include wavs:agent/contracts@0.0.1;
+//   // include wavs:agent/errors@0.0.1;
+//   // include wavs:agent/tools@0.0.1;
+//   // include wavs:agent/types@0.0.1;
 
-// // Import interfaces from wavs-agent (wavs-llm) that we need to use
-// use wavs:agent/client;
-// use wavs:agent/config;
-// use wavs:agent/types;
+// } 
 
-// Define our world that just re-exports the layer-trigger interface
-world dao-agent {
-  // Import the layer-trigger-world's interfaces
-  import wavs:worker/layer-trigger-world@0.3.0;
-  
-  // Import the LLM interfaces we'll use
-  import wavs:agent/client;
-  import wavs:agent/config;
-  import wavs:agent/types;
+world layer-trigger-world {
+  import wavs:agent/client@0.0.1;
+  import wavs:agent/config@0.0.1;
+  import wavs:agent/contracts@0.0.1;
+  import wavs:agent/errors@0.0.1;
+  import wavs:agent/tools@0.0.1;
+  import wavs:agent/types@0.0.1;
 
-  // Export the layer-trigger-world's interface
-  export wavs:worker/layer-trigger-world@0.3.0;
-} 
+  // include wavs:worker/layer-trigger-world@0.3.0;
+
+  import host: interface {
+    use wavs:worker/layer-types@0.3.0.{eth-chain-config, cosmos-chain-config, log-level};
+
+    get-eth-chain-config: func(chain-name: string) -> option<eth-chain-config>;
+    get-cosmos-chain-config: func(chain-name: string) -> option<cosmos-chain-config>;
+
+    log: func(level: log-level, message: string);
+  }
+
+  use wavs:worker/layer-types@0.3.0.{trigger-action};
+
+  export run: func(trigger-action: trigger-action) -> result<option<list<u8>>, string>;
+}

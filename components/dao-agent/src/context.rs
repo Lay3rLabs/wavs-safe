@@ -8,12 +8,13 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use std::str::FromStr;
 use wavs_llm::{
+    traits::GuestLlmClient,
     types::{Config, Contract, LlmOptions, Message},
-    LlmClientImpl,
+    AgentError, LlmClientImpl,
 };
 use wavs_wasi_chain::ethereum::new_eth_provider;
 use wavs_wasi_chain::http::{fetch_json, http_request_get};
-use wstd::http::HeaderValue;
+use wstd::{http::HeaderValue, runtime::block_on};
 
 // ERC20 interface definition using alloy-sol-types
 sol! {
@@ -41,111 +42,106 @@ pub struct DaoContext {
     pub supported_tokens: Vec<SupportedToken>,
     #[serde(skip)]
     pub llm_context: Config,
-    #[serde(rename = "model")]
-    pub model_name: String,
 }
 
 impl DaoContext {
-    /// Create a new LlmClientImpl instance for use with the LLM API
-    pub fn create_llm_client_impl(&self) -> LlmClientImpl {
-        LlmClientImpl {
-            model: self.llm_context.model.clone(),
-            config: self.llm_context.llm_config.clone(),
-            api_url: String::new(), // Will be set in new()
-            api_key: None,          // Will be set in new()
-        }
-    }
-
     /// Load context from environment variable CONFIG_URI or use default
-    pub async fn load() -> Result<Self, String> {
-        // Check if CONFIG_URI environment variable is set
-        if let Ok(config_uri) = env::var("config_uri") {
-            println!("Loading config from URI: {}", config_uri);
+    pub fn load() -> Result<Self, String> {
+        block_on(async move {
+            // Check if CONFIG_URI environment variable is set
+            if let Ok(config_uri) = env::var("config_uri") {
+                println!("Loading config from URI: {}", config_uri);
 
-            Self::load_from_uri(&config_uri).await
-        } else {
-            println!("No CONFIG_URI found, using default configuration");
-            Ok(Self::default())
-        }
+                Self::load_from_uri(&config_uri)
+            } else {
+                println!("No CONFIG_URI found, using default configuration");
+                Ok(Self::default())
+            }
+        })
     }
 
     /// Load context from a URI
-    pub async fn load_from_uri(uri: &str) -> Result<Self, String> {
-        // Strip any quotation marks from the URI
-        let clean_uri = uri.trim_matches('"');
+    pub fn load_from_uri(uri: &str) -> Result<Self, String> {
+        block_on(async move {
+            // Strip any quotation marks from the URI
+            let clean_uri = uri.trim_matches('"');
 
-        println!("Loading config from URI: {}", clean_uri);
+            println!("Loading config from URI: {}", clean_uri);
 
-        // Check URI scheme
-        if let Some(uri_with_scheme) = clean_uri.strip_prefix("ipfs://") {
-            // IPFS URI scheme detected
-            Self::load_from_ipfs(uri_with_scheme).await
-        } else if clean_uri.starts_with("http://") || clean_uri.starts_with("https://") {
-            // HTTP URI scheme detected
-            Self::fetch_from_uri(clean_uri).await
-        } else {
-            // Only support http/https and ipfs URIs
-            Err(format!("Unsupported URI scheme: {}", clean_uri))
-        }
+            // Check URI scheme
+            if let Some(uri_with_scheme) = clean_uri.strip_prefix("ipfs://") {
+                // IPFS URI scheme detected
+                Self::load_from_ipfs(uri_with_scheme)
+            } else if clean_uri.starts_with("http://") || clean_uri.starts_with("https://") {
+                // HTTP URI scheme detected
+                Self::fetch_from_uri(clean_uri)
+            } else {
+                // Only support http/https and ipfs URIs
+                Err(format!("Unsupported URI scheme: {}", clean_uri))
+            }
+        })
     }
 
     /// Load configuration from IPFS
-    async fn load_from_ipfs(cid: &str) -> Result<Self, String> {
-        let gateway_url = std::env::var("WAVS_ENV_IPFS_GATEWAY_URL").unwrap_or_else(|_| {
-            println!("WAVS_ENV_IPFS_GATEWAY_URL not set, using default");
-            "https://gateway.lighthouse.storage/ipfs".to_string()
-        });
+    fn load_from_ipfs(cid: &str) -> Result<Self, String> {
+        block_on(async move {
+            let gateway_url = std::env::var("WAVS_ENV_IPFS_GATEWAY_URL").unwrap_or_else(|_| {
+                println!("WAVS_ENV_IPFS_GATEWAY_URL not set, using default");
+                "https://gateway.lighthouse.storage/ipfs".to_string()
+            });
 
-        // Strip any quotation marks from the gateway URL
-        let clean_gateway_url = gateway_url.trim_matches('"');
+            // Strip any quotation marks from the gateway URL
+            let clean_gateway_url = gateway_url.trim_matches('"');
 
-        // Construct HTTP URL, avoiding duplicate /ipfs in the path
-        let http_url = if clean_gateway_url.ends_with("/ipfs") {
-            format!("{}/{}", clean_gateway_url, cid)
-        } else if clean_gateway_url.ends_with("/ipfs/") {
-            format!("{}{}", clean_gateway_url, cid)
-        } else if clean_gateway_url.ends_with("/") {
-            format!("{}ipfs/{}", clean_gateway_url, cid)
-        } else {
-            format!("{}/ipfs/{}", clean_gateway_url, cid)
-        };
+            // Construct HTTP URL, avoiding duplicate /ipfs in the path
+            let http_url = if clean_gateway_url.ends_with("/ipfs") {
+                format!("{}/{}", clean_gateway_url, cid)
+            } else if clean_gateway_url.ends_with("/ipfs/") {
+                format!("{}{}", clean_gateway_url, cid)
+            } else if clean_gateway_url.ends_with("/") {
+                format!("{}ipfs/{}", clean_gateway_url, cid)
+            } else {
+                format!("{}/ipfs/{}", clean_gateway_url, cid)
+            };
 
-        println!("Fetching IPFS config from: {}", http_url);
-        Self::fetch_from_uri(&http_url).await
+            println!("Fetching IPFS config from: {}", http_url);
+            Self::fetch_from_uri(&http_url)
+        })
     }
 
     /// Fetch configuration from a HTTP/HTTPS URI
-    async fn fetch_from_uri(uri: &str) -> Result<Self, String> {
-        // Strip any quotation marks from the URI
-        let clean_uri = uri.trim_matches('"');
+    fn fetch_from_uri(uri: &str) -> Result<Self, String> {
+        block_on(async move {
+            // Strip any quotation marks from the URI
+            let clean_uri = uri.trim_matches('"');
 
-        println!("Creating HTTP request for URI: {}", clean_uri);
+            println!("Creating HTTP request for URI: {}", clean_uri);
 
-        // Create HTTP request
-        let mut req = http_request_get(clean_uri).map_err(|e| {
-            let error_msg = format!("Failed to create request: {}", e);
-            println!("Error: {}", error_msg);
-            error_msg
-        })?;
+            // Create HTTP request
+            let mut req = http_request_get(clean_uri).map_err(|e| {
+                let error_msg = format!("Failed to create request: {}", e);
+                println!("Error: {}", error_msg);
+                error_msg
+            })?;
 
-        // Add appropriate headers for JSON content
-        req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
+            // Add appropriate headers for JSON content
+            req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
 
-        println!("Sending HTTP request...");
+            println!("Sending HTTP request...");
 
-        // Execute HTTP request and parse response as JSON
-        let json_context: DaoContextJson = fetch_json(req).await.unwrap();
+            // Execute HTTP request and parse response as JSON
+            let json_context: DaoContextJson = fetch_json(req).await.unwrap();
 
-        // Create merged DaoContext from JSON data
-        let mut result = Self::default();
-        result.account_address = json_context.account_address;
-        result.allowlisted_addresses = json_context.allowlisted_addresses;
-        result.supported_tokens = json_context.supported_tokens;
-        result.model_name = json_context.model.clone();
-        result.llm_context.model = json_context.model;
+            // Create merged DaoContext from JSON data
+            let mut result = Self::default();
+            result.account_address = json_context.account_address;
+            result.allowlisted_addresses = json_context.allowlisted_addresses;
+            result.supported_tokens = json_context.supported_tokens;
+            result.llm_context.model = json_context.model;
 
-        println!("Successfully loaded configuration");
-        Ok(result)
+            println!("Successfully loaded configuration");
+            Ok(result)
+        })
     }
 
     /// Create a new DaoContext from a JSON string
@@ -158,7 +154,6 @@ impl DaoContext {
         result.account_address = json_context.account_address;
         result.allowlisted_addresses = json_context.allowlisted_addresses;
         result.supported_tokens = json_context.supported_tokens;
-        result.model_name = json_context.model.clone();
         result.llm_context.model = json_context.model;
 
         Ok(result)
@@ -181,135 +176,150 @@ impl DaoContext {
     }
 
     /// Query the ETH balance for this DAO's account
-    pub async fn query_eth_balance(&self) -> Result<U256, String> {
-        let chain_config = get_eth_chain_config("local").unwrap();
-        let provider: RootProvider<Ethereum> =
-            new_eth_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
+    pub fn query_eth_balance(&self) -> Result<U256, String> {
+        block_on(async move {
+            let chain_config = get_eth_chain_config("local").unwrap();
+            let provider: RootProvider<Ethereum> =
+                new_eth_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
 
-        let address = Address::from_str(&self.account_address)
-            .map_err(|_| format!("Invalid address format: {}", self.account_address))?;
+            let address = Address::from_str(&self.account_address)
+                .map_err(|_| format!("Invalid address format: {}", self.account_address))?;
 
-        provider
-            .get_balance(address)
-            .await
-            .map_err(|e| format!("Failed to query ETH balance: {}", e))
+            provider
+                .get_balance(address)
+                .await
+                .map_err(|e| format!("Failed to query ETH balance: {}", e))
+        })
     }
 
     /// Query an ERC20 token balance
-    pub async fn query_token_balance(&self, token_address: &str) -> Result<TokenBalance, String> {
-        let chain_config = get_eth_chain_config("local").unwrap();
-        let provider: RootProvider<Ethereum> =
-            new_eth_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
-        // Parse addresses
-        let account = Address::from_str(&self.account_address)
-            .map_err(|_| format!("Invalid account address format: {}", self.account_address))?;
+    pub fn query_token_balance(&self, token_address: &str) -> Result<TokenBalance, String> {
+        block_on(async move {
+            let chain_config = get_eth_chain_config("local").unwrap();
+            let provider: RootProvider<Ethereum> =
+                new_eth_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
+            // Parse addresses
+            let account = Address::from_str(&self.account_address)
+                .map_err(|_| format!("Invalid account address format: {}", self.account_address))?;
 
-        let token = Address::from_str(token_address)
-            .map_err(|_| format!("Invalid token address format: {}", token_address))?;
+            let token = Address::from_str(token_address)
+                .map_err(|_| format!("Invalid token address format: {}", token_address))?;
 
-        // Get token balance
-        let balance_call = IERC20::balanceOfCall { owner: account };
-        let balance_tx = TransactionRequest {
-            to: Some(TxKind::Call(token)),
-            input: TransactionInput { input: Some(balance_call.abi_encode().into()), data: None },
-            ..Default::default()
-        };
+            // Get token balance
+            let balance_call = IERC20::balanceOfCall { owner: account };
+            let balance_tx = TransactionRequest {
+                to: Some(TxKind::Call(token)),
+                input: TransactionInput {
+                    input: Some(balance_call.abi_encode().into()),
+                    data: None,
+                },
+                ..Default::default()
+            };
 
-        let balance_result = provider
-            .call(&balance_tx)
-            .await
-            .map_err(|e| format!("Failed to query token balance: {}", e))?;
-        let balance = U256::from_be_slice(&balance_result);
+            let balance_result = provider
+                .call(&balance_tx)
+                .await
+                .map_err(|e| format!("Failed to query token balance: {}", e))?;
+            let balance = U256::from_be_slice(&balance_result);
 
-        // Get token decimals
-        let decimals_call = IERC20::decimalsCall {};
-        let decimals_tx = TransactionRequest {
-            to: Some(TxKind::Call(token)),
-            input: TransactionInput { input: Some(decimals_call.abi_encode().into()), data: None },
-            ..Default::default()
-        };
+            // Get token decimals
+            let decimals_call = IERC20::decimalsCall {};
+            let decimals_tx = TransactionRequest {
+                to: Some(TxKind::Call(token)),
+                input: TransactionInput {
+                    input: Some(decimals_call.abi_encode().into()),
+                    data: None,
+                },
+                ..Default::default()
+            };
 
-        let decimals_result = provider
-            .call(&decimals_tx)
-            .await
-            .map_err(|e| format!("Failed to query token decimals: {}", e))?;
+            let decimals_result = provider
+                .call(&decimals_tx)
+                .await
+                .map_err(|e| format!("Failed to query token decimals: {}", e))?;
 
-        // Properly decode the decimals response (uint8)
-        // The response should be a 32-byte value with the uint8 value in the last byte
-        let decimals = if decimals_result.len() >= 32 {
-            // Extract the last byte which contains the uint8 value
-            decimals_result[31]
-        } else {
-            // Default to 18 if response is not as expected
-            println!("Warning: Unexpected decimals response format, defaulting to 18");
-            18
-        };
+            // Properly decode the decimals response (uint8)
+            // The response should be a 32-byte value with the uint8 value in the last byte
+            let decimals = if decimals_result.len() >= 32 {
+                // Extract the last byte which contains the uint8 value
+                decimals_result[31]
+            } else {
+                // Default to 18 if response is not as expected
+                println!("Warning: Unexpected decimals response format, defaulting to 18");
+                18
+            };
 
-        // Get token symbol
-        let symbol_call = IERC20::symbolCall {};
-        let symbol_tx = TransactionRequest {
-            to: Some(TxKind::Call(token)),
-            input: TransactionInput { input: Some(symbol_call.abi_encode().into()), data: None },
-            ..Default::default()
-        };
+            // Get token symbol
+            let symbol_call = IERC20::symbolCall {};
+            let symbol_tx = TransactionRequest {
+                to: Some(TxKind::Call(token)),
+                input: TransactionInput {
+                    input: Some(symbol_call.abi_encode().into()),
+                    data: None,
+                },
+                ..Default::default()
+            };
 
-        let symbol_result = provider
-            .call(&symbol_tx)
-            .await
-            .map_err(|e| format!("Failed to query token symbol: {}", e))?;
+            let symbol_result = provider
+                .call(&symbol_tx)
+                .await
+                .map_err(|e| format!("Failed to query token symbol: {}", e))?;
 
-        // Parse the symbol from the result bytes (ABI-encoded string)
-        let symbol = if symbol_result.len() > 64 {
-            // The first 32 bytes are the offset, the next 32 bytes are the length
-            let length = U256::from_be_slice(&symbol_result[32..64]).as_limbs()[0] as usize;
-            if length > 0 && symbol_result.len() >= 64 + length {
-                let symbol_bytes = &symbol_result[64..64 + length];
-                String::from_utf8_lossy(symbol_bytes).to_string()
+            // Parse the symbol from the result bytes (ABI-encoded string)
+            let symbol = if symbol_result.len() > 64 {
+                // The first 32 bytes are the offset, the next 32 bytes are the length
+                let length = U256::from_be_slice(&symbol_result[32..64]).as_limbs()[0] as usize;
+                if length > 0 && symbol_result.len() >= 64 + length {
+                    let symbol_bytes = &symbol_result[64..64 + length];
+                    String::from_utf8_lossy(symbol_bytes).to_string()
+                } else {
+                    "UNKNOWN".to_string()
+                }
             } else {
                 "UNKNOWN".to_string()
-            }
-        } else {
-            "UNKNOWN".to_string()
-        };
+            };
 
-        // Create a TokenBalance
-        Ok(TokenBalance {
-            token_address: token_address.to_string(),
-            symbol,
-            balance: balance.to_string(),
-            decimals,
+            // Create a TokenBalance
+            Ok(TokenBalance {
+                token_address: token_address.to_string(),
+                symbol,
+                balance: balance.to_string(),
+                decimals,
+            })
         })
     }
 
     /// Query all supported token balances
-    pub async fn query_all_token_balances(&self) -> Result<Vec<TokenBalance>, String> {
-        let mut balances = Vec::new();
+    pub fn query_all_token_balances(&self) -> Result<Vec<TokenBalance>, String> {
+        block_on(async move {
+            let mut balances = Vec::new();
 
-        // Query ETH balance
-        let eth_balance = self.query_eth_balance().await?;
-        balances.push(TokenBalance {
-            token_address: "0x0000000000000000000000000000000000000000".to_string(),
-            symbol: "ETH".to_string(),
-            balance: eth_balance.to_string(),
-            decimals: 18,
-        });
+            // Query ETH balance
+            let eth_balance = self.query_eth_balance()?;
+            balances.push(TokenBalance {
+                token_address: "0x0000000000000000000000000000000000000000".to_string(),
+                symbol: "ETH".to_string(),
+                balance: eth_balance.to_string(),
+                decimals: 18,
+            });
 
-        // Query each supported token
-        for token in &self.supported_tokens {
-            if token.symbol.to_uppercase() != "ETH" {
-                match self.query_token_balance(&token.address).await {
-                    Ok(balance) => balances.push(balance),
-                    Err(e) => println!("Failed to query balance for {}: {}", token.symbol, e),
+            // Query each supported token
+            for token in &self.supported_tokens {
+                if token.symbol.to_uppercase() != "ETH" {
+                    match self.query_token_balance(&token.address) {
+                        Ok(balance) => balances.push(balance),
+                        Err(e) => println!("Failed to query balance for {}: {}", token.symbol, e),
+                    }
                 }
             }
-        }
 
-        Ok(balances)
+            Ok(balances)
+        })
     }
 
     /// Format balances for display in the prompt with dynamic balance fetching
-    pub async fn format_balances_dynamic(&self) -> String {
-        match self.query_all_token_balances().await {
+    pub fn format_balances_dynamic(&self) -> String {
+        match self.query_all_token_balances() {
             Ok(balances) => {
                 let mut result = Vec::new();
                 for balance in balances {
@@ -331,9 +341,9 @@ impl DaoContext {
     }
 
     /// Get the context with dynamically fetched balances
-    pub async fn get_context_with_balances(&self) -> String {
+    pub fn get_context_with_balances(&self) -> String {
         let supported_tokens = self.get_supported_token_symbols().join(", ");
-        let balances = self.format_balances_dynamic().await;
+        let balances = self.format_balances_dynamic();
 
         format!(
             r#"
@@ -414,7 +424,7 @@ impl Default for DaoContext {
 
         // Create basic Config
         let llm_context = Config {
-            model: "gpt-4".to_string(),
+            model: "llama3.2".to_string(),
             llm_config: llm_options,
             messages: vec![Message {
                 role: "system".into(),
@@ -450,7 +460,6 @@ impl Default for DaoContext {
                 ),
             ],
             llm_context,
-            model_name: "gpt-4".to_string(),
         }
     }
 }

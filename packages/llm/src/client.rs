@@ -56,6 +56,37 @@ pub struct LlmClientImpl {
     pub api_key: Option<String>,
 }
 
+impl LlmClientImpl {
+    /// Create a properly configured LlmClientImpl instance directly
+    /// This is a helper method that doesn't go through the WIT interface
+    pub fn create_configured(model: String, config: LlmOptions) -> Self {
+        // Get API key if using OpenAI models
+        let api_key = match model.as_str() {
+            "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
+                match std::env::var("WAVS_ENV_OPENAI_API_KEY") {
+                    Ok(key) => Some(key),
+                    Err(_) => None, // Only read if exists, don't return an error
+                }
+            }
+            _ => None, // Local models don't need an API key
+        };
+
+        // Set API URL based on model type
+        let api_url = match model.as_str() {
+            "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
+                "https://api.openai.com/v1/chat/completions".to_string()
+            }
+            _ => format!(
+                "{}/api/chat",
+                std::env::var("WAVS_ENV_OLLAMA_API_URL")
+                    .unwrap_or_else(|_| "http://localhost:11434".to_string())
+            ),
+        };
+
+        Self { model, config, api_url, api_key }
+    }
+}
+
 impl client::GuestLlmClient for LlmClientImpl {
     fn new(&self, model: String) -> Result<client::LlmClient, AgentError> {
         // Validate model name
@@ -85,7 +116,6 @@ impl client::GuestLlmClient for LlmClientImpl {
                     .unwrap_or_else(|_| "http://localhost:11434".to_string())
             ),
         };
-
         // Default configuration
         let config = LlmOptions {
             temperature: 0.7,
@@ -203,17 +233,14 @@ impl client::GuestLlmClient for LlmClientImpl {
             }
 
             println!("Sending chat completion request:");
-            println!("- Model: {}", self.model);
-            println!("- Number of messages: {}", messages.len());
-            println!("- Tools provided: {}", tools.is_some());
-            println!("- Temperature: {}", self.config.temperature);
-            println!("- Top_p: {}", self.config.top_p);
 
             // Check if OpenAI models have an API key
             let is_openai_model = matches!(
                 self.model.as_str(),
                 "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo"
             );
+
+            println!("is_openai_model: {}", is_openai_model);
 
             if is_openai_model && self.api_key.is_none() {
                 return Err(AgentError::Llm("OpenAI API key is required for OpenAI models".into()));
@@ -222,6 +249,13 @@ impl client::GuestLlmClient for LlmClientImpl {
             // Calculate max tokens based on tools presence if not explicitly set
             let max_tokens =
                 self.config.max_tokens.unwrap_or_else(|| if tools.is_some() { 1024 } else { 100 });
+
+            println!("api key: {}", self.api_key.is_some());
+            println!("api url: {}", self.api_url);
+
+            if self.api_url.is_empty() {
+                return Err(AgentError::Http("API URL is empty".into()));
+            }
 
             // Create request body with configurable settings
             let body = if self.api_key.is_some() {
@@ -365,21 +399,67 @@ impl client::GuestLlmClient for LlmClientImpl {
                     .ok_or_else(|| AgentError::Llm("No response choices returned".into()))
             } else {
                 // Parse Ollama chat response format
-                #[derive(Debug, Deserialize)]
-                struct OllamaResponse {
-                    message: Message,
-                    #[serde(default)]
-                    _model: String,
-                    #[serde(default)]
-                    _created_at: String,
+                // Create a custom deserialization logic for Ollama responses
+                let parsed_json: serde_json::Value =
+                    serde_json::from_str(&body_str).map_err(|e| {
+                        AgentError::Llm(format!("Failed to parse Ollama response as JSON: {}", e))
+                    })?;
+
+                println!("Successfully parsed Ollama response to JSON Value");
+
+                // Extract message contents
+                let role =
+                    parsed_json["message"]["role"].as_str().unwrap_or("assistant").to_string();
+
+                let content = parsed_json["message"]["content"].as_str().map(|s| s.to_string());
+
+                // Create base message
+                let mut message =
+                    Message { role, content, tool_calls: None, tool_call_id: None, name: None };
+
+                // Process tool calls if present
+                if let Some(tool_calls_array) = parsed_json["message"]["tool_calls"].as_array() {
+                    println!("Found tool calls in Ollama response: {}", tool_calls_array.len());
+
+                    let mut processed_tool_calls = Vec::new();
+
+                    for (idx, tool_call) in tool_calls_array.iter().enumerate() {
+                        if let Some(name) = tool_call["function"]["name"].as_str() {
+                            println!("Processing tool call: {}", name);
+
+                            // Get arguments value (could be object or string)
+                            let args = &tool_call["function"]["arguments"];
+
+                            // Convert arguments to string if they're an object
+                            let arguments = if args.is_object() {
+                                serde_json::to_string(args).unwrap_or_default()
+                            } else if args.is_string() {
+                                args.as_str().unwrap_or_default().to_string()
+                            } else {
+                                serde_json::to_string(args).unwrap_or_default()
+                            };
+
+                            println!("Arguments converted to string: {}", arguments);
+
+                            processed_tool_calls
+                                .push(crate::bindings::exports::wavs::agent::types::ToolCall {
+                                id: format!("call_{}", idx),
+                                tool_type: "function".to_string(),
+                                function:
+                                    crate::bindings::exports::wavs::agent::types::ToolCallFunction {
+                                        name: name.to_string(),
+                                        arguments,
+                                    },
+                            });
+                        }
+                    }
+
+                    if !processed_tool_calls.is_empty() {
+                        message.tool_calls = Some(processed_tool_calls);
+                    }
                 }
 
-                // Parse as Ollama response
-                let resp: OllamaResponse = serde_json::from_str(&body_str).map_err(|e| {
-                    AgentError::Llm(format!("Failed to parse Ollama response: {}", e))
-                })?;
-
-                Ok(resp.message)
+                Ok(message)
             }
         })
     }
