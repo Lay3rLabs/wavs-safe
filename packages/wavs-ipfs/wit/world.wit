@@ -1,0 +1,32 @@
+package wavs:ipfs;
+
+interface types {
+  // Error type for operations that can fail
+  type error = string;
+  
+  // IPFS URL type
+  type ipfs-url = string;
+}
+
+interface ipfs {
+  use types.{ipfs-url, error};
+
+  // Upload JSON data to IPFS
+  upload-json-to-ipfs: func(json-data: string, ipfs-url: string) -> result<ipfs-url, error>;
+  
+  // Upload image to IPFS
+  upload-image-to-ipfs: func(image-data: list<u8>, filename: string, ipfs-url: string) -> result<ipfs-url, error>;
+  
+  // Delete a file from the filesystem
+  delete-file: func(file-path: string) -> result<bool, error>;
+  
+  // Get IPFS URL from CID
+  get-ipfs-url: func(cid: string, filename: option<string>) -> ipfs-url;
+  
+  // Upload NFT content (metadata and/or image) to IPFS
+  upload-nft-content: func(content-type: string, content: list<u8>, ipfs-url: string) -> result<ipfs-url, error>;
+}
+
+world ipfs-world {
+  export ipfs;
+}
