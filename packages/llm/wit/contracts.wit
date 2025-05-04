@@ -2,29 +2,7 @@ package wavs:agent;
 
 interface contracts {
   use errors.{agent-error};
-
-  /// Represents a smart contract that the DAO can interact with
-  record contract {
-    name: string,
-    address: string,
-    abi: string,
-    description: option<string>,
-  }
-
-  /// Represents a contract function call
-  record contract-call {
-    function: string,
-    args: list<string>,  // Using string to represent JSON values
-  }
-
-  /// Represents a transaction to be executed through a wallet
-  record transaction {
-    to: string,
-    value: string,
-    contract-call: option<contract-call>,
-    data: string,
-    description: string,
-  }
+  use types.{contract, contract-call, transaction};
 
   /// Helper methods for contracts
   resource contract-manager {

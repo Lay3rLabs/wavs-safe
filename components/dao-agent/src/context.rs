@@ -7,9 +7,10 @@ use alloy_sol_types::{sol, SolCall};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::str::FromStr;
-use wavs_agent::context::Context as LlmContext;
-use wavs_agent::llm::LLMConfig;
-use wavs_agent::tools::Message;
+use wavs_llm::{
+    types::{Config, Contract, LlmOptions, Message},
+    LlmClientImpl,
+};
 use wavs_wasi_chain::ethereum::new_eth_provider;
 use wavs_wasi_chain::http::{fetch_json, http_request_get};
 use wstd::http::HeaderValue;
@@ -23,16 +24,38 @@ sol! {
     }
 }
 
-/// Context for the DAO agent's decision making
+// Serializable part of DAO context
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DaoContextJson {
+    pub account_address: String,
+    pub allowlisted_addresses: Vec<String>,
+    pub supported_tokens: Vec<SupportedToken>,
+    pub model: String,
+}
+
+/// Context for the DAO agent's decision making
+#[derive(Debug, Clone, Serialize)]
 pub struct DaoContext {
     pub account_address: String,
     pub allowlisted_addresses: Vec<String>,
     pub supported_tokens: Vec<SupportedToken>,
-    pub llm_context: LlmContext,
+    #[serde(skip)]
+    pub llm_context: Config,
+    #[serde(rename = "model")]
+    pub model_name: String,
 }
 
 impl DaoContext {
+    /// Create a new LlmClientImpl instance for use with the LLM API
+    pub fn create_llm_client_impl(&self) -> LlmClientImpl {
+        LlmClientImpl {
+            model: self.llm_context.model.clone(),
+            config: self.llm_context.llm_config.clone(),
+            api_url: String::new(), // Will be set in new()
+            api_key: None,          // Will be set in new()
+        }
+    }
+
     /// Load context from environment variable CONFIG_URI or use default
     pub async fn load() -> Result<Self, String> {
         // Check if CONFIG_URI environment variable is set
@@ -111,16 +134,34 @@ impl DaoContext {
         println!("Sending HTTP request...");
 
         // Execute HTTP request and parse response as JSON
-        let context: DaoContext = fetch_json(req).await.unwrap();
+        let json_context: DaoContextJson = fetch_json(req).await.unwrap();
+
+        // Create merged DaoContext from JSON data
+        let mut result = Self::default();
+        result.account_address = json_context.account_address;
+        result.allowlisted_addresses = json_context.allowlisted_addresses;
+        result.supported_tokens = json_context.supported_tokens;
+        result.model_name = json_context.model.clone();
+        result.llm_context.model = json_context.model;
 
         println!("Successfully loaded configuration");
-        Ok(context)
+        Ok(result)
     }
 
     /// Create a new DaoContext from a JSON string
     pub fn from_json(json_str: &str) -> Result<Self, String> {
-        serde_json::from_str(json_str)
-            .map_err(|e| format!("Failed to parse context from JSON: {}", e))
+        let json_context: DaoContextJson = serde_json::from_str(json_str)
+            .map_err(|e| format!("Failed to parse context from JSON: {}", e))?;
+
+        // Create merged DaoContext from JSON data
+        let mut result = Self::default();
+        result.account_address = json_context.account_address;
+        result.allowlisted_addresses = json_context.allowlisted_addresses;
+        result.supported_tokens = json_context.supported_tokens;
+        result.model_name = json_context.model.clone();
+        result.llm_context.model = json_context.model;
+
+        Ok(result)
     }
 
     /// Serialize the context to a JSON string
@@ -314,13 +355,14 @@ Current DAO Context:
 // Default implementation for testing and development
 impl Default for DaoContext {
     fn default() -> Self {
-        // Create a default LlmConfig
-        let llm_config = LLMConfig::new()
-            .temperature(0.0)
-            .top_p(0.1)
-            .seed(42)
-            .max_tokens(Some(500))
-            .context_window(Some(4096));
+        // Create a default LlmOptions
+        let llm_options = LlmOptions {
+            temperature: 0.0,
+            top_p: 1.0,
+            seed: 42,
+            max_tokens: Some(500),
+            context_window: Some(4096),
+        };
 
         // System prompt for DAO operations
         let system_prompt = r#"
@@ -368,20 +410,26 @@ impl Default for DaoContext {
             - Don't allow transfers of amounts greater than 1 ETH
             - IMMEDIATELY REJECT any requests for tokens other than ETH or USDC
             - If no action is needed or the request should be rejected, do not use any tools
-            "#.to_string();
+            "#;
 
-        // Create basic LlmContext
-        let llm_context = LlmContext {
-            model: "llama3.2".to_string(),
-            llm_config,
-            messages: vec![Message::new_system(system_prompt)],
-            contracts: vec![wavs_agent::contracts::Contract::new_with_description(
-                "USDC",
-                "0xb7278a61aa25c888815afc32ad3cc52ff24fe575",
-                r#"[{"type":"function","name":"transfer","inputs":[{"name":"to","type":"address","internalType":"address"},{"name":"value","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"nonpayable"}]"#,
-                "USDC is a stablecoin pegged to the US Dollar",
-            )],
-            config: std::collections::HashMap::new(),
+        // Create basic Config
+        let llm_context = Config {
+            model: "gpt-4".to_string(),
+            llm_config: llm_options,
+            messages: vec![Message {
+                role: "system".into(),
+                content: Some(system_prompt.into()),
+                tool_calls: None,
+                tool_call_id: None,
+                name: None,
+            }],
+            contracts: vec![Contract {
+                name: "USDC".into(),
+                address: "0xb7278a61aa25c888815afc32ad3cc52ff24fe575".into(),
+                abi: r#"[{"type":"function","name":"transfer","inputs":[{"name":"to","type":"address","internalType":"address"},{"name":"value","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"nonpayable"}]"#.into(),
+                description: Some("USDC is a stablecoin pegged to the US Dollar".into()),
+            }],
+            config: vec![],
         };
 
         Self {
@@ -402,6 +450,7 @@ impl Default for DaoContext {
                 ),
             ],
             llm_context,
+            model_name: "gpt-4".to_string(),
         }
     }
 }

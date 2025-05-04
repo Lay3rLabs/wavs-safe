@@ -991,7 +991,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tiny-keccak",
- "wavs-agent",
+ "wavs-llm",
  "wavs-wasi-chain",
  "wit-bindgen-rt 0.39.0",
  "wstd",
@@ -3710,7 +3710,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "wavs-llm-two"
+name = "wavs-llm"
 version = "0.3.0"
 dependencies = [
  "alloy-dyn-abi",

@@ -22,7 +22,7 @@ wasi = "0.14.1"
 wavs-wasi-chain = "0.3.0"
 
 # WAVS
-wavs-agent = { path = "./packages/wavs-agent" }
+wavs-llm = { path = "./packages/llm" }
 
 # Other
 serde = { version = "1.0.217", features = ["derive"] }

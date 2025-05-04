@@ -2,32 +2,7 @@ package wavs:agent;
 
 interface config {
   use errors.{agent-error};
-  use common.{message};
-  use contracts.{contract};
-
-  /// Configuration options for LLM API requests
-  record llm-options {
-    /// Temperature controls randomness (0.0-2.0)
-    temperature: f32,
-    /// Top_p controls diversity (0.0-1.0)
-    top-p: f32,
-    /// Seed for deterministic outputs
-    seed: u32,
-    /// Maximum tokens to generate
-    max-tokens: option<u32>,
-    /// Context window size (mainly for Ollama)
-    context-window: option<u32>,
-  }
-
-  /// Generic configuration for agent's decision making
-  record config {
-    contracts: list<contract>,
-    llm-config: llm-options,
-    model: string,
-    messages: list<message>,
-    /// Any global configuration values
-    config: list<tuple<string, string>>,
-  }
+  use types.{message, config, llm-options, contract};
 
   /// Functions for manipulating LLM options
   resource llm-options-funcs {

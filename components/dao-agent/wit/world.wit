@@ -1,0 +1,23 @@
+package component:dao-agent;
+
+// // Import the existing layer-trigger-world interface
+// use wavs:worker/layer-trigger-world@0.3.0;
+
+// // Import interfaces from wavs-agent (wavs-llm) that we need to use
+// use wavs:agent/client;
+// use wavs:agent/config;
+// use wavs:agent/types;
+
+// Define our world that just re-exports the layer-trigger interface
+world dao-agent {
+  // Import the layer-trigger-world's interfaces
+  import wavs:worker/layer-trigger-world@0.3.0;
+  
+  // Import the LLM interfaces we'll use
+  import wavs:agent/client;
+  import wavs:agent/config;
+  import wavs:agent/types;
+
+  // Export the layer-trigger-world's interface
+  export wavs:worker/layer-trigger-world@0.3.0;
+} 

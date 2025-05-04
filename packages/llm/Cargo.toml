@@ -1,5 +1,5 @@
 [package]
-name = "wavs-llm-two"
+name = "wavs-llm"
 edition.workspace = true
 version.workspace = true
 authors.workspace = true

@@ -2,8 +2,7 @@ package wavs:agent;
 
 interface tools {
   use client.{llm-client};
-  use common.{message, tool, tool-call, function, custom-tool-handler};
-  use contracts.{contract};
+  use types.{message, tool, tool-call, function, custom-tool-handler, contract};
 
   /// Tool creation and management functions
   resource tools-builder {

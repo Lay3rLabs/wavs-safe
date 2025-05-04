@@ -1,19 +1,15 @@
 mod bindings;
 pub mod context;
 
-use alloy_sol_types::{SolType, SolValue};
+use alloy_sol_types::SolType;
 use bindings::{
     export,
     wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent},
     Guest, TriggerAction,
 };
 use context::DaoContext;
-use wavs_agent::llm::LlmResponse;
-use wavs_agent::{
-    contracts::{create_payload_from_tx, transaction_operations::validate_transaction},
-    errors::AgentError,
-    llm::LLMClient,
-};
+use serde_json;
+use wavs_llm::{process_prompt_with_client, types::LlmResponse};
 use wstd::runtime::block_on;
 
 struct Component;
@@ -41,38 +37,33 @@ impl Guest for Component {
         return block_on(async move {
             // Get the DAO context with all our configuration
             let context = DaoContext::load().await?;
-            let llm_context = context.llm_context;
+            let llm_context = context.llm_context.clone();
 
-            // Create LLM client
-            let client = LLMClient::with_config(&llm_context.model, llm_context.llm_config.clone())
-                .map_err(|e| e.to_string())?;
+            // Create LLM client implementation
+            let llm_client_impl = context.create_llm_client_impl();
 
-            // Process prompt
-            let llm_response = client
-                .process_prompt(&prompt, &llm_context, None, None)
-                .await
-                .map_err(|e| e.to_string())?;
+            // Use the helper function to process the prompt
+            let result = process_prompt_with_client(
+                &llm_client_impl,
+                llm_context.model.clone(),
+                prompt,
+                llm_context,
+                None,
+                None,
+            )
+            .map_err(|e| e.to_string())?;
 
             // Handle the response
-            match llm_response {
+            match result {
                 LlmResponse::Transaction(tx) => {
                     println!("Transaction to execute: {:?}", tx);
 
-                    // Validate the transaction first
-                    validate_transaction(&tx).map_err(|e| {
-                        AgentError::Transaction(format!("Transaction validation failed: {}", e))
-                            .to_string()
-                    })?;
-
-                    // Create the transaction payload
-                    let payload = create_payload_from_tx(&tx).map_err(|e| {
-                        AgentError::Transaction(format!("Failed to create transaction: {}", e))
-                            .to_string()
-                    })?;
-
+                    // Serialize transaction for execution
+                    let payload = serde_json::to_vec(&tx)
+                        .map_err(|e| format!("Failed to serialize transaction: {}", e))?;
                     println!("Payload: {:?}", payload);
 
-                    Ok(Some(payload.abi_encode().to_vec()))
+                    Ok(Some(payload))
                 }
                 LlmResponse::Text(text) => {
                     println!("LLM response: {}", text);

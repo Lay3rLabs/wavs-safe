@@ -1,46 +1,156 @@
-# WAVS Agent
+# WAVS LLM WASM Component
 
 ## Overview
 
-The WAVS Agent is a flexible AI-powered autonomous agent built using WebAssembly Autonomous Verification System (WAVS). It enables the creation of AI-assisted components that can interact with smart contracts, execute transactions, and integrate with custom tools through a modular architecture.
+The WAVS LLM WASM Component is a WebAssembly component that enables AI-assisted interactions with smart contracts and blockchain networks. It provides a modular architecture for integrating large language models into applications that need to interpret user requests, execute transactions, and interact with custom tools. As a WebAssembly component, it can be used across multiple programming languages including Rust, Go, and TypeScript.
 
 ## Features
 
-- **LLM-Powered Decision Making**: Uses large language models to interpret requests and decide on appropriate actions
-- **Smart Contract Interaction**: Seamlessly interacts with any smart contract through ABI interfaces
-- **Transaction Handling**: Generates properly formatted transaction payloads
-- **Extensible Tooling**: Easily add custom tools beyond smart contract calls
-- **Configurable Behavior**: Customizable through JSON configuration that can be loaded from HTTP or IPFS
+- **LLM Integration**: Connects to language models from providers like OpenAI and Ollama
+- **Smart Contract Interaction**: Automatically generates tools for smart contract functions
+- **Transaction Construction**: Creates properly formatted transaction payloads
+- **ABI Encoding**: Handles Ethereum ABI encoding for function calls
+- **Extensible Tools System**: Supports custom tools for additional functionality
+- **Configurable**: Flexible JSON configuration for customizing behavior
 
 ## Architecture
 
-The WAVS Agent is built around a few core components:
+The WAVS LLM WASM Component consists of several key modules:
 
-- **Context**: Stores configuration, contracts, and chat messages for the LLM conversation. This simplified structure makes it easier to customize and extend the agent's capabilities without being tied to specific use cases like DAOs.
+- **Client**: Handles communication with LLM providers, managing API requests and response processing
+- **Config**: Manages component configuration, including contract definitions and LLM settings
+- **Contracts**: Processes smart contract ABIs and handles transaction creation
+- **Encoding**: Provides ABI encoding for Ethereum function calls
+- **Tools**: Manages the tools system, including contract function calls and custom tools
+- **Serialization**: Handles serialization/deserialization of WIT types
 
-- **LLM Client**: Handles interactions with language models (supports OpenAI and Ollama). The client abstracts away the differences between various LLM providers, offering a consistent interface.
+## Usage
 
-- **Tools System**: Provides a framework for creating and handling tools. The agent automatically generates tools for each smart contract function defined in the configuration, allowing for seamless blockchain interaction.
+### Setup
 
-- **Contract Handling**: Automatically encodes function calls to smart contracts using their ABIs, handling the complexity of blockchain interactions for you.
+To use the WAVS LLM WASM Component in your project:
 
-- **Custom Tool Extension**: Allows adding arbitrary functionality via custom tools that can perform any operation, from API calls to complex calculations.
+```rust
+// Import the necessary types
+use wavs_llm::bindings::exports::wavs::agent::{
+    client::{GuestLlmClient, LlmClient},
+    config::GuestConfigManager,
+    tools::GuestToolsBuilder,
+    types::{Config, LlmOptions, LlmResponse, Message, Tool},
+};
 
-### Processing Flow
+// Create component instances
+let config_manager = ConfigManagerImpl::new();
+let llm_client = LlmClientImpl {
+    model: "gpt-4".into(),
+    config: LlmOptions {
+        temperature: 0.7,
+        top_p: 1.0,
+        seed: 0,
+        max_tokens: None,
+        context_window: None,
+    },
+    api_url: String::new(),
+    api_key: None,
+};
+let tools_builder = ToolsBuilderImpl;
+```
 
-1. User sends a text prompt to the agent
-2. Agent loads the context and initializes LLM client
-3. Agent generates available tools from smart contracts and custom tools
-4. Agent sends the prompt, context, and tools to the LLM
-5. LLM decides on an action and may call one or more tools
-6. Tool calls are processed by appropriate handlers
-7. Result is returned as either a transaction or text response
+### Processing User Prompts
+
+```rust
+// Load configuration
+let config = match config_manager.load() {
+    Ok(config) => config,
+    Err(e) => {
+        println!("Error loading config: {}", e);
+        config_manager.default_config()
+    }
+};
+
+// Initialize LLM client
+let client = llm_client.new("gpt-4".to_string())?;
+
+// Process user prompt
+let prompt = "Transfer 0.1 ETH to 0x1234567890123456789012345678901234567890";
+let response = client.process_prompt(
+    prompt.to_string(),
+    config,
+    None, // Custom tools
+    None, // Custom handlers
+)?;
+
+// Handle the response
+match response {
+    LlmResponse::Transaction(tx) => {
+        println!("Transaction to execute:");
+        println!("  To: {}", tx.to);
+        println!("  Value: {}", tx.value);
+        println!("  Data: {}", tx.data);
+        // Execute the transaction...
+    }
+    LlmResponse::Text(text) => {
+        println!("LLM response: {}", text);
+    }
+}
+```
+
+### Creating Custom Tools
+
+```rust
+// Create a custom tool
+let custom_tool = tools_builder.custom_tool(
+    "get_price".to_string(),
+    "Get the current price of a token".to_string(),
+    r#"{
+        "type": "object",
+        "properties": {
+            "token": {
+                "type": "string",
+                "description": "The token symbol (e.g., ETH, BTC)"
+            }
+        },
+        "required": ["token"]
+    }"#.to_string()
+);
+
+// Implement a custom tool handler
+struct PriceToolHandler;
+
+impl CustomToolHandler {
+    fn new() -> Self {
+        Self {}
+    }
+
+    // Method to execute the tool call
+    fn execute(&self, tool_call: ToolCall) -> Result<String, String> {
+        // Parse arguments
+        let args: serde_json::Value = serde_json::from_str(&tool_call.function.arguments)
+            .map_err(|e| format!("Failed to parse arguments: {}", e))?;
+
+        // Extract token symbol
+        let token = args["token"]
+            .as_str()
+            .ok_or("Missing token parameter")?;
+
+        // In a real implementation, you would fetch the price from an API
+        let price = match token.to_uppercase().as_str() {
+            "ETH" => "1800.00",
+            "BTC" => "60000.00",
+            _ => "Unknown token",
+        };
+
+        Ok(format!("The current price of {} is ${}", token, price))
+    }
+}
+
+// Create a custom handlers list
+let custom_handlers = vec![PriceToolHandler::new()];
+```
 
 ## Configuration
 
-The agent loads its configuration from a JSON file, which can be specified through the `config_uri` environment variable. Configuration can be hosted on HTTP/HTTPS or IPFS.
-
-### Configuration Options
+The component can be configured using a JSON configuration file:
 
 ```json
 {
@@ -53,333 +163,94 @@ The agent loads its configuration from a JSON file, which can be specified throu
     }
   ],
   "llm_config": {
-    "temperature": 0,
-    "top_p": 0.1,
+    "temperature": 0.0,
+    "top_p": 1.0,
     "seed": 42,
     "max_tokens": 500,
     "context_window": 4096
   },
-  "model": "llama3.2",
+  "model": "gpt-4",
   "messages": [
     {
       "role": "system",
-      "content": "You are an agent responsible for making and executing transactions. Use the available tools to interact with smart contracts."
+      "content": "You are an agent responsible for making and executing transactions."
     }
-  ]
+  ],
+  "config": {
+    "api_base_url": "https://api.openai.com/v1"
+  }
 }
 ```
-
-Note: The system prompt is now included as the first message in the `messages` array with a role of "system". This allows for more flexible conversation history management and better compatibility with LLM APIs.
-
-## Usage as a Library
-
-The WAVS Agent is designed to be used as a library in your WASI components. Here's a basic example of how to use it:
-
-```rust
-use components::wavs_agent::{
-    context::Context,
-    llm::{LLMClient, LlmResponse},
-};
-use wstd::runtime::block_on;
-
-fn process_user_request(prompt: &str) -> Result<(), String> {
-    block_on(async {
-        // Load context
-        let context = Context::load().await?;
-
-        // Create LLM client
-        let client = LLMClient::with_config(&context.model, context.llm_config.clone())?;
-
-        // Process prompt
-        let llm_response = client.process_prompt(prompt, &context, None, None).await?;
-
-        // Handle the response
-        match llm_response {
-            LlmResponse::Transaction(tx) => {
-                println!("Transaction to execute: {:?}", tx);
-                // Your logic to handle the transaction
-            },
-            LlmResponse::Text(text) => {
-                println!("LLM response: {}", text);
-                // Your logic to handle the text response
-            }
-        }
-
-        Ok(())
-    })
-}
-```
-
-## Using Custom Tools
-
-One of the most powerful features of the WAVS Agent is the ability to add custom tools beyond smart contract interactions. Here's an example:
-
-```rust
-use components::wavs_agent::{
-    context::Context,
-    llm::{LLMClient, LlmResponse},
-    tools::{builders, CustomToolHandler, Tool, ToolCall},
-};
-use serde_json::json;
-use std::boxed::Box;
-
-// 1. Create a custom tool definition
-let weather_tool = builders::custom_tool(
-    "get_weather",
-    "Get the current weather for a location",
-    json!({
-        "type": "object",
-        "properties": {
-            "location": {
-                "type": "string",
-                "description": "The city name or zip code"
-            }
-        },
-        "required": ["location"]
-    })
-);
-
-// 2. Create a custom tool handler
-struct WeatherToolHandler;
-
-impl CustomToolHandler for WeatherToolHandler {
-    fn can_handle(&self, tool_name: &str) -> bool {
-        tool_name == "get_weather"
-    }
-
-    fn execute(&self, tool_call: &ToolCall) -> Result<String, String> {
-        // Parse the arguments
-        let args: serde_json::Value = serde_json::from_str(&tool_call.function.arguments)
-            .map_err(|e| format!("Failed to parse arguments: {}", e))?;
-
-        // Extract the location
-        let location = args["location"].as_str().ok_or("Missing location")?;
-
-        // In a real implementation, you would call a weather API here
-        // For this example, we'll just return a static response
-        let weather_info = format!("{{\"temperature\": 72, \"conditions\": \"sunny\", \"location\": \"{}\"}}", location);
-
-        Ok(weather_info)
-    }
-}
-
-// 3. Create a vector of custom tools and handlers
-let custom_tools = vec![weather_tool];
-let weather_handler = Box::new(WeatherToolHandler);
-let custom_handlers: Vec<Box<dyn CustomToolHandler>> = vec![weather_handler];
-
-// 4. Use the tools with the LLM client
-async fn example() -> Result<(), String> {
-    let context = Context::load().await?;
-    let client = LLMClient::with_config("llama3.2", context.llm_config.clone())?;
-
-    let prompt = "What's the weather like in San Francisco?";
-    let result = client.process_prompt(
-        prompt,
-        &context,
-        custom_tools,
-        custom_handlers.as_ref().map(|h| h.as_slice())
-    ).await?;
-
-    match result {
-        LlmResponse::Text(text) => println!("Response: {}", text),
-        LlmResponse::Transaction(tx) => println!("Transaction: {:?}", tx),
-    }
-
-    Ok(())
-}
-```
-
-### How Custom Tools Work
-
-1. **Custom Tool Definition**: Use `builders::custom_tool()` to create a new tool with a name, description, and JSON Schema for parameters.
-
-2. **Custom Tool Handler**: Implement the `CustomToolHandler` trait to handle calls to your custom tool:
-
-   - `can_handle()`: Returns true if this handler can process the given tool name
-   - `execute()`: Processes the tool call and returns a result string
-
-3. **Integration**: Pass your custom tools and handlers to the `process_prompt` method:
-   - `custom_tools`: A vector of Tool objects defining what tools are available
-   - `custom_handlers`: A slice of boxed CustomToolHandler trait objects that implement the tool functionality
-
-This approach allows you to extend the agent with any custom functionality you need, such as:
-
-- API calls to external services
-- Database queries
-- File system operations
-- Complex calculations or data processing
-- Integration with other components or systems
 
 ## Environment Variables
 
-- `config_uri`: URI to load the configuration from (supports HTTP/HTTPS or IPFS)
-- `WAVS_ENV_IPFS_GATEWAY_URL`: IPFS gateway URL to use when loading from IPFS (default: https://gateway.lighthouse.storage/ipfs)
+The component uses the following environment variables:
+
+- `config_uri`: URI to load the configuration from
+- `WAVS_ENV_OPENAI_API_KEY`: API key for OpenAI models (only needed when using OpenAI models)
 - `WAVS_ENV_OLLAMA_API_URL`: URL for Ollama API (default: http://localhost:11434)
-- `WAVS_ENV_OPENAI_API_KEY`: API key for OpenAI models (required only when using OpenAI models)
 
 ## Example Prompts
 
 ```
 Transfer 0.1 ETH to 0x1234...
 
+Send 50 USDC to vitalik.eth
+
 Call the vote function on the Governance contract with parameter true
 ```
+
+## Using in a WebAssembly Host Environment
+
+To use this component in a WebAssembly host environment, import the component using your language's WebAssembly Component Model tooling:
+
+### Rust Example (using wasmtime)
+
+```rust
+use wasmtime::component::*;
+use wasmtime::{Config, Engine, Store};
+
+// Import the generated bindings for the component
+use wavs_component::WavsLlmComponent;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Configure the engine
+    let mut config = Config::new();
+    config.wasm_component_model(true);
+    let engine = Engine::new(&config)?;
+
+    // Load the component
+    let component = Component::from_file(&engine, "path/to/wavs_llm.wasm")?;
+
+    // Create a store
+    let mut store = Store::new(&engine, ());
+
+    // Instantiate the component
+    let (wavs, _) = WavsLlmComponent::instantiate(&mut store, &component)?;
+
+    // Set up environment variables
+    std::env::set_var("WAVS_ENV_OPENAI_API_KEY", "your-api-key");
+
+    // Process a user request
+    let prompt = "Transfer 0.1 ETH to 0x1234567890123456789012345678901234567890";
+    let result = wavs.process_prompt(&mut store, prompt)?;
+
+    println!("Result: {:?}", result);
+
+    Ok(())
+}
+```
+
+## Building Custom Applications
+
+When building applications with this component, consider:
+
+1. **Configuration Management**: Store your contract ABIs and configuration in a centralized location
+2. **Error Handling**: Implement proper error handling for API failures and parsing errors
+3. **Security**: Never expose API keys directly in your application
+4. **Transaction Validation**: Always validate generated transactions before submitting them to a blockchain
+5. **Custom Tools**: Implement domain-specific tools for your application's needs
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](../../LICENSE) file for details.
-
-## Building Custom WASI Components
-
-The WAVS Agent is designed to be a building block for creating custom WASI components. Here's how to create your own WASI component using the WAVS Agent:
-
-### 1. Add Dependencies to Cargo.toml
-
-```toml
-[dependencies]
-wavs-agent = { git = "https://github.com/wavslabs/wavs-agent.git" }
-anyhow = "1.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-wstd = "0.1.0"
-```
-
-### 2. Implement the WASI Component
-
-```rust
-mod bindings;
-use bindings::{export, Guest, TriggerAction};
-use wavs_agent::{
-    context::Context,
-    llm::{LLMClient, LlmResponse},
-    tools::{builders, CustomToolHandler, Tool, ToolCall},
-};
-use wstd::runtime::block_on;
-
-struct Component;
-
-impl Guest for Component {
-    fn run(trigger_action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
-        // Extract the prompt from the trigger data
-        let prompt = extract_prompt_from_trigger(&trigger_action)?;
-
-        return block_on(async move {
-            // Load context
-            let context = Context::load().await?;
-
-            // Create LLM client
-            let client = LLMClient::with_config(&context.model, context.llm_config.clone())?;
-
-            // Add any custom tools
-            let custom_tools = create_custom_tools();
-            let custom_handlers = create_custom_handlers();
-
-            // Process prompt using LLM with tools
-            let llm_response = client.process_prompt(
-                &prompt,
-                &context,
-                custom_tools,
-                custom_handlers.as_ref().map(|h| h.as_slice())
-            ).await?;
-
-            // Handle the response appropriately for your component
-            match llm_response {
-                LlmResponse::Transaction(tx) => {
-                    // Process transaction based on your component's needs
-                    // ...
-
-                    // Return serialized data
-                    Ok(Some(serde_json::to_vec(&tx).unwrap()))
-                },
-                LlmResponse::Text(text) => {
-                    // Process text response
-                    // ...
-
-                    // Return text data
-                    Ok(Some(text.as_bytes().to_vec()))
-                }
-            }
-        });
-    }
-}
-
-// Helper function to extract the prompt from trigger action
-fn extract_prompt_from_trigger(trigger_action: &TriggerAction) -> Result<String, String> {
-    use bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent};
-    use alloy_sol_types::sol_data::String as SolString;
-    use alloy_sol_types::SolType;
-
-    match &trigger_action.data {
-        TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
-            // Decode the ABI-encoded string from the event log
-            let decoded = SolString::abi_decode(&log.data, false)
-                .map_err(|e| format!("Failed to decode ABI string: {}", e))?;
-
-            Ok(decoded.to_string())
-        }
-        TriggerData::Raw(data) => {
-            // For raw data, just convert from UTF-8 bytes
-            let prompt = std::str::from_utf8(data)
-                .map_err(|e| format!("Failed to decode prompt from bytes: {}", e))?;
-
-            Ok(prompt.to_string())
-        }
-        _ => Err("Unsupported trigger data".to_string()),
-    }
-}
-
-export!(Component with_types_in bindings);
-```
-
-### 3. Create Custom Tools (Optional)
-
-```rust
-fn create_custom_tools() -> Option<Vec<Tool>> {
-    // Define custom tools for your component
-    let tools = vec![
-        builders::custom_tool(
-            "custom_action",
-            "Perform a custom action",
-            serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "parameter": {
-                        "type": "string",
-                        "description": "Input parameter"
-                    }
-                },
-                "required": ["parameter"]
-            })
-        )
-    ];
-
-    Some(tools)
-}
-
-fn create_custom_handlers() -> Option<Vec<Box<dyn CustomToolHandler>>> {
-    // Create handlers for your custom tools
-    let handlers: Vec<Box<dyn CustomToolHandler>> = vec![
-        Box::new(CustomActionHandler)
-    ];
-
-    Some(handlers)
-}
-
-struct CustomActionHandler;
-
-impl CustomToolHandler for CustomActionHandler {
-    fn can_handle(&self, tool_name: &str) -> bool {
-        tool_name == "custom_action"
-    }
-
-    fn execute(&self, tool_call: &ToolCall) -> Result<String, String> {
-        // Implement your custom action here
-        // ...
-
-        Ok("Success!".to_string())
-    }
-}
-```
-
-This approach allows you to build specialized WASI components that leverage the WAVS Agent's capabilities while adding your own custom functionality.

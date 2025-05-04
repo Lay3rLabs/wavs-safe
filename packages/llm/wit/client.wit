@@ -2,17 +2,7 @@ package wavs:agent;
 
 interface client {
   use errors.{agent-error};
-  use common.{message, tool, tool-call, custom-tool-handler};
-  use contracts.{transaction};
-  use config.{config, llm-options};
-
-  /// Response from an LLM interaction
-  variant llm-response {
-    /// Transaction to be executed
-    transaction(transaction),
-    /// Text response (when no action is needed)
-    text(string),
-  }
+  use types.{message, tool, tool-call, custom-tool-handler, llm-response, transaction, config, llm-options};
 
   /// Client for making LLM API requests
   resource llm-client {

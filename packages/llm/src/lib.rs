@@ -5,150 +5,93 @@ pub mod config;
 pub mod contracts;
 pub mod encoding;
 pub mod errors;
+pub mod serialization;
 pub mod sol_interfaces;
 pub mod tools;
 
-// TODO: component behind a feature flag for composability
-// use alloy_sol_types::{SolType, SolValue};
-// use bindings::{
-//     export,
-//     wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent},
-//     Guest, TriggerAction,
-// };
-// use context::Context;
-// use errors::{AgentError, AgentResult};
-// use llm::{LLMClient, LlmResponse};
-// use serde::{Deserialize, Serialize};
-// use wstd::runtime::block_on;
+// Re-export commonly used types for easier access
+pub use client::LlmClientImpl;
+pub use config::{ConfigManagerImpl, LlmOptionsFuncsImpl};
+pub use tools::ToolsBuilderImpl;
 
-// /// Input structure for the component
-// #[derive(Debug, Deserialize, Serialize)]
-// struct AgentInput {
-//     prompt: String,
-//     #[serde(default)]
-//     context_uri: Option<String>,
-//     #[serde(default)]
-//     context_json: Option<String>,
-// }
+// Re-export the AgentError type for error handling
+pub use bindings::exports::wavs::agent::errors::AgentError;
 
-// struct Component;
+// Re-export types from bindings that are needed by clients
+pub mod types {
+    pub use crate::bindings::exports::wavs::agent::client::LlmClient;
+    pub use crate::bindings::exports::wavs::agent::types::{
+        Config, Contract, CustomToolHandler, Function, LlmOptions, LlmResponse, Message, Tool,
+        ToolCall, Transaction,
+    };
+}
 
-// impl Guest for Component {
-//     fn run(trigger_action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
-//         let result = inner_run(trigger_action);
+// Re-export the traits from the bindings
+pub mod traits {
+    pub use crate::bindings::exports::wavs::agent::client::GuestLlmClient;
+    pub use crate::bindings::exports::wavs::agent::config::GuestConfigManager;
+    pub use crate::bindings::exports::wavs::agent::tools::GuestToolsBuilder;
+}
 
-//         match result {
-//             Ok(data) => Ok(data),
-//             Err(err) => {
-//                 // Log the full error
-//                 eprintln!("Error: {:?}", err);
-//                 // Return a simplified error message
-//                 Err(err.to_string())
-//             }
-//         }
-//     }
-// }
+// Main component for all exports
+pub struct Component;
 
-// /// Inner implementation of the run function to use our custom error handling
-// fn inner_run(trigger_action: TriggerAction) -> AgentResult<Option<Vec<u8>>> {
-//     let agent_input = match trigger_action.data {
-//         // Handle raw data - expected to be JSON containing prompt and optional context
-//         TriggerData::Raw(data) => {
-//             let input_str = std::str::from_utf8(&data).map_err(AgentError::Utf8)?;
+// Implementing each of the interfaces for our Component
+impl bindings::exports::wavs::agent::client::Guest for Component {
+    type LlmClient = client::LlmClientImpl;
+}
 
-//             // First try to parse as AgentInput
-//             match serde_json::from_str::<AgentInput>(input_str) {
-//                 Ok(input) => Ok(input),
-//                 Err(_) => {
-//                     // Fall back to treating the entire input as just the prompt
-//                     Ok(AgentInput {
-//                         prompt: input_str.to_string(),
-//                         context_uri: None,
-//                         context_json: None,
-//                     })
-//                 }
-//             }
-//         }
-//         // Handle Ethereum events - decode the string from ABI-encoded data
-//         TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
-//             // Decode the ABI-encoded string first
-//             let decoded = alloy_sol_types::sol_data::String::abi_decode(&log.data, false)
-//                 .map_err(|e| AgentError::Other(format!("Failed to decode ABI string: {}", e)))?;
+impl bindings::exports::wavs::agent::config::Guest for Component {
+    type LlmOptionsFuncs = config::LlmOptionsFuncsImpl;
+    type ConfigManager = config::ConfigManagerImpl;
+}
 
-//             let input_str = decoded.to_string();
+impl bindings::exports::wavs::agent::contracts::Guest for Component {
+    type ContractManager = contracts::ContractManagerImpl;
+    type TransactionManager = contracts::TransactionManagerImpl;
+}
 
-//             // Try to parse as AgentInput
-//             match serde_json::from_str::<AgentInput>(&input_str) {
-//                 Ok(input) => Ok(input),
-//                 Err(_) => {
-//                     // Fall back to treating the entire input as just the prompt
-//                     Ok(AgentInput { prompt: input_str, context_uri: None, context_json: None })
-//                 }
-//             }
-//         }
-//         _ => Err(AgentError::Other("Unsupported trigger data".to_string())),
-//     }?;
+impl bindings::exports::wavs::agent::tools::Guest for Component {
+    type ToolsBuilder = tools::ToolsBuilderImpl;
+}
 
-//     return block_on(async move {
-//         // Load context - either from the environment, from a provided URI, or from inline JSON
-//         let context = if let Some(uri) = agent_input.context_uri {
-//             // Use provided URI to load context
-//             Context::load_from_uri(&uri).await.map_err(|e| {
-//                 AgentError::ContextLoading(format!("Failed to load context from URI: {}", e))
-//             })?
-//         } else if let Some(json) = agent_input.context_json {
-//             // Parse inline JSON context
-//             Context::from_json(&json).map_err(|e| {
-//                 AgentError::ContextLoading(format!("Failed to parse context JSON: {}", e))
-//             })?
-//         } else {
-//             // Default to environment-based context loading
-//             Context::load()
-//                 .await
-//                 .map_err(|e| AgentError::ContextLoading(format!("Failed to load context: {}", e)))?
-//         };
+// Add the missing types::Guest implementation
+impl bindings::exports::wavs::agent::types::Guest for Component {
+    type CustomToolHandler = CustomToolHandlerImpl;
+}
 
-//         // Validate the context
-//         context.validate().map_err(|e| AgentError::ContextValidation(e.to_string()))?;
+// A simple implementation of CustomToolHandler
+pub struct CustomToolHandlerImpl;
 
-//         // Create LLM client
-//         let client = LLMClient::with_config(&context.model, context.llm_config.clone())
-//             .map_err(|e| AgentError::Llm(format!("Failed to create LLM client: {}", e)))?;
+impl bindings::exports::wavs::agent::types::GuestCustomToolHandler for CustomToolHandlerImpl {
+    fn can_handle(&self, _tool_name: String) -> bool {
+        // Placeholder implementation - doesn't handle any tools
+        false
+    }
 
-//         // Process prompt using LLM with tools
-//         let llm_response = client
-//             .process_prompt(&agent_input.prompt, &context, None, None)
-//             .await
-//             .map_err(|e| AgentError::Llm(format!("LLM processing error: {}", e)))?;
+    fn execute(
+        &self,
+        _tool_call: bindings::exports::wavs::agent::types::ToolCall,
+    ) -> Result<String, String> {
+        // Placeholder implementation
+        Err("Custom tool handling not implemented".into())
+    }
+}
 
-//         // Match the response type
-//         match llm_response {
-//             LlmResponse::Transaction(transaction) => {
-//                 // Validate the transaction first
-//                 contracts::transaction_operations::validate_transaction(&transaction).map_err(
-//                     |e| AgentError::Transaction(format!("Transaction validation failed: {}", e)),
-//                 )?;
+// Export the component
+bindings::export!(Component with_types_in bindings);
 
-//                 // Create the transaction payload
-//                 let payload = contracts::create_payload_from_tx(&transaction).map_err(|e| {
-//                     AgentError::Transaction(format!("Failed to create transaction: {}", e))
-//                 })?;
+// Helper function to process a prompt without needing direct access to LlmClient methods
+pub fn process_prompt_with_client(
+    client_impl: &LlmClientImpl,
+    model: String,
+    prompt: String,
+    config: types::Config,
+    custom_tools: Option<Vec<types::Tool>>,
+    custom_handlers: Option<Vec<types::CustomToolHandler>>,
+) -> Result<types::LlmResponse, AgentError> {
+    use bindings::exports::wavs::agent::client::GuestLlmClient;
 
-//                 println!("Payload: {:?}", payload);
-
-//                 Ok(Some(payload.abi_encode().to_vec()))
-//             }
-//             LlmResponse::Text(text) => {
-//                 if !text.is_empty() {
-//                     println!("LLM response: {}", text);
-//                     Ok(Some(text.as_bytes().to_vec()))
-//                 } else {
-//                     println!("No action needed");
-//                     Ok(None)
-//                 }
-//             }
-//         }
-//     });
-// }
-
-// export!(Component with_types_in bindings);
+    // Using the implementation directly rather than trying to call through opaque type
+    client_impl.process_prompt(prompt, config, custom_tools, custom_handlers)
+}
