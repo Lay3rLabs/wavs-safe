@@ -4,6 +4,7 @@ package wavs:agent;
 world wavs-agent {
   // Import all the interfaces
   import client;
+  import common;
   import config;
   import contracts;
   import errors;
@@ -11,6 +12,7 @@ world wavs-agent {
   
   // Export all the interfaces
   export client;
+  export common;
   export config;
   export contracts;
   export errors;

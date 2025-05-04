@@ -1,8 +1,5 @@
 use thiserror::Error;
 
-/// Result type alias for Agent operations
-pub type AgentResult<T> = Result<T, AgentError>;
-
 /// Error type for Agent operations
 #[derive(Error, Debug)]
 pub enum AgentError {

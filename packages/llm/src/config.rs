@@ -1,10 +1,11 @@
 use crate::client::Message;
 use crate::contracts::Contract;
-use crate::errors::{AgentError, AgentResult};
+use crate::errors::AgentError;
 use serde::{Deserialize, Serialize};
 use std::env;
 use wavs_wasi_chain::http::{fetch_json, http_request_get};
 use wstd::http::HeaderValue;
+use wstd::runtime::block_on;
 
 // TODO wit record
 // Configuration options for LLM API requests
@@ -90,12 +91,12 @@ pub struct Config {
 // TODO wit resource
 impl Config {
     /// Load Config from environment variable CONFIG_URI or use default
-    pub async fn load() -> Result<Self, String> {
+    pub fn load() -> Result<Self, String> {
         // Check if CONFIG_URI environment variable is set
         if let Ok(config_uri) = env::var("config_uri") {
             println!("Loading config from URI: {}", config_uri);
 
-            Self::load_from_uri(&config_uri).await
+            Self::load_from_uri(&config_uri)
         } else {
             println!("No CONFIG_URI found, using default configuration");
             Ok(Self::default())
@@ -103,86 +104,92 @@ impl Config {
     }
 
     /// Load Config from a URI
-    pub async fn load_from_uri(uri: &str) -> Result<Self, String> {
-        // Strip any quotation marks from the URI
-        let clean_uri = uri.trim_matches('"');
+    pub fn load_from_uri(uri: &str) -> Result<Self, String> {
+        block_on(async {
+            // Strip any quotation marks from the URI
+            let clean_uri = uri.trim_matches('"');
 
-        println!("Loading config from URI: {}", clean_uri);
+            println!("Loading config from URI: {}", clean_uri);
 
-        // Check URI scheme
-        if let Some(uri_with_scheme) = clean_uri.strip_prefix("ipfs://") {
-            // IPFS URI scheme detected
-            Self::load_from_ipfs(uri_with_scheme).await
-        } else if clean_uri.starts_with("http://") || clean_uri.starts_with("https://") {
-            // HTTP URI scheme detected
-            Self::fetch_from_uri(clean_uri).await
-        } else {
-            // Only support http/https and ipfs URIs
-            Err(format!("Unsupported URI scheme: {}", clean_uri))
-        }
+            // Check URI scheme
+            if let Some(uri_with_scheme) = clean_uri.strip_prefix("ipfs://") {
+                // IPFS URI scheme detected
+                Self::load_from_ipfs(uri_with_scheme)
+            } else if clean_uri.starts_with("http://") || clean_uri.starts_with("https://") {
+                // HTTP URI scheme detected
+                Self::fetch_from_uri(clean_uri)
+            } else {
+                // Only support http/https and ipfs URIs
+                Err(format!("Unsupported URI scheme: {}", clean_uri))
+            }
+        })
     }
 
     /// Load configuration from IPFS
-    async fn load_from_ipfs(cid: &str) -> Result<Self, String> {
-        let gateway_url = std::env::var("WAVS_ENV_IPFS_GATEWAY_URL").unwrap_or_else(|_| {
-            println!("WAVS_ENV_IPFS_GATEWAY_URL not set, using default");
-            "https://gateway.lighthouse.storage/ipfs".to_string()
-        });
+    fn load_from_ipfs(cid: &str) -> Result<Self, String> {
+        block_on(async {
+            let gateway_url = std::env::var("WAVS_ENV_IPFS_GATEWAY_URL").unwrap_or_else(|_| {
+                println!("WAVS_ENV_IPFS_GATEWAY_URL not set, using default");
+                "https://gateway.lighthouse.storage/ipfs".to_string()
+            });
 
-        // Strip any quotation marks from the gateway URL
-        let clean_gateway_url = gateway_url.trim_matches('"');
+            // Strip any quotation marks from the gateway URL
+            let clean_gateway_url = gateway_url.trim_matches('"');
 
-        // Construct HTTP URL, avoiding duplicate /ipfs in the path
-        let http_url = if clean_gateway_url.ends_with("/ipfs") {
-            format!("{}/{}", clean_gateway_url, cid)
-        } else if clean_gateway_url.ends_with("/ipfs/") {
-            format!("{}{}", clean_gateway_url, cid)
-        } else if clean_gateway_url.ends_with("/") {
-            format!("{}ipfs/{}", clean_gateway_url, cid)
-        } else {
-            format!("{}/ipfs/{}", clean_gateway_url, cid)
-        };
+            // Construct HTTP URL, avoiding duplicate /ipfs in the path
+            let http_url = if clean_gateway_url.ends_with("/ipfs") {
+                format!("{}/{}", clean_gateway_url, cid)
+            } else if clean_gateway_url.ends_with("/ipfs/") {
+                format!("{}{}", clean_gateway_url, cid)
+            } else if clean_gateway_url.ends_with("/") {
+                format!("{}ipfs/{}", clean_gateway_url, cid)
+            } else {
+                format!("{}/ipfs/{}", clean_gateway_url, cid)
+            };
 
-        println!("Fetching IPFS config from: {}", http_url);
-        Self::fetch_from_uri(&http_url).await
+            println!("Fetching IPFS config from: {}", http_url);
+            Self::fetch_from_uri(&http_url)
+        })
     }
 
     /// Fetch configuration from a HTTP/HTTPS URI
-    async fn fetch_from_uri(uri: &str) -> Result<Self, String> {
-        // Strip any quotation marks from the URI
-        let clean_uri = uri.trim_matches('"');
+    fn fetch_from_uri(uri: &str) -> Result<Self, String> {
+        block_on(async {
+            // Strip any quotation marks from the URI
+            let clean_uri = uri.trim_matches('"');
 
-        println!("Creating HTTP request for URI: {}", clean_uri);
+            println!("Creating HTTP request for URI: {}", clean_uri);
 
-        // Create HTTP request
-        let mut req = http_request_get(clean_uri).map_err(|e| {
-            let error_msg = format!("Failed to create request: {}", e);
-            println!("Error: {}", error_msg);
-            error_msg
-        })?;
+            // Create HTTP request
+            let mut req = http_request_get(clean_uri).map_err(|e| {
+                let error_msg = format!("Failed to create request: {}", e);
+                println!("Error: {}", error_msg);
+                error_msg
+            })?;
 
-        // Add appropriate headers for JSON content
-        req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
+            // Add appropriate headers for JSON content
+            req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
 
-        println!("Sending HTTP request...");
+            println!("Sending HTTP request...");
 
-        // Execute HTTP request and parse response as JSON
-        let Config: Config = fetch_json(req).await.unwrap();
+            // Execute HTTP request and parse response as JSON
+            let config: Config = fetch_json(req).await.unwrap();
 
-        println!("Successfully loaded configuration");
-        Ok(Config)
+            println!("Successfully loaded configuration");
+            Ok(config)
+        })
     }
 
     /// Load Config from JSON
-    pub fn from_json(json: &str) -> AgentResult<Self> {
-        let Config: Self = serde_json::from_str(json).map_err(|e| {
+    pub fn from_json(json: &str) -> Result<Self, AgentError> {
+        let config: Self = serde_json::from_str(json).map_err(|e| {
             AgentError::Configuration(format!("Failed to parse Config JSON: {}", e))
         })?;
 
         // Validate the Config
-        Config.validate()?;
+        config.validate()?;
 
-        Ok(Config)
+        Ok(config)
     }
 
     /// Serialize the Config to a JSON string
@@ -211,7 +218,7 @@ impl Config {
     }
 
     /// Validate the Config for required fields and logical consistency
-    pub fn validate(&self) -> AgentResult<()> {
+    pub fn validate(&self) -> Result<(), AgentError> {
         // Check each contract for required fields
         for (i, contract) in self.contracts.iter().enumerate() {
             if contract.address.is_empty() {
@@ -279,7 +286,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_Config_from_json() {
+    fn test_config_from_json() {
         // Valid Config JSON
         let json = r#"{
             "contracts": [
@@ -309,28 +316,28 @@ mod tests {
             }
         }"#;
 
-        let Config = Config::from_json(json).unwrap();
+        let config = Config::from_json(json).unwrap();
 
         // Verify loaded values
-        assert_eq!(Config.contracts.len(), 1);
-        assert_eq!(Config.contracts[0].name, "TestContract");
-        assert_eq!(Config.contracts[0].address, "0x1234567890123456789012345678901234567890");
-        assert_eq!(Config.model, "test-model");
-        assert_eq!(Config.llm_config.temperature, 0.7);
-        assert_eq!(Config.llm_config.top_p, 0.9);
-        assert_eq!(Config.llm_config.seed, 123);
-        assert_eq!(Config.llm_config.max_tokens, Some(500));
-        assert_eq!(Config.llm_config.context_window, Some(4096));
-        assert_eq!(Config.messages.len(), 1);
-        assert_eq!(Config.messages[0].role, "system");
-        assert_eq!(Config.messages[0].content.as_ref().unwrap(), "Test system message");
-        assert_eq!(Config.config.get("test_key").unwrap(), "test_value");
+        assert_eq!(config.contracts.len(), 1);
+        assert_eq!(config.contracts[0].name, "TestContract");
+        assert_eq!(config.contracts[0].address, "0x1234567890123456789012345678901234567890");
+        assert_eq!(config.model, "test-model");
+        assert_eq!(config.llm_config.temperature, 0.7);
+        assert_eq!(config.llm_config.top_p, 0.9);
+        assert_eq!(config.llm_config.seed, 123);
+        assert_eq!(config.llm_config.max_tokens, Some(500));
+        assert_eq!(config.llm_config.context_window, Some(4096));
+        assert_eq!(config.messages.len(), 1);
+        assert_eq!(config.messages[0].role, "system");
+        assert_eq!(config.messages[0].content.as_ref().unwrap(), "Test system message");
+        assert_eq!(config.config.get("test_key").unwrap(), "test_value");
     }
 
     #[test]
-    fn test_Config_validation() {
+    fn test_config_validation() {
         // Valid Config
-        let valid_Config = Config {
+        let valid_config = Config {
             contracts: vec![Contract::new(
                 "TestContract",
                 "0x1234567890123456789012345678901234567890",
@@ -342,10 +349,10 @@ mod tests {
             config: std::collections::HashMap::new(),
         };
 
-        assert!(valid_Config.validate().is_ok());
+        assert!(valid_config.validate().is_ok());
 
         // Invalid contract address
-        let invalid_address_Config = Config {
+        let invalid_address_config = Config {
             contracts: vec![Contract::new(
                 "TestContract",
                 "invalid-address",
@@ -357,10 +364,10 @@ mod tests {
             config: std::collections::HashMap::new(),
         };
 
-        assert!(invalid_address_Config.validate().is_err());
+        assert!(invalid_address_config.validate().is_err());
 
         // Empty ABI
-        let empty_abi_Config = Config {
+        let empty_abi_config = Config {
             contracts: vec![Contract::new(
                 "TestContract",
                 "0x1234567890123456789012345678901234567890",
@@ -372,12 +379,12 @@ mod tests {
             config: std::collections::HashMap::new(),
         };
 
-        assert!(empty_abi_Config.validate().is_err());
+        assert!(empty_abi_config.validate().is_err());
     }
 
     #[test]
     fn test_get_contract_by_name() {
-        let Config = Config {
+        let config = Config {
             contracts: vec![
                 Contract::new(
                     "Contract1",
@@ -397,23 +404,23 @@ mod tests {
         };
 
         // Test exact match
-        let contract = Config.get_contract_by_name("Contract1");
+        let contract = config.get_contract_by_name("Contract1");
         assert!(contract.is_some());
         assert_eq!(contract.unwrap().name, "Contract1");
 
         // Test case insensitive match
-        let contract = Config.get_contract_by_name("contract2");
+        let contract = config.get_contract_by_name("contract2");
         assert!(contract.is_some());
         assert_eq!(contract.unwrap().name, "Contract2");
 
         // Test non-existent contract
-        let contract = Config.get_contract_by_name("NonExistentContract");
+        let contract = config.get_contract_by_name("NonExistentContract");
         assert!(contract.is_none());
     }
 
     #[test]
     fn test_format_contract_descriptions() {
-        let Config = Config {
+        let config = Config {
             contracts: vec![
                 Contract::new_with_description(
                     "Contract1",
@@ -434,7 +441,7 @@ mod tests {
             config: std::collections::HashMap::new(),
         };
 
-        let descriptions = Config.format_contract_descriptions();
+        let descriptions = config.format_contract_descriptions();
 
         // Check that the descriptions contain the contract names, addresses, and ABIs
         assert!(descriptions.contains("Contract1"));
@@ -447,14 +454,14 @@ mod tests {
     }
 
     #[test]
-    fn test_default_Config() {
-        let Config = Config::default();
+    fn test_default_config() {
+        let config = Config::default();
 
         // Check that default Config has reasonable values
-        assert!(!Config.contracts.is_empty());
-        assert_eq!(Config.model, "llama3.2");
-        assert!(!Config.messages.is_empty());
-        assert_eq!(Config.messages[0].role, "system");
-        assert!(Config.messages[0].content.is_some());
+        assert!(!config.contracts.is_empty());
+        assert_eq!(config.model, "llama3.2");
+        assert!(!config.messages.is_empty());
+        assert_eq!(config.messages[0].role, "system");
+        assert!(config.messages[0].content.is_some());
     }
 }

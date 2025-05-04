@@ -1,6 +1,6 @@
 use crate::config::{Config, LlmOptions};
 use crate::contracts::Transaction;
-use crate::errors::{AgentError, AgentResult};
+use crate::errors::AgentError;
 use crate::tools::{Tool, ToolCall, Tools};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -82,19 +82,19 @@ pub enum LlmResponse {
 // TODO WIT resource
 impl LLMClient {
     /// Create a new LLM client with default configuration
-    pub fn new(model: &str) -> AgentResult<Self> {
+    pub fn new(model: &str) -> Result<Self, AgentError> {
         Self::with_config(model, LlmOptions::default())
     }
 
     /// Create a new LLM client from a JSON configuration string
-    pub fn from_json(model: &str, json_config: &str) -> AgentResult<Self> {
+    pub fn from_json(model: &str, json_config: &str) -> Result<Self, AgentError> {
         let config: LlmOptions = serde_json::from_str(json_config)
             .map_err(|e| AgentError::Config(format!("Failed to parse config JSON: {}", e)))?;
         Self::with_config(model, config)
     }
 
     /// Create a new LLM client with custom configuration
-    pub fn with_config(model: &str, config: LlmOptions) -> AgentResult<Self> {
+    pub fn with_config(model: &str, config: LlmOptions) -> Result<Self, AgentError> {
         // Validate model name
         if model.trim().is_empty() {
             return Err(AgentError::Llm("Model name cannot be empty".to_string()));
@@ -148,7 +148,7 @@ impl LLMClient {
         &self,
         messages: &[Message],
         tools: Option<&[Tool]>,
-    ) -> AgentResult<Message> {
+    ) -> Result<Message, AgentError> {
         block_on(async {
             // Validate messages
             if messages.is_empty() {
@@ -339,7 +339,7 @@ impl LLMClient {
     }
 
     /// Helper method to get just the content string from a chat completion
-    pub fn chat_completion_text(&self, messages: &[Message]) -> AgentResult<String> {
+    pub fn chat_completion_text(&self, messages: &[Message]) -> Result<String, AgentError> {
         block_on(async {
             let response = self.chat_completion(messages, None)?;
             Ok(response.content.unwrap_or_default())
@@ -353,7 +353,7 @@ impl LLMClient {
         config: &Config,
         custom_tools: Option<Vec<Tool>>,
         custom_handlers: Option<&[Box<dyn crate::tools::CustomToolHandler>]>,
-    ) -> AgentResult<LlmResponse> {
+    ) -> Result<LlmResponse, AgentError> {
         block_on(async {
             // Create the tools for ETH transfers
             let eth_tool = Tools::send_eth_tool();
@@ -581,7 +581,7 @@ mod tests {
     #[test]
     fn test_chat_completion_empty_messages() {
         let client = LLMClient::new("llama3.2").unwrap();
-        let result = block_on(async { client.chat_completion(&[], None).await });
+        let result = client.chat_completion(&[], None);
         assert!(result.is_err());
         let err = result.unwrap_err();
         match err {

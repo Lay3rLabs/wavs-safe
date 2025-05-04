@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::encoding::encode_function_args;
-use crate::errors::{AgentError, AgentResult};
+use crate::errors::AgentError;
 use crate::sol_interfaces::TransactionPayload;
 use alloy_json_abi::{Function, JsonAbi};
 use alloy_primitives::{Address, Bytes, U256};
@@ -49,7 +49,7 @@ impl Contract {
     }
 
     /// Parse the JSON ABI to JsonAbi struct
-    fn parse_abi(&self) -> AgentResult<JsonAbi> {
+    fn parse_abi(&self) -> Result<JsonAbi, AgentError> {
         serde_json::from_str(&self.abi)
             .map_err(|e| AgentError::Contract(format!("Failed to parse ABI: {}", e)))
     }
@@ -59,7 +59,7 @@ impl Contract {
         &self,
         function_name: &str,
         args: &[serde_json::Value],
-    ) -> AgentResult<Bytes> {
+    ) -> Result<Bytes, AgentError> {
         // Find the function in the parsed ABI
         let function = self.find_function(function_name)?;
 
@@ -77,7 +77,7 @@ impl Contract {
     }
 
     /// Find a function in the ABI
-    pub fn find_function(&self, function_name: &str) -> AgentResult<Function> {
+    pub fn find_function(&self, function_name: &str) -> Result<Function, AgentError> {
         let json_abi = self.parse_abi()?;
 
         json_abi.functions().find(|f| f.name == function_name).cloned().ok_or_else(|| {
@@ -90,7 +90,7 @@ impl Contract {
         &self,
         function_name: &str,
         args: &[serde_json::Value],
-    ) -> AgentResult<()> {
+    ) -> Result<(), AgentError> {
         // Find the function in the ABI
         let function = self.find_function(function_name)?;
 
@@ -147,7 +147,7 @@ impl Transaction {
 
     // TODO use self
     /// Validate a transaction
-    pub fn validate_transaction(tx: &Transaction) -> AgentResult<()> {
+    pub fn validate_transaction(tx: &Transaction) -> Result<(), AgentError> {
         // Basic validation
         if tx.to.len() != 42 || !tx.to.starts_with("0x") {
             return Err(AgentError::Transaction("Invalid destination address".to_string()));
@@ -159,12 +159,12 @@ impl Transaction {
         }
 
         // Get Config to look up contracts
-        let Config = Config::default();
+        let config = Config::default();
 
         // If there's a contract call, validate its arguments
         if let Some(contract_call) = &tx.contract_call {
             // Find the contract
-            let contract = Config
+            let contract = config
                 .contracts
                 .iter()
                 .find(|c| c.address.to_lowercase() == tx.to.to_lowercase())
@@ -181,7 +181,7 @@ impl Transaction {
 
     // TODO use self
     /// Helper function to create a TransactionPayload from a Transaction
-    pub fn create_payload_from_tx(tx: &Transaction) -> AgentResult<TransactionPayload> {
+    pub fn create_payload_from_tx(tx: &Transaction) -> Result<TransactionPayload, AgentError> {
         // Parse address
         let to: Address = tx
             .to
@@ -195,10 +195,10 @@ impl Transaction {
         // Handle contract calls
         let data = if let Some(contract_call) = &tx.contract_call {
             // Get contract details from the Config
-            let Config = Config::default();
+            let config = Config::default();
 
             // Try to find the contract by address
-            let contract = Config
+            let contract = config
                 .contracts
                 .iter()
                 .find(|c| c.address.to_lowercase() == tx.to.to_lowercase())

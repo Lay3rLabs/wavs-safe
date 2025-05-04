@@ -250,7 +250,7 @@ impl Tools {
     /// # Example
     /// ```
     /// use serde_json::json;
-    /// use tools::Tools;
+    /// use wavs_llm_two::tools::Tools;
     ///
     /// let weather_tool = Tools::custom_tool(
     ///     "get_weather",
@@ -575,7 +575,7 @@ mod tests {
         use serde_json::json;
 
         // Test send_eth tool
-        let eth_tool = builders::send_eth();
+        let eth_tool = Tools::send_eth_tool();
         assert_eq!(eth_tool.function.name, "send_eth");
         assert!(eth_tool.function.description.is_some());
 
@@ -589,7 +589,7 @@ mod tests {
         }
 
         // Test custom tool
-        let weather_tool = builders::custom_tool(
+        let weather_tool = Tools::custom_tool(
             "get_weather",
             "Get weather information",
             json!({
@@ -640,7 +640,7 @@ mod tests {
             "A token contract",
         );
 
-        let contract_tools = builders::from_contract(&contract);
+        let contract_tools = Tools::tools_from_contract(&contract);
 
         // Now we should have tools since we added stateMutability
         assert!(!contract_tools.is_empty(), "Expected contract tools to be non-empty");
