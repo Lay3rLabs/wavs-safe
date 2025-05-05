@@ -102,6 +102,7 @@ pub struct SolFunction {
     pub inputs: Vec<SolParam>,
 }
 
+// TODO add to wit
 /// Encode a function call using a function definition and arguments
 pub fn encode_function_call(function_json: &Value, args: &[Value]) -> Result<Vec<u8>, String> {
     // Parse the function definition into a simpler structure

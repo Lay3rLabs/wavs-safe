@@ -28,6 +28,7 @@ pub mod types {
 pub mod traits {
     pub use crate::bindings::exports::wavs::agent::client::GuestLlmClientManager;
     pub use crate::bindings::exports::wavs::agent::config::GuestConfigManager;
+    pub use crate::bindings::exports::wavs::agent::contracts::GuestContractManager;
     pub use crate::bindings::exports::wavs::agent::tools::GuestToolsBuilder;
 }
 

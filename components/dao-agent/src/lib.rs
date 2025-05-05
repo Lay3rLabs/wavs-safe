@@ -4,15 +4,22 @@ pub mod context;
 pub mod sol_interfaces;
 
 use crate::sol_interfaces::TransactionPayload;
-use alloy_sol_types::SolType;
+use alloy_primitives::{Address, Bytes, U256};
+use alloy_sol_types::{SolType, SolValue};
 use bindings::{
     export,
     wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent},
     Guest, TriggerAction,
 };
 use context::DaoContext;
-use serde_json;
-use wavs_llm::{client::new_client, traits::GuestLlmClientManager, types::LlmResponse};
+use std::str::FromStr;
+use wavs_llm::{
+    client::new_client,
+    contracts::{self, ContractManagerImpl},
+    traits::{GuestContractManager, GuestLlmClientManager},
+    types::LlmResponse,
+    AgentError,
+};
 
 struct Component;
 
@@ -53,12 +60,42 @@ impl Guest for Component {
             LlmResponse::Transaction(tx) => {
                 println!("Transaction to execute: {:?}", tx);
 
-                // TODO fix encoding
-                // Serialize transaction for execution
-                let payload = TransactionPayload { to: tx.to, value: tx.value, data: tx.data };
-                println!("Payload: {:?}", payload);
+                // Parse address
+                let to: Address = tx
+                    .to
+                    .parse()
+                    .map_err(|e| AgentError::Transaction(format!("Invalid address: {}", e)))?;
 
-                Ok(Some(payload))
+                // Parse value
+                let value = U256::from_str(&tx.value)
+                    .map_err(|e| AgentError::Transaction(format!("Invalid value: {}", e)))?;
+
+                // Handle contract calls
+                let data = if let Some(contract_call) = &tx.contract_call {
+                    // Try to find the contract by address
+                    let contract = llm_context
+                        .contracts
+                        .iter()
+                        .find(|c| c.address.to_lowercase() == tx.to.to_lowercase())
+                        .ok_or_else(|| {
+                            AgentError::Contract(format!(
+                                "Cannot find contract at address {}",
+                                tx.to
+                            ))
+                        })?;
+
+                    contracts::ContractManagerImpl::encode_function_call(
+                        &ContractManagerImpl,
+                        contract.clone(),
+                        contract_call.function.clone(),
+                        contract_call.args.clone(),
+                    )?
+                    .into()
+                } else {
+                    Bytes::default()
+                };
+
+                Ok(Some(TransactionPayload { to, value, data }.abi_encode()))
             }
             LlmResponse::Text(text) => {
                 println!("LLM response: {}", text);
