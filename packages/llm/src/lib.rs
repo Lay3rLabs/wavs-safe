@@ -6,11 +6,9 @@ pub mod contracts;
 pub mod encoding;
 pub mod errors;
 pub mod serialization;
-pub mod sol_interfaces;
 pub mod tools;
 
 // Re-export commonly used types for easier access
-pub use client::LlmClientImpl;
 pub use config::{ConfigManagerImpl, LlmOptionsFuncsImpl};
 pub use tools::ToolsBuilderImpl;
 
@@ -28,7 +26,7 @@ pub mod types {
 
 // Re-export the traits from the bindings
 pub mod traits {
-    pub use crate::bindings::exports::wavs::agent::client::GuestLlmClient;
+    pub use crate::bindings::exports::wavs::agent::client::GuestLlmClientManager;
     pub use crate::bindings::exports::wavs::agent::config::GuestConfigManager;
     pub use crate::bindings::exports::wavs::agent::tools::GuestToolsBuilder;
 }
@@ -38,7 +36,28 @@ pub struct Component;
 
 // Implementing each of the interfaces for our Component
 impl bindings::exports::wavs::agent::client::Guest for Component {
-    type LlmClient = client::LlmClientImpl;
+    type LlmClientManager = client::LlmClient;
+
+    // Implement standalone constructor functions from the updated WIT
+    fn new_client(
+        model: String,
+    ) -> Result<client::LlmClient, bindings::exports::wavs::agent::errors::AgentError> {
+        client::new_client(model)
+    }
+
+    fn from_json(
+        model: String,
+        json_config: String,
+    ) -> Result<client::LlmClient, bindings::exports::wavs::agent::errors::AgentError> {
+        client::from_json(model, json_config)
+    }
+
+    fn with_config(
+        model: String,
+        config: bindings::exports::wavs::agent::types::LlmOptions,
+    ) -> Result<client::LlmClient, bindings::exports::wavs::agent::errors::AgentError> {
+        client::with_config(model, config)
+    }
 }
 
 impl bindings::exports::wavs::agent::config::Guest for Component {

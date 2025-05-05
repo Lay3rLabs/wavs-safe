@@ -75,6 +75,18 @@ interface types {
     context-window: option<u32>,
   }
 
+  /// Client configuration for LLM interactions
+  record llm-client {
+    /// The model name to use
+    model: string,
+    /// Configuration options for LLM requests
+    config: llm-options,
+    /// The API URL to send requests to
+    api-url: string,
+    /// Optional API key for authenticated services
+    api-key: option<string>,
+  }
+
   /// Generic configuration for agent's decision making
   record config {
     contracts: list<contract>,

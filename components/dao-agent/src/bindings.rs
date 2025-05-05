@@ -491,6 +491,28 @@ pub mod wavs {
                         .finish()
                 }
             }
+            /// Client configuration for LLM interactions
+            #[derive(Clone)]
+            pub struct LlmClient {
+                /// The model name to use
+                pub model: _rt::String,
+                /// Configuration options for LLM requests
+                pub config: LlmOptions,
+                /// The API URL to send requests to
+                pub api_url: _rt::String,
+                /// Optional API key for authenticated services
+                pub api_key: Option<_rt::String>,
+            }
+            impl ::core::fmt::Debug for LlmClient {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    f.debug_struct("LlmClient")
+                        .field("model", &self.model)
+                        .field("config", &self.config)
+                        .field("api-url", &self.api_url)
+                        .field("api-key", &self.api_key)
+                        .finish()
+                }
+            }
             /// Represents a smart contract that the DAO can interact with
             #[derive(Clone)]
             pub struct Contract {
@@ -718,13 +740,14 @@ pub mod wavs {
             pub type LlmResponse = super::super::super::wavs::agent::types::LlmResponse;
             pub type Config = super::super::super::wavs::agent::types::Config;
             pub type LlmOptions = super::super::super::wavs::agent::types::LlmOptions;
+            pub type LlmClient = super::super::super::wavs::agent::types::LlmClient;
             /// Client for making LLM API requests
             #[derive(Debug)]
             #[repr(transparent)]
-            pub struct LlmClient {
-                handle: _rt::Resource<LlmClient>,
+            pub struct LlmClientManager {
+                handle: _rt::Resource<LlmClientManager>,
             }
-            impl LlmClient {
+            impl LlmClientManager {
                 #[doc(hidden)]
                 pub unsafe fn from_handle(handle: u32) -> Self {
                     Self { handle: _rt::Resource::from_handle(handle) }
@@ -738,7 +761,7 @@ pub mod wavs {
                     _rt::Resource::handle(&self.handle)
                 }
             }
-            unsafe impl _rt::WasmResource for LlmClient {
+            unsafe impl _rt::WasmResource for LlmClientManager {
                 #[inline]
                 unsafe fn drop(_handle: u32) {
                     #[cfg(not(target_arch = "wasm32"))]
@@ -747,107 +770,89 @@ pub mod wavs {
                     {
                         #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
                         extern "C" {
-                            #[link_name = "[resource-drop]llm-client"]
+                            #[link_name = "[resource-drop]llm-client-manager"]
                             fn drop(_: u32);
                         }
                         drop(_handle);
                     }
                 }
             }
-            impl LlmClient {
-                #[allow(unused_unsafe, clippy::all)]
-                /// Create a new LLM client with default configuration
-                pub fn new(&self, model: &str) -> Result<LlmClient, AgentError> {
-                    unsafe {
-                        #[repr(align(4))]
-                        struct RetArea([::core::mem::MaybeUninit<u8>; 16]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 16]);
-                        let vec0 = model;
-                        let ptr0 = vec0.as_ptr().cast::<u8>();
-                        let len0 = vec0.len();
-                        let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
-                        #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
-                        extern "C" {
-                            #[link_name = "[method]llm-client.new"]
-                            fn wit_import(_: i32, _: *mut u8, _: usize, _: *mut u8);
-                        }
-                        #[cfg(not(target_arch = "wasm32"))]
-                        fn wit_import(_: i32, _: *mut u8, _: usize, _: *mut u8) {
-                            unreachable!()
-                        }
-                        wit_import((self).handle() as i32, ptr0.cast_mut(), len0, ptr1);
-                        let l2 = i32::from(*ptr1.add(0).cast::<u8>());
-                        match l2 {
-                            0 => {
-                                let e = {
-                                    let l3 = *ptr1.add(4).cast::<i32>();
-                                    LlmClient::from_handle(l3 as u32)
-                                };
-                                Ok(e)
-                            }
-                            1 => {
-                                let e = {
-                                    let l4 = i32::from(*ptr1.add(4).cast::<u8>());
-                                    use super::super::super::wavs::agent::errors::AgentError as V44;
-                                    let v44 = match l4 {
-                                        0 => {
-                                            let e44 = {
-                                                let l5 = *ptr1.add(8).cast::<*mut u8>();
-                                                let l6 = *ptr1.add(12).cast::<usize>();
-                                                let len7 = l6;
-                                                let bytes7 =
-                                                    _rt::Vec::from_raw_parts(l5.cast(), len7, len7);
-                                                _rt::string_lift(bytes7)
-                                            };
-                                            V44::Api(e44)
-                                        }
+            #[allow(unused_unsafe, clippy::all)]
+            /// Create a new LLM client with default configuration
+            pub fn new_client(model: &str) -> Result<LlmClient, AgentError> {
+                unsafe {
+                    #[repr(align(4))]
+                    struct RetArea([::core::mem::MaybeUninit<u8>; 60]);
+                    let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 60]);
+                    let vec0 = model;
+                    let ptr0 = vec0.as_ptr().cast::<u8>();
+                    let len0 = vec0.len();
+                    let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
+                    extern "C" {
+                        #[link_name = "new-client"]
+                        fn wit_import(_: *mut u8, _: usize, _: *mut u8);
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    fn wit_import(_: *mut u8, _: usize, _: *mut u8) {
+                        unreachable!()
+                    }
+                    wit_import(ptr0.cast_mut(), len0, ptr1);
+                    let l2 = i32::from(*ptr1.add(0).cast::<u8>());
+                    match l2 {
+                        0 => {
+                            let e = {
+                                let l3 = *ptr1.add(4).cast::<*mut u8>();
+                                let l4 = *ptr1.add(8).cast::<usize>();
+                                let len5 = l4;
+                                let bytes5 = _rt::Vec::from_raw_parts(l3.cast(), len5, len5);
+                                let l6 = *ptr1.add(12).cast::<f32>();
+                                let l7 = *ptr1.add(16).cast::<f32>();
+                                let l8 = *ptr1.add(20).cast::<i32>();
+                                let l9 = i32::from(*ptr1.add(24).cast::<u8>());
+                                let l11 = i32::from(*ptr1.add(32).cast::<u8>());
+                                let l13 = *ptr1.add(40).cast::<*mut u8>();
+                                let l14 = *ptr1.add(44).cast::<usize>();
+                                let len15 = l14;
+                                let bytes15 = _rt::Vec::from_raw_parts(l13.cast(), len15, len15);
+                                let l16 = i32::from(*ptr1.add(48).cast::<u8>());
+                                super::super::super::wavs::agent::types::LlmClient {
+                                    model: _rt::string_lift(bytes5),
+                                    config: super::super::super::wavs::agent::types::LlmOptions {
+                                        temperature: l6,
+                                        top_p: l7,
+                                        seed: l8 as u32,
+                                        max_tokens: match l9 {
+                                            0 => None,
+                                            1 => {
+                                                let e = {
+                                                    let l10 = *ptr1.add(28).cast::<i32>();
+                                                    l10 as u32
+                                                };
+                                                Some(e)
+                                            }
+                                            _ => _rt::invalid_enum_discriminant(),
+                                        },
+                                        context_window: match l11 {
+                                            0 => None,
+                                            1 => {
+                                                let e = {
+                                                    let l12 = *ptr1.add(36).cast::<i32>();
+                                                    l12 as u32
+                                                };
+                                                Some(e)
+                                            }
+                                            _ => _rt::invalid_enum_discriminant(),
+                                        },
+                                    },
+                                    api_url: _rt::string_lift(bytes15),
+                                    api_key: match l16 {
+                                        0 => None,
                                         1 => {
-                                            let e44 = {
-                                                let l8 = *ptr1.add(8).cast::<*mut u8>();
-                                                let l9 = *ptr1.add(12).cast::<usize>();
-                                                let len10 = l9;
-                                                let bytes10 = _rt::Vec::from_raw_parts(
-                                                    l8.cast(),
-                                                    len10,
-                                                    len10,
-                                                );
-                                                _rt::string_lift(bytes10)
-                                            };
-                                            V44::Http(e44)
-                                        }
-                                        2 => {
-                                            let e44 = {
-                                                let l11 = *ptr1.add(8).cast::<*mut u8>();
-                                                let l12 = *ptr1.add(12).cast::<usize>();
-                                                let len13 = l12;
-                                                let bytes13 = _rt::Vec::from_raw_parts(
-                                                    l11.cast(),
-                                                    len13,
-                                                    len13,
-                                                );
-                                                _rt::string_lift(bytes13)
-                                            };
-                                            V44::ExternalService(e44)
-                                        }
-                                        3 => {
-                                            let e44 = {
-                                                let l14 = *ptr1.add(8).cast::<*mut u8>();
-                                                let l15 = *ptr1.add(12).cast::<usize>();
-                                                let len16 = l15;
-                                                let bytes16 = _rt::Vec::from_raw_parts(
-                                                    l14.cast(),
-                                                    len16,
-                                                    len16,
-                                                );
-                                                _rt::string_lift(bytes16)
-                                            };
-                                            V44::Config(e44)
-                                        }
-                                        4 => {
-                                            let e44 = {
-                                                let l17 = *ptr1.add(8).cast::<*mut u8>();
-                                                let l18 = *ptr1.add(12).cast::<usize>();
+                                            let e = {
+                                                let l17 = *ptr1.add(52).cast::<*mut u8>();
+                                                let l18 = *ptr1.add(56).cast::<usize>();
                                                 let len19 = l18;
                                                 let bytes19 = _rt::Vec::from_raw_parts(
                                                     l17.cast(),
@@ -856,253 +861,251 @@ pub mod wavs {
                                                 );
                                                 _rt::string_lift(bytes19)
                                             };
-                                            V44::Contract(e44)
+                                            Some(e)
                                         }
-                                        5 => {
-                                            let e44 = {
-                                                let l20 = *ptr1.add(8).cast::<*mut u8>();
-                                                let l21 = *ptr1.add(12).cast::<usize>();
-                                                let len22 = l21;
-                                                let bytes22 = _rt::Vec::from_raw_parts(
-                                                    l20.cast(),
-                                                    len22,
-                                                    len22,
-                                                );
-                                                _rt::string_lift(bytes22)
-                                            };
-                                            V44::Configuration(e44)
-                                        }
-                                        6 => {
-                                            let e44 = {
-                                                let l23 = *ptr1.add(8).cast::<*mut u8>();
-                                                let l24 = *ptr1.add(12).cast::<usize>();
-                                                let len25 = l24;
-                                                let bytes25 = _rt::Vec::from_raw_parts(
-                                                    l23.cast(),
-                                                    len25,
-                                                    len25,
-                                                );
-                                                _rt::string_lift(bytes25)
-                                            };
-                                            V44::ContextLoading(e44)
-                                        }
-                                        7 => {
-                                            let e44 = {
-                                                let l26 = *ptr1.add(8).cast::<*mut u8>();
-                                                let l27 = *ptr1.add(12).cast::<usize>();
-                                                let len28 = l27;
-                                                let bytes28 = _rt::Vec::from_raw_parts(
-                                                    l26.cast(),
-                                                    len28,
-                                                    len28,
-                                                );
-                                                _rt::string_lift(bytes28)
-                                            };
-                                            V44::ContextValidation(e44)
-                                        }
-                                        8 => {
-                                            let e44 = {
-                                                let l29 = *ptr1.add(8).cast::<*mut u8>();
-                                                let l30 = *ptr1.add(12).cast::<usize>();
-                                                let len31 = l30;
-                                                let bytes31 = _rt::Vec::from_raw_parts(
-                                                    l29.cast(),
-                                                    len31,
-                                                    len31,
-                                                );
-                                                _rt::string_lift(bytes31)
-                                            };
-                                            V44::Llm(e44)
-                                        }
-                                        9 => {
-                                            let e44 = {
-                                                let l32 = *ptr1.add(8).cast::<*mut u8>();
-                                                let l33 = *ptr1.add(12).cast::<usize>();
-                                                let len34 = l33;
-                                                let bytes34 = _rt::Vec::from_raw_parts(
-                                                    l32.cast(),
-                                                    len34,
-                                                    len34,
-                                                );
-                                                _rt::string_lift(bytes34)
-                                            };
-                                            V44::Io(e44)
-                                        }
-                                        10 => {
-                                            let e44 = {
-                                                let l35 = *ptr1.add(8).cast::<*mut u8>();
-                                                let l36 = *ptr1.add(12).cast::<usize>();
-                                                let len37 = l36;
-                                                let bytes37 = _rt::Vec::from_raw_parts(
-                                                    l35.cast(),
-                                                    len37,
-                                                    len37,
-                                                );
-                                                _rt::string_lift(bytes37)
-                                            };
-                                            V44::Transaction(e44)
-                                        }
-                                        11 => {
-                                            let e44 = {
-                                                let l38 = *ptr1.add(8).cast::<*mut u8>();
-                                                let l39 = *ptr1.add(12).cast::<usize>();
-                                                let len40 = l39;
-                                                let bytes40 = _rt::Vec::from_raw_parts(
-                                                    l38.cast(),
-                                                    len40,
-                                                    len40,
-                                                );
-                                                _rt::string_lift(bytes40)
-                                            };
-                                            V44::Utf8(e44)
-                                        }
-                                        n => {
-                                            debug_assert_eq!(n, 12, "invalid enum discriminant");
-                                            let e44 = {
-                                                let l41 = *ptr1.add(8).cast::<*mut u8>();
-                                                let l42 = *ptr1.add(12).cast::<usize>();
-                                                let len43 = l42;
-                                                let bytes43 = _rt::Vec::from_raw_parts(
-                                                    l41.cast(),
-                                                    len43,
-                                                    len43,
-                                                );
-                                                _rt::string_lift(bytes43)
-                                            };
-                                            V44::Other(e44)
-                                        }
-                                    };
-                                    v44
-                                };
-                                Err(e)
-                            }
-                            _ => _rt::invalid_enum_discriminant(),
+                                        _ => _rt::invalid_enum_discriminant(),
+                                    },
+                                }
+                            };
+                            Ok(e)
                         }
+                        1 => {
+                            let e = {
+                                let l20 = i32::from(*ptr1.add(4).cast::<u8>());
+                                use super::super::super::wavs::agent::errors::AgentError as V60;
+                                let v60 = match l20 {
+                                    0 => {
+                                        let e60 = {
+                                            let l21 = *ptr1.add(8).cast::<*mut u8>();
+                                            let l22 = *ptr1.add(12).cast::<usize>();
+                                            let len23 = l22;
+                                            let bytes23 =
+                                                _rt::Vec::from_raw_parts(l21.cast(), len23, len23);
+                                            _rt::string_lift(bytes23)
+                                        };
+                                        V60::Api(e60)
+                                    }
+                                    1 => {
+                                        let e60 = {
+                                            let l24 = *ptr1.add(8).cast::<*mut u8>();
+                                            let l25 = *ptr1.add(12).cast::<usize>();
+                                            let len26 = l25;
+                                            let bytes26 =
+                                                _rt::Vec::from_raw_parts(l24.cast(), len26, len26);
+                                            _rt::string_lift(bytes26)
+                                        };
+                                        V60::Http(e60)
+                                    }
+                                    2 => {
+                                        let e60 = {
+                                            let l27 = *ptr1.add(8).cast::<*mut u8>();
+                                            let l28 = *ptr1.add(12).cast::<usize>();
+                                            let len29 = l28;
+                                            let bytes29 =
+                                                _rt::Vec::from_raw_parts(l27.cast(), len29, len29);
+                                            _rt::string_lift(bytes29)
+                                        };
+                                        V60::ExternalService(e60)
+                                    }
+                                    3 => {
+                                        let e60 = {
+                                            let l30 = *ptr1.add(8).cast::<*mut u8>();
+                                            let l31 = *ptr1.add(12).cast::<usize>();
+                                            let len32 = l31;
+                                            let bytes32 =
+                                                _rt::Vec::from_raw_parts(l30.cast(), len32, len32);
+                                            _rt::string_lift(bytes32)
+                                        };
+                                        V60::Config(e60)
+                                    }
+                                    4 => {
+                                        let e60 = {
+                                            let l33 = *ptr1.add(8).cast::<*mut u8>();
+                                            let l34 = *ptr1.add(12).cast::<usize>();
+                                            let len35 = l34;
+                                            let bytes35 =
+                                                _rt::Vec::from_raw_parts(l33.cast(), len35, len35);
+                                            _rt::string_lift(bytes35)
+                                        };
+                                        V60::Contract(e60)
+                                    }
+                                    5 => {
+                                        let e60 = {
+                                            let l36 = *ptr1.add(8).cast::<*mut u8>();
+                                            let l37 = *ptr1.add(12).cast::<usize>();
+                                            let len38 = l37;
+                                            let bytes38 =
+                                                _rt::Vec::from_raw_parts(l36.cast(), len38, len38);
+                                            _rt::string_lift(bytes38)
+                                        };
+                                        V60::Configuration(e60)
+                                    }
+                                    6 => {
+                                        let e60 = {
+                                            let l39 = *ptr1.add(8).cast::<*mut u8>();
+                                            let l40 = *ptr1.add(12).cast::<usize>();
+                                            let len41 = l40;
+                                            let bytes41 =
+                                                _rt::Vec::from_raw_parts(l39.cast(), len41, len41);
+                                            _rt::string_lift(bytes41)
+                                        };
+                                        V60::ContextLoading(e60)
+                                    }
+                                    7 => {
+                                        let e60 = {
+                                            let l42 = *ptr1.add(8).cast::<*mut u8>();
+                                            let l43 = *ptr1.add(12).cast::<usize>();
+                                            let len44 = l43;
+                                            let bytes44 =
+                                                _rt::Vec::from_raw_parts(l42.cast(), len44, len44);
+                                            _rt::string_lift(bytes44)
+                                        };
+                                        V60::ContextValidation(e60)
+                                    }
+                                    8 => {
+                                        let e60 = {
+                                            let l45 = *ptr1.add(8).cast::<*mut u8>();
+                                            let l46 = *ptr1.add(12).cast::<usize>();
+                                            let len47 = l46;
+                                            let bytes47 =
+                                                _rt::Vec::from_raw_parts(l45.cast(), len47, len47);
+                                            _rt::string_lift(bytes47)
+                                        };
+                                        V60::Llm(e60)
+                                    }
+                                    9 => {
+                                        let e60 = {
+                                            let l48 = *ptr1.add(8).cast::<*mut u8>();
+                                            let l49 = *ptr1.add(12).cast::<usize>();
+                                            let len50 = l49;
+                                            let bytes50 =
+                                                _rt::Vec::from_raw_parts(l48.cast(), len50, len50);
+                                            _rt::string_lift(bytes50)
+                                        };
+                                        V60::Io(e60)
+                                    }
+                                    10 => {
+                                        let e60 = {
+                                            let l51 = *ptr1.add(8).cast::<*mut u8>();
+                                            let l52 = *ptr1.add(12).cast::<usize>();
+                                            let len53 = l52;
+                                            let bytes53 =
+                                                _rt::Vec::from_raw_parts(l51.cast(), len53, len53);
+                                            _rt::string_lift(bytes53)
+                                        };
+                                        V60::Transaction(e60)
+                                    }
+                                    11 => {
+                                        let e60 = {
+                                            let l54 = *ptr1.add(8).cast::<*mut u8>();
+                                            let l55 = *ptr1.add(12).cast::<usize>();
+                                            let len56 = l55;
+                                            let bytes56 =
+                                                _rt::Vec::from_raw_parts(l54.cast(), len56, len56);
+                                            _rt::string_lift(bytes56)
+                                        };
+                                        V60::Utf8(e60)
+                                    }
+                                    n => {
+                                        debug_assert_eq!(n, 12, "invalid enum discriminant");
+                                        let e60 = {
+                                            let l57 = *ptr1.add(8).cast::<*mut u8>();
+                                            let l58 = *ptr1.add(12).cast::<usize>();
+                                            let len59 = l58;
+                                            let bytes59 =
+                                                _rt::Vec::from_raw_parts(l57.cast(), len59, len59);
+                                            _rt::string_lift(bytes59)
+                                        };
+                                        V60::Other(e60)
+                                    }
+                                };
+                                v60
+                            };
+                            Err(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
                     }
                 }
             }
-            impl LlmClient {
-                #[allow(unused_unsafe, clippy::all)]
-                /// Create a new LLM client from a JSON configuration string
-                pub fn from_json(
-                    &self,
-                    model: &str,
-                    json_config: &str,
-                ) -> Result<LlmClient, AgentError> {
-                    unsafe {
-                        #[repr(align(4))]
-                        struct RetArea([::core::mem::MaybeUninit<u8>; 16]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 16]);
-                        let vec0 = model;
-                        let ptr0 = vec0.as_ptr().cast::<u8>();
-                        let len0 = vec0.len();
-                        let vec1 = json_config;
-                        let ptr1 = vec1.as_ptr().cast::<u8>();
-                        let len1 = vec1.len();
-                        let ptr2 = ret_area.0.as_mut_ptr().cast::<u8>();
-                        #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
-                        extern "C" {
-                            #[link_name = "[method]llm-client.from-json"]
-                            fn wit_import(
-                                _: i32,
-                                _: *mut u8,
-                                _: usize,
-                                _: *mut u8,
-                                _: usize,
-                                _: *mut u8,
-                            );
-                        }
-                        #[cfg(not(target_arch = "wasm32"))]
-                        fn wit_import(
-                            _: i32,
-                            _: *mut u8,
-                            _: usize,
-                            _: *mut u8,
-                            _: usize,
-                            _: *mut u8,
-                        ) {
-                            unreachable!()
-                        }
-                        wit_import(
-                            (self).handle() as i32,
-                            ptr0.cast_mut(),
-                            len0,
-                            ptr1.cast_mut(),
-                            len1,
-                            ptr2,
-                        );
-                        let l3 = i32::from(*ptr2.add(0).cast::<u8>());
-                        match l3 {
-                            0 => {
-                                let e = {
-                                    let l4 = *ptr2.add(4).cast::<i32>();
-                                    LlmClient::from_handle(l4 as u32)
-                                };
-                                Ok(e)
-                            }
-                            1 => {
-                                let e = {
-                                    let l5 = i32::from(*ptr2.add(4).cast::<u8>());
-                                    use super::super::super::wavs::agent::errors::AgentError as V45;
-                                    let v45 = match l5 {
-                                        0 => {
-                                            let e45 = {
-                                                let l6 = *ptr2.add(8).cast::<*mut u8>();
-                                                let l7 = *ptr2.add(12).cast::<usize>();
-                                                let len8 = l7;
-                                                let bytes8 =
-                                                    _rt::Vec::from_raw_parts(l6.cast(), len8, len8);
-                                                _rt::string_lift(bytes8)
-                                            };
-                                            V45::Api(e45)
-                                        }
+            #[allow(unused_unsafe, clippy::all)]
+            /// Create a new LLM client from a JSON configuration string
+            pub fn from_json(model: &str, json_config: &str) -> Result<LlmClient, AgentError> {
+                unsafe {
+                    #[repr(align(4))]
+                    struct RetArea([::core::mem::MaybeUninit<u8>; 60]);
+                    let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 60]);
+                    let vec0 = model;
+                    let ptr0 = vec0.as_ptr().cast::<u8>();
+                    let len0 = vec0.len();
+                    let vec1 = json_config;
+                    let ptr1 = vec1.as_ptr().cast::<u8>();
+                    let len1 = vec1.len();
+                    let ptr2 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
+                    extern "C" {
+                        #[link_name = "from-json"]
+                        fn wit_import(_: *mut u8, _: usize, _: *mut u8, _: usize, _: *mut u8);
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    fn wit_import(_: *mut u8, _: usize, _: *mut u8, _: usize, _: *mut u8) {
+                        unreachable!()
+                    }
+                    wit_import(ptr0.cast_mut(), len0, ptr1.cast_mut(), len1, ptr2);
+                    let l3 = i32::from(*ptr2.add(0).cast::<u8>());
+                    match l3 {
+                        0 => {
+                            let e = {
+                                let l4 = *ptr2.add(4).cast::<*mut u8>();
+                                let l5 = *ptr2.add(8).cast::<usize>();
+                                let len6 = l5;
+                                let bytes6 = _rt::Vec::from_raw_parts(l4.cast(), len6, len6);
+                                let l7 = *ptr2.add(12).cast::<f32>();
+                                let l8 = *ptr2.add(16).cast::<f32>();
+                                let l9 = *ptr2.add(20).cast::<i32>();
+                                let l10 = i32::from(*ptr2.add(24).cast::<u8>());
+                                let l12 = i32::from(*ptr2.add(32).cast::<u8>());
+                                let l14 = *ptr2.add(40).cast::<*mut u8>();
+                                let l15 = *ptr2.add(44).cast::<usize>();
+                                let len16 = l15;
+                                let bytes16 = _rt::Vec::from_raw_parts(l14.cast(), len16, len16);
+                                let l17 = i32::from(*ptr2.add(48).cast::<u8>());
+                                super::super::super::wavs::agent::types::LlmClient {
+                                    model: _rt::string_lift(bytes6),
+                                    config: super::super::super::wavs::agent::types::LlmOptions {
+                                        temperature: l7,
+                                        top_p: l8,
+                                        seed: l9 as u32,
+                                        max_tokens: match l10 {
+                                            0 => None,
+                                            1 => {
+                                                let e = {
+                                                    let l11 = *ptr2.add(28).cast::<i32>();
+                                                    l11 as u32
+                                                };
+                                                Some(e)
+                                            }
+                                            _ => _rt::invalid_enum_discriminant(),
+                                        },
+                                        context_window: match l12 {
+                                            0 => None,
+                                            1 => {
+                                                let e = {
+                                                    let l13 = *ptr2.add(36).cast::<i32>();
+                                                    l13 as u32
+                                                };
+                                                Some(e)
+                                            }
+                                            _ => _rt::invalid_enum_discriminant(),
+                                        },
+                                    },
+                                    api_url: _rt::string_lift(bytes16),
+                                    api_key: match l17 {
+                                        0 => None,
                                         1 => {
-                                            let e45 = {
-                                                let l9 = *ptr2.add(8).cast::<*mut u8>();
-                                                let l10 = *ptr2.add(12).cast::<usize>();
-                                                let len11 = l10;
-                                                let bytes11 = _rt::Vec::from_raw_parts(
-                                                    l9.cast(),
-                                                    len11,
-                                                    len11,
-                                                );
-                                                _rt::string_lift(bytes11)
-                                            };
-                                            V45::Http(e45)
-                                        }
-                                        2 => {
-                                            let e45 = {
-                                                let l12 = *ptr2.add(8).cast::<*mut u8>();
-                                                let l13 = *ptr2.add(12).cast::<usize>();
-                                                let len14 = l13;
-                                                let bytes14 = _rt::Vec::from_raw_parts(
-                                                    l12.cast(),
-                                                    len14,
-                                                    len14,
-                                                );
-                                                _rt::string_lift(bytes14)
-                                            };
-                                            V45::ExternalService(e45)
-                                        }
-                                        3 => {
-                                            let e45 = {
-                                                let l15 = *ptr2.add(8).cast::<*mut u8>();
-                                                let l16 = *ptr2.add(12).cast::<usize>();
-                                                let len17 = l16;
-                                                let bytes17 = _rt::Vec::from_raw_parts(
-                                                    l15.cast(),
-                                                    len17,
-                                                    len17,
-                                                );
-                                                _rt::string_lift(bytes17)
-                                            };
-                                            V45::Config(e45)
-                                        }
-                                        4 => {
-                                            let e45 = {
-                                                let l18 = *ptr2.add(8).cast::<*mut u8>();
-                                                let l19 = *ptr2.add(12).cast::<usize>();
+                                            let e = {
+                                                let l18 = *ptr2.add(52).cast::<*mut u8>();
+                                                let l19 = *ptr2.add(56).cast::<usize>();
                                                 let len20 = l19;
                                                 let bytes20 = _rt::Vec::from_raw_parts(
                                                     l18.cast(),
@@ -1111,183 +1114,203 @@ pub mod wavs {
                                                 );
                                                 _rt::string_lift(bytes20)
                                             };
-                                            V45::Contract(e45)
+                                            Some(e)
                                         }
-                                        5 => {
-                                            let e45 = {
-                                                let l21 = *ptr2.add(8).cast::<*mut u8>();
-                                                let l22 = *ptr2.add(12).cast::<usize>();
-                                                let len23 = l22;
-                                                let bytes23 = _rt::Vec::from_raw_parts(
-                                                    l21.cast(),
-                                                    len23,
-                                                    len23,
-                                                );
-                                                _rt::string_lift(bytes23)
-                                            };
-                                            V45::Configuration(e45)
-                                        }
-                                        6 => {
-                                            let e45 = {
-                                                let l24 = *ptr2.add(8).cast::<*mut u8>();
-                                                let l25 = *ptr2.add(12).cast::<usize>();
-                                                let len26 = l25;
-                                                let bytes26 = _rt::Vec::from_raw_parts(
-                                                    l24.cast(),
-                                                    len26,
-                                                    len26,
-                                                );
-                                                _rt::string_lift(bytes26)
-                                            };
-                                            V45::ContextLoading(e45)
-                                        }
-                                        7 => {
-                                            let e45 = {
-                                                let l27 = *ptr2.add(8).cast::<*mut u8>();
-                                                let l28 = *ptr2.add(12).cast::<usize>();
-                                                let len29 = l28;
-                                                let bytes29 = _rt::Vec::from_raw_parts(
-                                                    l27.cast(),
-                                                    len29,
-                                                    len29,
-                                                );
-                                                _rt::string_lift(bytes29)
-                                            };
-                                            V45::ContextValidation(e45)
-                                        }
-                                        8 => {
-                                            let e45 = {
-                                                let l30 = *ptr2.add(8).cast::<*mut u8>();
-                                                let l31 = *ptr2.add(12).cast::<usize>();
-                                                let len32 = l31;
-                                                let bytes32 = _rt::Vec::from_raw_parts(
-                                                    l30.cast(),
-                                                    len32,
-                                                    len32,
-                                                );
-                                                _rt::string_lift(bytes32)
-                                            };
-                                            V45::Llm(e45)
-                                        }
-                                        9 => {
-                                            let e45 = {
-                                                let l33 = *ptr2.add(8).cast::<*mut u8>();
-                                                let l34 = *ptr2.add(12).cast::<usize>();
-                                                let len35 = l34;
-                                                let bytes35 = _rt::Vec::from_raw_parts(
-                                                    l33.cast(),
-                                                    len35,
-                                                    len35,
-                                                );
-                                                _rt::string_lift(bytes35)
-                                            };
-                                            V45::Io(e45)
-                                        }
-                                        10 => {
-                                            let e45 = {
-                                                let l36 = *ptr2.add(8).cast::<*mut u8>();
-                                                let l37 = *ptr2.add(12).cast::<usize>();
-                                                let len38 = l37;
-                                                let bytes38 = _rt::Vec::from_raw_parts(
-                                                    l36.cast(),
-                                                    len38,
-                                                    len38,
-                                                );
-                                                _rt::string_lift(bytes38)
-                                            };
-                                            V45::Transaction(e45)
-                                        }
-                                        11 => {
-                                            let e45 = {
-                                                let l39 = *ptr2.add(8).cast::<*mut u8>();
-                                                let l40 = *ptr2.add(12).cast::<usize>();
-                                                let len41 = l40;
-                                                let bytes41 = _rt::Vec::from_raw_parts(
-                                                    l39.cast(),
-                                                    len41,
-                                                    len41,
-                                                );
-                                                _rt::string_lift(bytes41)
-                                            };
-                                            V45::Utf8(e45)
-                                        }
-                                        n => {
-                                            debug_assert_eq!(n, 12, "invalid enum discriminant");
-                                            let e45 = {
-                                                let l42 = *ptr2.add(8).cast::<*mut u8>();
-                                                let l43 = *ptr2.add(12).cast::<usize>();
-                                                let len44 = l43;
-                                                let bytes44 = _rt::Vec::from_raw_parts(
-                                                    l42.cast(),
-                                                    len44,
-                                                    len44,
-                                                );
-                                                _rt::string_lift(bytes44)
-                                            };
-                                            V45::Other(e45)
-                                        }
-                                    };
-                                    v45
-                                };
-                                Err(e)
-                            }
-                            _ => _rt::invalid_enum_discriminant(),
+                                        _ => _rt::invalid_enum_discriminant(),
+                                    },
+                                }
+                            };
+                            Ok(e)
                         }
+                        1 => {
+                            let e = {
+                                let l21 = i32::from(*ptr2.add(4).cast::<u8>());
+                                use super::super::super::wavs::agent::errors::AgentError as V61;
+                                let v61 = match l21 {
+                                    0 => {
+                                        let e61 = {
+                                            let l22 = *ptr2.add(8).cast::<*mut u8>();
+                                            let l23 = *ptr2.add(12).cast::<usize>();
+                                            let len24 = l23;
+                                            let bytes24 =
+                                                _rt::Vec::from_raw_parts(l22.cast(), len24, len24);
+                                            _rt::string_lift(bytes24)
+                                        };
+                                        V61::Api(e61)
+                                    }
+                                    1 => {
+                                        let e61 = {
+                                            let l25 = *ptr2.add(8).cast::<*mut u8>();
+                                            let l26 = *ptr2.add(12).cast::<usize>();
+                                            let len27 = l26;
+                                            let bytes27 =
+                                                _rt::Vec::from_raw_parts(l25.cast(), len27, len27);
+                                            _rt::string_lift(bytes27)
+                                        };
+                                        V61::Http(e61)
+                                    }
+                                    2 => {
+                                        let e61 = {
+                                            let l28 = *ptr2.add(8).cast::<*mut u8>();
+                                            let l29 = *ptr2.add(12).cast::<usize>();
+                                            let len30 = l29;
+                                            let bytes30 =
+                                                _rt::Vec::from_raw_parts(l28.cast(), len30, len30);
+                                            _rt::string_lift(bytes30)
+                                        };
+                                        V61::ExternalService(e61)
+                                    }
+                                    3 => {
+                                        let e61 = {
+                                            let l31 = *ptr2.add(8).cast::<*mut u8>();
+                                            let l32 = *ptr2.add(12).cast::<usize>();
+                                            let len33 = l32;
+                                            let bytes33 =
+                                                _rt::Vec::from_raw_parts(l31.cast(), len33, len33);
+                                            _rt::string_lift(bytes33)
+                                        };
+                                        V61::Config(e61)
+                                    }
+                                    4 => {
+                                        let e61 = {
+                                            let l34 = *ptr2.add(8).cast::<*mut u8>();
+                                            let l35 = *ptr2.add(12).cast::<usize>();
+                                            let len36 = l35;
+                                            let bytes36 =
+                                                _rt::Vec::from_raw_parts(l34.cast(), len36, len36);
+                                            _rt::string_lift(bytes36)
+                                        };
+                                        V61::Contract(e61)
+                                    }
+                                    5 => {
+                                        let e61 = {
+                                            let l37 = *ptr2.add(8).cast::<*mut u8>();
+                                            let l38 = *ptr2.add(12).cast::<usize>();
+                                            let len39 = l38;
+                                            let bytes39 =
+                                                _rt::Vec::from_raw_parts(l37.cast(), len39, len39);
+                                            _rt::string_lift(bytes39)
+                                        };
+                                        V61::Configuration(e61)
+                                    }
+                                    6 => {
+                                        let e61 = {
+                                            let l40 = *ptr2.add(8).cast::<*mut u8>();
+                                            let l41 = *ptr2.add(12).cast::<usize>();
+                                            let len42 = l41;
+                                            let bytes42 =
+                                                _rt::Vec::from_raw_parts(l40.cast(), len42, len42);
+                                            _rt::string_lift(bytes42)
+                                        };
+                                        V61::ContextLoading(e61)
+                                    }
+                                    7 => {
+                                        let e61 = {
+                                            let l43 = *ptr2.add(8).cast::<*mut u8>();
+                                            let l44 = *ptr2.add(12).cast::<usize>();
+                                            let len45 = l44;
+                                            let bytes45 =
+                                                _rt::Vec::from_raw_parts(l43.cast(), len45, len45);
+                                            _rt::string_lift(bytes45)
+                                        };
+                                        V61::ContextValidation(e61)
+                                    }
+                                    8 => {
+                                        let e61 = {
+                                            let l46 = *ptr2.add(8).cast::<*mut u8>();
+                                            let l47 = *ptr2.add(12).cast::<usize>();
+                                            let len48 = l47;
+                                            let bytes48 =
+                                                _rt::Vec::from_raw_parts(l46.cast(), len48, len48);
+                                            _rt::string_lift(bytes48)
+                                        };
+                                        V61::Llm(e61)
+                                    }
+                                    9 => {
+                                        let e61 = {
+                                            let l49 = *ptr2.add(8).cast::<*mut u8>();
+                                            let l50 = *ptr2.add(12).cast::<usize>();
+                                            let len51 = l50;
+                                            let bytes51 =
+                                                _rt::Vec::from_raw_parts(l49.cast(), len51, len51);
+                                            _rt::string_lift(bytes51)
+                                        };
+                                        V61::Io(e61)
+                                    }
+                                    10 => {
+                                        let e61 = {
+                                            let l52 = *ptr2.add(8).cast::<*mut u8>();
+                                            let l53 = *ptr2.add(12).cast::<usize>();
+                                            let len54 = l53;
+                                            let bytes54 =
+                                                _rt::Vec::from_raw_parts(l52.cast(), len54, len54);
+                                            _rt::string_lift(bytes54)
+                                        };
+                                        V61::Transaction(e61)
+                                    }
+                                    11 => {
+                                        let e61 = {
+                                            let l55 = *ptr2.add(8).cast::<*mut u8>();
+                                            let l56 = *ptr2.add(12).cast::<usize>();
+                                            let len57 = l56;
+                                            let bytes57 =
+                                                _rt::Vec::from_raw_parts(l55.cast(), len57, len57);
+                                            _rt::string_lift(bytes57)
+                                        };
+                                        V61::Utf8(e61)
+                                    }
+                                    n => {
+                                        debug_assert_eq!(n, 12, "invalid enum discriminant");
+                                        let e61 = {
+                                            let l58 = *ptr2.add(8).cast::<*mut u8>();
+                                            let l59 = *ptr2.add(12).cast::<usize>();
+                                            let len60 = l59;
+                                            let bytes60 =
+                                                _rt::Vec::from_raw_parts(l58.cast(), len60, len60);
+                                            _rt::string_lift(bytes60)
+                                        };
+                                        V61::Other(e61)
+                                    }
+                                };
+                                v61
+                            };
+                            Err(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
                     }
                 }
             }
-            impl LlmClient {
-                #[allow(unused_unsafe, clippy::all)]
-                /// Create a new LLM client with custom configuration
-                pub fn with_config(
-                    &self,
-                    model: &str,
-                    config: LlmOptions,
-                ) -> Result<LlmClient, AgentError> {
-                    unsafe {
-                        #[repr(align(4))]
-                        struct RetArea([::core::mem::MaybeUninit<u8>; 16]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 16]);
-                        let vec0 = model;
-                        let ptr0 = vec0.as_ptr().cast::<u8>();
-                        let len0 = vec0.len();
-                        let super::super::super::wavs::agent::types::LlmOptions {
-                            temperature: temperature1,
-                            top_p: top_p1,
-                            seed: seed1,
-                            max_tokens: max_tokens1,
-                            context_window: context_window1,
-                        } = config;
-                        let (result2_0, result2_1) = match max_tokens1 {
-                            Some(e) => (1i32, _rt::as_i32(e)),
-                            None => (0i32, 0i32),
-                        };
-                        let (result3_0, result3_1) = match context_window1 {
-                            Some(e) => (1i32, _rt::as_i32(e)),
-                            None => (0i32, 0i32),
-                        };
-                        let ptr4 = ret_area.0.as_mut_ptr().cast::<u8>();
-                        #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
-                        extern "C" {
-                            #[link_name = "[method]llm-client.with-config"]
-                            fn wit_import(
-                                _: i32,
-                                _: *mut u8,
-                                _: usize,
-                                _: f32,
-                                _: f32,
-                                _: i32,
-                                _: i32,
-                                _: i32,
-                                _: i32,
-                                _: i32,
-                                _: *mut u8,
-                            );
-                        }
-                        #[cfg(not(target_arch = "wasm32"))]
+            #[allow(unused_unsafe, clippy::all)]
+            /// Create a new LLM client with custom configuration
+            pub fn with_config(model: &str, config: LlmOptions) -> Result<LlmClient, AgentError> {
+                unsafe {
+                    #[repr(align(4))]
+                    struct RetArea([::core::mem::MaybeUninit<u8>; 60]);
+                    let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 60]);
+                    let vec0 = model;
+                    let ptr0 = vec0.as_ptr().cast::<u8>();
+                    let len0 = vec0.len();
+                    let super::super::super::wavs::agent::types::LlmOptions {
+                        temperature: temperature1,
+                        top_p: top_p1,
+                        seed: seed1,
+                        max_tokens: max_tokens1,
+                        context_window: context_window1,
+                    } = config;
+                    let (result2_0, result2_1) = match max_tokens1 {
+                        Some(e) => (1i32, _rt::as_i32(e)),
+                        None => (0i32, 0i32),
+                    };
+                    let (result3_0, result3_1) = match context_window1 {
+                        Some(e) => (1i32, _rt::as_i32(e)),
+                        None => (0i32, 0i32),
+                    };
+                    let ptr4 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
+                    extern "C" {
+                        #[link_name = "with-config"]
                         fn wit_import(
-                            _: i32,
                             _: *mut u8,
                             _: usize,
                             _: f32,
@@ -1298,96 +1321,89 @@ pub mod wavs {
                             _: i32,
                             _: i32,
                             _: *mut u8,
-                        ) {
-                            unreachable!()
-                        }
-                        wit_import(
-                            (self).handle() as i32,
-                            ptr0.cast_mut(),
-                            len0,
-                            _rt::as_f32(temperature1),
-                            _rt::as_f32(top_p1),
-                            _rt::as_i32(seed1),
-                            result2_0,
-                            result2_1,
-                            result3_0,
-                            result3_1,
-                            ptr4,
                         );
-                        let l5 = i32::from(*ptr4.add(0).cast::<u8>());
-                        match l5 {
-                            0 => {
-                                let e = {
-                                    let l6 = *ptr4.add(4).cast::<i32>();
-                                    LlmClient::from_handle(l6 as u32)
-                                };
-                                Ok(e)
-                            }
-                            1 => {
-                                let e = {
-                                    let l7 = i32::from(*ptr4.add(4).cast::<u8>());
-                                    use super::super::super::wavs::agent::errors::AgentError as V47;
-                                    let v47 = match l7 {
-                                        0 => {
-                                            let e47 = {
-                                                let l8 = *ptr4.add(8).cast::<*mut u8>();
-                                                let l9 = *ptr4.add(12).cast::<usize>();
-                                                let len10 = l9;
-                                                let bytes10 = _rt::Vec::from_raw_parts(
-                                                    l8.cast(),
-                                                    len10,
-                                                    len10,
-                                                );
-                                                _rt::string_lift(bytes10)
-                                            };
-                                            V47::Api(e47)
-                                        }
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    fn wit_import(
+                        _: *mut u8,
+                        _: usize,
+                        _: f32,
+                        _: f32,
+                        _: i32,
+                        _: i32,
+                        _: i32,
+                        _: i32,
+                        _: i32,
+                        _: *mut u8,
+                    ) {
+                        unreachable!()
+                    }
+                    wit_import(
+                        ptr0.cast_mut(),
+                        len0,
+                        _rt::as_f32(temperature1),
+                        _rt::as_f32(top_p1),
+                        _rt::as_i32(seed1),
+                        result2_0,
+                        result2_1,
+                        result3_0,
+                        result3_1,
+                        ptr4,
+                    );
+                    let l5 = i32::from(*ptr4.add(0).cast::<u8>());
+                    match l5 {
+                        0 => {
+                            let e = {
+                                let l6 = *ptr4.add(4).cast::<*mut u8>();
+                                let l7 = *ptr4.add(8).cast::<usize>();
+                                let len8 = l7;
+                                let bytes8 = _rt::Vec::from_raw_parts(l6.cast(), len8, len8);
+                                let l9 = *ptr4.add(12).cast::<f32>();
+                                let l10 = *ptr4.add(16).cast::<f32>();
+                                let l11 = *ptr4.add(20).cast::<i32>();
+                                let l12 = i32::from(*ptr4.add(24).cast::<u8>());
+                                let l14 = i32::from(*ptr4.add(32).cast::<u8>());
+                                let l16 = *ptr4.add(40).cast::<*mut u8>();
+                                let l17 = *ptr4.add(44).cast::<usize>();
+                                let len18 = l17;
+                                let bytes18 = _rt::Vec::from_raw_parts(l16.cast(), len18, len18);
+                                let l19 = i32::from(*ptr4.add(48).cast::<u8>());
+                                super::super::super::wavs::agent::types::LlmClient {
+                                    model: _rt::string_lift(bytes8),
+                                    config: super::super::super::wavs::agent::types::LlmOptions {
+                                        temperature: l9,
+                                        top_p: l10,
+                                        seed: l11 as u32,
+                                        max_tokens: match l12 {
+                                            0 => None,
+                                            1 => {
+                                                let e = {
+                                                    let l13 = *ptr4.add(28).cast::<i32>();
+                                                    l13 as u32
+                                                };
+                                                Some(e)
+                                            }
+                                            _ => _rt::invalid_enum_discriminant(),
+                                        },
+                                        context_window: match l14 {
+                                            0 => None,
+                                            1 => {
+                                                let e = {
+                                                    let l15 = *ptr4.add(36).cast::<i32>();
+                                                    l15 as u32
+                                                };
+                                                Some(e)
+                                            }
+                                            _ => _rt::invalid_enum_discriminant(),
+                                        },
+                                    },
+                                    api_url: _rt::string_lift(bytes18),
+                                    api_key: match l19 {
+                                        0 => None,
                                         1 => {
-                                            let e47 = {
-                                                let l11 = *ptr4.add(8).cast::<*mut u8>();
-                                                let l12 = *ptr4.add(12).cast::<usize>();
-                                                let len13 = l12;
-                                                let bytes13 = _rt::Vec::from_raw_parts(
-                                                    l11.cast(),
-                                                    len13,
-                                                    len13,
-                                                );
-                                                _rt::string_lift(bytes13)
-                                            };
-                                            V47::Http(e47)
-                                        }
-                                        2 => {
-                                            let e47 = {
-                                                let l14 = *ptr4.add(8).cast::<*mut u8>();
-                                                let l15 = *ptr4.add(12).cast::<usize>();
-                                                let len16 = l15;
-                                                let bytes16 = _rt::Vec::from_raw_parts(
-                                                    l14.cast(),
-                                                    len16,
-                                                    len16,
-                                                );
-                                                _rt::string_lift(bytes16)
-                                            };
-                                            V47::ExternalService(e47)
-                                        }
-                                        3 => {
-                                            let e47 = {
-                                                let l17 = *ptr4.add(8).cast::<*mut u8>();
-                                                let l18 = *ptr4.add(12).cast::<usize>();
-                                                let len19 = l18;
-                                                let bytes19 = _rt::Vec::from_raw_parts(
-                                                    l17.cast(),
-                                                    len19,
-                                                    len19,
-                                                );
-                                                _rt::string_lift(bytes19)
-                                            };
-                                            V47::Config(e47)
-                                        }
-                                        4 => {
-                                            let e47 = {
-                                                let l20 = *ptr4.add(8).cast::<*mut u8>();
-                                                let l21 = *ptr4.add(12).cast::<usize>();
+                                            let e = {
+                                                let l20 = *ptr4.add(52).cast::<*mut u8>();
+                                                let l21 = *ptr4.add(56).cast::<usize>();
                                                 let len22 = l21;
                                                 let bytes22 = _rt::Vec::from_raw_parts(
                                                     l20.cast(),
@@ -1396,132 +1412,173 @@ pub mod wavs {
                                                 );
                                                 _rt::string_lift(bytes22)
                                             };
-                                            V47::Contract(e47)
+                                            Some(e)
                                         }
-                                        5 => {
-                                            let e47 = {
-                                                let l23 = *ptr4.add(8).cast::<*mut u8>();
-                                                let l24 = *ptr4.add(12).cast::<usize>();
-                                                let len25 = l24;
-                                                let bytes25 = _rt::Vec::from_raw_parts(
-                                                    l23.cast(),
-                                                    len25,
-                                                    len25,
-                                                );
-                                                _rt::string_lift(bytes25)
-                                            };
-                                            V47::Configuration(e47)
-                                        }
-                                        6 => {
-                                            let e47 = {
-                                                let l26 = *ptr4.add(8).cast::<*mut u8>();
-                                                let l27 = *ptr4.add(12).cast::<usize>();
-                                                let len28 = l27;
-                                                let bytes28 = _rt::Vec::from_raw_parts(
-                                                    l26.cast(),
-                                                    len28,
-                                                    len28,
-                                                );
-                                                _rt::string_lift(bytes28)
-                                            };
-                                            V47::ContextLoading(e47)
-                                        }
-                                        7 => {
-                                            let e47 = {
-                                                let l29 = *ptr4.add(8).cast::<*mut u8>();
-                                                let l30 = *ptr4.add(12).cast::<usize>();
-                                                let len31 = l30;
-                                                let bytes31 = _rt::Vec::from_raw_parts(
-                                                    l29.cast(),
-                                                    len31,
-                                                    len31,
-                                                );
-                                                _rt::string_lift(bytes31)
-                                            };
-                                            V47::ContextValidation(e47)
-                                        }
-                                        8 => {
-                                            let e47 = {
-                                                let l32 = *ptr4.add(8).cast::<*mut u8>();
-                                                let l33 = *ptr4.add(12).cast::<usize>();
-                                                let len34 = l33;
-                                                let bytes34 = _rt::Vec::from_raw_parts(
-                                                    l32.cast(),
-                                                    len34,
-                                                    len34,
-                                                );
-                                                _rt::string_lift(bytes34)
-                                            };
-                                            V47::Llm(e47)
-                                        }
-                                        9 => {
-                                            let e47 = {
-                                                let l35 = *ptr4.add(8).cast::<*mut u8>();
-                                                let l36 = *ptr4.add(12).cast::<usize>();
-                                                let len37 = l36;
-                                                let bytes37 = _rt::Vec::from_raw_parts(
-                                                    l35.cast(),
-                                                    len37,
-                                                    len37,
-                                                );
-                                                _rt::string_lift(bytes37)
-                                            };
-                                            V47::Io(e47)
-                                        }
-                                        10 => {
-                                            let e47 = {
-                                                let l38 = *ptr4.add(8).cast::<*mut u8>();
-                                                let l39 = *ptr4.add(12).cast::<usize>();
-                                                let len40 = l39;
-                                                let bytes40 = _rt::Vec::from_raw_parts(
-                                                    l38.cast(),
-                                                    len40,
-                                                    len40,
-                                                );
-                                                _rt::string_lift(bytes40)
-                                            };
-                                            V47::Transaction(e47)
-                                        }
-                                        11 => {
-                                            let e47 = {
-                                                let l41 = *ptr4.add(8).cast::<*mut u8>();
-                                                let l42 = *ptr4.add(12).cast::<usize>();
-                                                let len43 = l42;
-                                                let bytes43 = _rt::Vec::from_raw_parts(
-                                                    l41.cast(),
-                                                    len43,
-                                                    len43,
-                                                );
-                                                _rt::string_lift(bytes43)
-                                            };
-                                            V47::Utf8(e47)
-                                        }
-                                        n => {
-                                            debug_assert_eq!(n, 12, "invalid enum discriminant");
-                                            let e47 = {
-                                                let l44 = *ptr4.add(8).cast::<*mut u8>();
-                                                let l45 = *ptr4.add(12).cast::<usize>();
-                                                let len46 = l45;
-                                                let bytes46 = _rt::Vec::from_raw_parts(
-                                                    l44.cast(),
-                                                    len46,
-                                                    len46,
-                                                );
-                                                _rt::string_lift(bytes46)
-                                            };
-                                            V47::Other(e47)
-                                        }
-                                    };
-                                    v47
-                                };
-                                Err(e)
-                            }
-                            _ => _rt::invalid_enum_discriminant(),
+                                        _ => _rt::invalid_enum_discriminant(),
+                                    },
+                                }
+                            };
+                            Ok(e)
                         }
+                        1 => {
+                            let e = {
+                                let l23 = i32::from(*ptr4.add(4).cast::<u8>());
+                                use super::super::super::wavs::agent::errors::AgentError as V63;
+                                let v63 = match l23 {
+                                    0 => {
+                                        let e63 = {
+                                            let l24 = *ptr4.add(8).cast::<*mut u8>();
+                                            let l25 = *ptr4.add(12).cast::<usize>();
+                                            let len26 = l25;
+                                            let bytes26 =
+                                                _rt::Vec::from_raw_parts(l24.cast(), len26, len26);
+                                            _rt::string_lift(bytes26)
+                                        };
+                                        V63::Api(e63)
+                                    }
+                                    1 => {
+                                        let e63 = {
+                                            let l27 = *ptr4.add(8).cast::<*mut u8>();
+                                            let l28 = *ptr4.add(12).cast::<usize>();
+                                            let len29 = l28;
+                                            let bytes29 =
+                                                _rt::Vec::from_raw_parts(l27.cast(), len29, len29);
+                                            _rt::string_lift(bytes29)
+                                        };
+                                        V63::Http(e63)
+                                    }
+                                    2 => {
+                                        let e63 = {
+                                            let l30 = *ptr4.add(8).cast::<*mut u8>();
+                                            let l31 = *ptr4.add(12).cast::<usize>();
+                                            let len32 = l31;
+                                            let bytes32 =
+                                                _rt::Vec::from_raw_parts(l30.cast(), len32, len32);
+                                            _rt::string_lift(bytes32)
+                                        };
+                                        V63::ExternalService(e63)
+                                    }
+                                    3 => {
+                                        let e63 = {
+                                            let l33 = *ptr4.add(8).cast::<*mut u8>();
+                                            let l34 = *ptr4.add(12).cast::<usize>();
+                                            let len35 = l34;
+                                            let bytes35 =
+                                                _rt::Vec::from_raw_parts(l33.cast(), len35, len35);
+                                            _rt::string_lift(bytes35)
+                                        };
+                                        V63::Config(e63)
+                                    }
+                                    4 => {
+                                        let e63 = {
+                                            let l36 = *ptr4.add(8).cast::<*mut u8>();
+                                            let l37 = *ptr4.add(12).cast::<usize>();
+                                            let len38 = l37;
+                                            let bytes38 =
+                                                _rt::Vec::from_raw_parts(l36.cast(), len38, len38);
+                                            _rt::string_lift(bytes38)
+                                        };
+                                        V63::Contract(e63)
+                                    }
+                                    5 => {
+                                        let e63 = {
+                                            let l39 = *ptr4.add(8).cast::<*mut u8>();
+                                            let l40 = *ptr4.add(12).cast::<usize>();
+                                            let len41 = l40;
+                                            let bytes41 =
+                                                _rt::Vec::from_raw_parts(l39.cast(), len41, len41);
+                                            _rt::string_lift(bytes41)
+                                        };
+                                        V63::Configuration(e63)
+                                    }
+                                    6 => {
+                                        let e63 = {
+                                            let l42 = *ptr4.add(8).cast::<*mut u8>();
+                                            let l43 = *ptr4.add(12).cast::<usize>();
+                                            let len44 = l43;
+                                            let bytes44 =
+                                                _rt::Vec::from_raw_parts(l42.cast(), len44, len44);
+                                            _rt::string_lift(bytes44)
+                                        };
+                                        V63::ContextLoading(e63)
+                                    }
+                                    7 => {
+                                        let e63 = {
+                                            let l45 = *ptr4.add(8).cast::<*mut u8>();
+                                            let l46 = *ptr4.add(12).cast::<usize>();
+                                            let len47 = l46;
+                                            let bytes47 =
+                                                _rt::Vec::from_raw_parts(l45.cast(), len47, len47);
+                                            _rt::string_lift(bytes47)
+                                        };
+                                        V63::ContextValidation(e63)
+                                    }
+                                    8 => {
+                                        let e63 = {
+                                            let l48 = *ptr4.add(8).cast::<*mut u8>();
+                                            let l49 = *ptr4.add(12).cast::<usize>();
+                                            let len50 = l49;
+                                            let bytes50 =
+                                                _rt::Vec::from_raw_parts(l48.cast(), len50, len50);
+                                            _rt::string_lift(bytes50)
+                                        };
+                                        V63::Llm(e63)
+                                    }
+                                    9 => {
+                                        let e63 = {
+                                            let l51 = *ptr4.add(8).cast::<*mut u8>();
+                                            let l52 = *ptr4.add(12).cast::<usize>();
+                                            let len53 = l52;
+                                            let bytes53 =
+                                                _rt::Vec::from_raw_parts(l51.cast(), len53, len53);
+                                            _rt::string_lift(bytes53)
+                                        };
+                                        V63::Io(e63)
+                                    }
+                                    10 => {
+                                        let e63 = {
+                                            let l54 = *ptr4.add(8).cast::<*mut u8>();
+                                            let l55 = *ptr4.add(12).cast::<usize>();
+                                            let len56 = l55;
+                                            let bytes56 =
+                                                _rt::Vec::from_raw_parts(l54.cast(), len56, len56);
+                                            _rt::string_lift(bytes56)
+                                        };
+                                        V63::Transaction(e63)
+                                    }
+                                    11 => {
+                                        let e63 = {
+                                            let l57 = *ptr4.add(8).cast::<*mut u8>();
+                                            let l58 = *ptr4.add(12).cast::<usize>();
+                                            let len59 = l58;
+                                            let bytes59 =
+                                                _rt::Vec::from_raw_parts(l57.cast(), len59, len59);
+                                            _rt::string_lift(bytes59)
+                                        };
+                                        V63::Utf8(e63)
+                                    }
+                                    n => {
+                                        debug_assert_eq!(n, 12, "invalid enum discriminant");
+                                        let e63 = {
+                                            let l60 = *ptr4.add(8).cast::<*mut u8>();
+                                            let l61 = *ptr4.add(12).cast::<usize>();
+                                            let len62 = l61;
+                                            let bytes62 =
+                                                _rt::Vec::from_raw_parts(l60.cast(), len62, len62);
+                                            _rt::string_lift(bytes62)
+                                        };
+                                        V63::Other(e63)
+                                    }
+                                };
+                                v63
+                            };
+                            Err(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
                     }
                 }
             }
-            impl LlmClient {
+            impl LlmClientManager {
                 #[allow(unused_unsafe, clippy::all)]
                 /// Get the model name
                 pub fn get_model(&self) -> _rt::String {
@@ -1533,7 +1590,7 @@ pub mod wavs {
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
                         extern "C" {
-                            #[link_name = "[method]llm-client.get-model"]
+                            #[link_name = "[method]llm-client-manager.get-model"]
                             fn wit_import(_: i32, _: *mut u8);
                         }
                         #[cfg(not(target_arch = "wasm32"))]
@@ -1549,7 +1606,7 @@ pub mod wavs {
                     }
                 }
             }
-            impl LlmClient {
+            impl LlmClientManager {
                 #[allow(unused_unsafe, clippy::all)]
                 /// Get a reference to the current configuration
                 pub fn get_config(&self) -> LlmOptions {
@@ -1561,7 +1618,7 @@ pub mod wavs {
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
                         extern "C" {
-                            #[link_name = "[method]llm-client.get-config"]
+                            #[link_name = "[method]llm-client-manager.get-config"]
                             fn wit_import(_: i32, _: *mut u8);
                         }
                         #[cfg(not(target_arch = "wasm32"))]
@@ -1604,7 +1661,7 @@ pub mod wavs {
                     }
                 }
             }
-            impl LlmClient {
+            impl LlmClientManager {
                 #[allow(unused_unsafe, clippy::all)]
                 /// Send a chat completion request, with optional tools
                 pub fn chat_completion(
@@ -1822,7 +1879,7 @@ pub mod wavs {
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
                         extern "C" {
-                            #[link_name = "[method]llm-client.chat-completion"]
+                            #[link_name = "[method]llm-client-manager.chat-completion"]
                             fn wit_import(
                                 _: i32,
                                 _: *mut u8,
@@ -2200,7 +2257,7 @@ pub mod wavs {
                     }
                 }
             }
-            impl LlmClient {
+            impl LlmClientManager {
                 #[allow(unused_unsafe, clippy::all)]
                 /// Helper method to get just the content string from a chat completion
                 pub fn chat_completion_text(
@@ -2345,7 +2402,7 @@ pub mod wavs {
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
                         extern "C" {
-                            #[link_name = "[method]llm-client.chat-completion-text"]
+                            #[link_name = "[method]llm-client-manager.chat-completion-text"]
                             fn wit_import(_: i32, _: *mut u8, _: usize, _: *mut u8);
                         }
                         #[cfg(not(target_arch = "wasm32"))]
@@ -2572,7 +2629,7 @@ pub mod wavs {
                     }
                 }
             }
-            impl LlmClient {
+            impl LlmClientManager {
                 #[allow(unused_unsafe, clippy::all)]
                 /// Process a prompt with the LLM and return either a Transaction or text response
                 pub fn process_prompt(
@@ -2963,7 +3020,7 @@ pub mod wavs {
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
                         extern "C" {
-                            #[link_name = "[method]llm-client.process-prompt"]
+                            #[link_name = "[method]llm-client-manager.process-prompt"]
                             fn wit_import(_: *mut u8, _: *mut u8);
                         }
                         #[cfg(not(target_arch = "wasm32"))]
@@ -7286,109 +7343,87 @@ pub mod wavs {
                     }
                 }
             }
-            impl TransactionManager {
-                #[allow(unused_unsafe, clippy::all)]
-                /// Helper function to create a transaction payload from a Transaction
-                pub fn create_payload_from_tx(
-                    &self,
-                    transaction: &Transaction,
-                ) -> Result<_rt::String, AgentError> {
-                    unsafe {
-                        let mut cleanup_list = _rt::Vec::new();
-                        #[repr(align(4))]
-                        struct RetArea([::core::mem::MaybeUninit<u8>; 16]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 16]);
-                        let super::super::super::wavs::agent::types::Transaction {
-                            to: to0,
-                            value: value0,
-                            contract_call: contract_call0,
-                            data: data0,
-                            description: description0,
-                        } = transaction;
-                        let vec1 = to0;
-                        let ptr1 = vec1.as_ptr().cast::<u8>();
-                        let len1 = vec1.len();
-                        let vec2 = value0;
-                        let ptr2 = vec2.as_ptr().cast::<u8>();
-                        let len2 = vec2.len();
-                        let (result7_0, result7_1, result7_2, result7_3, result7_4) =
-                            match contract_call0 {
-                                Some(e) => {
-                                    let super::super::super::wavs::agent::types::ContractCall {
-                                        function: function3,
-                                        args: args3,
-                                    } = e;
-                                    let vec4 = function3;
-                                    let ptr4 = vec4.as_ptr().cast::<u8>();
-                                    let len4 = vec4.len();
-                                    let vec6 = args3;
-                                    let len6 = vec6.len();
-                                    let layout6 = _rt::alloc::Layout::from_size_align_unchecked(
-                                        vec6.len() * 8,
-                                        4,
-                                    );
-                                    let result6 = if layout6.size() != 0 {
-                                        let ptr = _rt::alloc::alloc(layout6).cast::<u8>();
-                                        if ptr.is_null() {
-                                            _rt::alloc::handle_alloc_error(layout6);
-                                        }
-                                        ptr
-                                    } else {
-                                        ::core::ptr::null_mut()
-                                    };
-                                    for (i, e) in vec6.into_iter().enumerate() {
-                                        let base = result6.add(i * 8);
-                                        {
-                                            let vec5 = e;
-                                            let ptr5 = vec5.as_ptr().cast::<u8>();
-                                            let len5 = vec5.len();
-                                            *base.add(4).cast::<usize>() = len5;
-                                            *base.add(0).cast::<*mut u8>() = ptr5.cast_mut();
-                                        }
+            #[allow(unused_unsafe, clippy::all)]
+            /// Helper function to create a transaction payload from a Transaction
+            pub fn create_payload_from_tx(
+                transaction: &Transaction,
+            ) -> Result<_rt::String, AgentError> {
+                unsafe {
+                    let mut cleanup_list = _rt::Vec::new();
+                    #[repr(align(4))]
+                    struct RetArea([::core::mem::MaybeUninit<u8>; 16]);
+                    let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 16]);
+                    let super::super::super::wavs::agent::types::Transaction {
+                        to: to0,
+                        value: value0,
+                        contract_call: contract_call0,
+                        data: data0,
+                        description: description0,
+                    } = transaction;
+                    let vec1 = to0;
+                    let ptr1 = vec1.as_ptr().cast::<u8>();
+                    let len1 = vec1.len();
+                    let vec2 = value0;
+                    let ptr2 = vec2.as_ptr().cast::<u8>();
+                    let len2 = vec2.len();
+                    let (result7_0, result7_1, result7_2, result7_3, result7_4) =
+                        match contract_call0 {
+                            Some(e) => {
+                                let super::super::super::wavs::agent::types::ContractCall {
+                                    function: function3,
+                                    args: args3,
+                                } = e;
+                                let vec4 = function3;
+                                let ptr4 = vec4.as_ptr().cast::<u8>();
+                                let len4 = vec4.len();
+                                let vec6 = args3;
+                                let len6 = vec6.len();
+                                let layout6 = _rt::alloc::Layout::from_size_align_unchecked(
+                                    vec6.len() * 8,
+                                    4,
+                                );
+                                let result6 = if layout6.size() != 0 {
+                                    let ptr = _rt::alloc::alloc(layout6).cast::<u8>();
+                                    if ptr.is_null() {
+                                        _rt::alloc::handle_alloc_error(layout6);
                                     }
-                                    cleanup_list.extend_from_slice(&[(result6, layout6)]);
-                                    (1i32, ptr4.cast_mut(), len4, result6, len6)
+                                    ptr
+                                } else {
+                                    ::core::ptr::null_mut()
+                                };
+                                for (i, e) in vec6.into_iter().enumerate() {
+                                    let base = result6.add(i * 8);
+                                    {
+                                        let vec5 = e;
+                                        let ptr5 = vec5.as_ptr().cast::<u8>();
+                                        let len5 = vec5.len();
+                                        *base.add(4).cast::<usize>() = len5;
+                                        *base.add(0).cast::<*mut u8>() = ptr5.cast_mut();
+                                    }
                                 }
-                                None => (
-                                    0i32,
-                                    ::core::ptr::null_mut(),
-                                    0usize,
-                                    ::core::ptr::null_mut(),
-                                    0usize,
-                                ),
-                            };
-                        let vec8 = data0;
-                        let ptr8 = vec8.as_ptr().cast::<u8>();
-                        let len8 = vec8.len();
-                        let vec9 = description0;
-                        let ptr9 = vec9.as_ptr().cast::<u8>();
-                        let len9 = vec9.len();
-                        let ptr10 = ret_area.0.as_mut_ptr().cast::<u8>();
-                        #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/contracts@0.0.1")]
-                        extern "C" {
-                            #[link_name = "[method]transaction-manager.create-payload-from-tx"]
-                            fn wit_import(
-                                _: i32,
-                                _: *mut u8,
-                                _: usize,
-                                _: *mut u8,
-                                _: usize,
-                                _: i32,
-                                _: *mut u8,
-                                _: usize,
-                                _: *mut u8,
-                                _: usize,
-                                _: *mut u8,
-                                _: usize,
-                                _: *mut u8,
-                                _: usize,
-                                _: *mut u8,
-                            );
-                        }
-                        #[cfg(not(target_arch = "wasm32"))]
+                                cleanup_list.extend_from_slice(&[(result6, layout6)]);
+                                (1i32, ptr4.cast_mut(), len4, result6, len6)
+                            }
+                            None => (
+                                0i32,
+                                ::core::ptr::null_mut(),
+                                0usize,
+                                ::core::ptr::null_mut(),
+                                0usize,
+                            ),
+                        };
+                    let vec8 = data0;
+                    let ptr8 = vec8.as_ptr().cast::<u8>();
+                    let len8 = vec8.len();
+                    let vec9 = description0;
+                    let ptr9 = vec9.as_ptr().cast::<u8>();
+                    let len9 = vec9.len();
+                    let ptr10 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "wavs:agent/contracts@0.0.1")]
+                    extern "C" {
+                        #[link_name = "create-payload-from-tx"]
                         fn wit_import(
-                            _: i32,
                             _: *mut u8,
                             _: usize,
                             _: *mut u8,
@@ -7403,239 +7438,215 @@ pub mod wavs {
                             _: *mut u8,
                             _: usize,
                             _: *mut u8,
-                        ) {
-                            unreachable!()
-                        }
-                        wit_import(
-                            (self).handle() as i32,
-                            ptr1.cast_mut(),
-                            len1,
-                            ptr2.cast_mut(),
-                            len2,
-                            result7_0,
-                            result7_1,
-                            result7_2,
-                            result7_3,
-                            result7_4,
-                            ptr8.cast_mut(),
-                            len8,
-                            ptr9.cast_mut(),
-                            len9,
-                            ptr10,
                         );
-                        let l11 = i32::from(*ptr10.add(0).cast::<u8>());
-                        for (ptr, layout) in cleanup_list {
-                            if layout.size() != 0 {
-                                _rt::alloc::dealloc(ptr.cast(), layout);
-                            }
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    fn wit_import(
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: i32,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                    ) {
+                        unreachable!()
+                    }
+                    wit_import(
+                        ptr1.cast_mut(),
+                        len1,
+                        ptr2.cast_mut(),
+                        len2,
+                        result7_0,
+                        result7_1,
+                        result7_2,
+                        result7_3,
+                        result7_4,
+                        ptr8.cast_mut(),
+                        len8,
+                        ptr9.cast_mut(),
+                        len9,
+                        ptr10,
+                    );
+                    let l11 = i32::from(*ptr10.add(0).cast::<u8>());
+                    for (ptr, layout) in cleanup_list {
+                        if layout.size() != 0 {
+                            _rt::alloc::dealloc(ptr.cast(), layout);
                         }
-                        match l11 {
-                            0 => {
-                                let e = {
-                                    let l12 = *ptr10.add(4).cast::<*mut u8>();
-                                    let l13 = *ptr10.add(8).cast::<usize>();
-                                    let len14 = l13;
-                                    let bytes14 =
-                                        _rt::Vec::from_raw_parts(l12.cast(), len14, len14);
-                                    _rt::string_lift(bytes14)
-                                };
-                                Ok(e)
-                            }
-                            1 => {
-                                let e = {
-                                    let l15 = i32::from(*ptr10.add(4).cast::<u8>());
-                                    use super::super::super::wavs::agent::errors::AgentError as V55;
-                                    let v55 = match l15 {
-                                        0 => {
-                                            let e55 = {
-                                                let l16 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l17 = *ptr10.add(12).cast::<usize>();
-                                                let len18 = l17;
-                                                let bytes18 = _rt::Vec::from_raw_parts(
-                                                    l16.cast(),
-                                                    len18,
-                                                    len18,
-                                                );
-                                                _rt::string_lift(bytes18)
-                                            };
-                                            V55::Api(e55)
-                                        }
-                                        1 => {
-                                            let e55 = {
-                                                let l19 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l20 = *ptr10.add(12).cast::<usize>();
-                                                let len21 = l20;
-                                                let bytes21 = _rt::Vec::from_raw_parts(
-                                                    l19.cast(),
-                                                    len21,
-                                                    len21,
-                                                );
-                                                _rt::string_lift(bytes21)
-                                            };
-                                            V55::Http(e55)
-                                        }
-                                        2 => {
-                                            let e55 = {
-                                                let l22 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l23 = *ptr10.add(12).cast::<usize>();
-                                                let len24 = l23;
-                                                let bytes24 = _rt::Vec::from_raw_parts(
-                                                    l22.cast(),
-                                                    len24,
-                                                    len24,
-                                                );
-                                                _rt::string_lift(bytes24)
-                                            };
-                                            V55::ExternalService(e55)
-                                        }
-                                        3 => {
-                                            let e55 = {
-                                                let l25 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l26 = *ptr10.add(12).cast::<usize>();
-                                                let len27 = l26;
-                                                let bytes27 = _rt::Vec::from_raw_parts(
-                                                    l25.cast(),
-                                                    len27,
-                                                    len27,
-                                                );
-                                                _rt::string_lift(bytes27)
-                                            };
-                                            V55::Config(e55)
-                                        }
-                                        4 => {
-                                            let e55 = {
-                                                let l28 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l29 = *ptr10.add(12).cast::<usize>();
-                                                let len30 = l29;
-                                                let bytes30 = _rt::Vec::from_raw_parts(
-                                                    l28.cast(),
-                                                    len30,
-                                                    len30,
-                                                );
-                                                _rt::string_lift(bytes30)
-                                            };
-                                            V55::Contract(e55)
-                                        }
-                                        5 => {
-                                            let e55 = {
-                                                let l31 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l32 = *ptr10.add(12).cast::<usize>();
-                                                let len33 = l32;
-                                                let bytes33 = _rt::Vec::from_raw_parts(
-                                                    l31.cast(),
-                                                    len33,
-                                                    len33,
-                                                );
-                                                _rt::string_lift(bytes33)
-                                            };
-                                            V55::Configuration(e55)
-                                        }
-                                        6 => {
-                                            let e55 = {
-                                                let l34 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l35 = *ptr10.add(12).cast::<usize>();
-                                                let len36 = l35;
-                                                let bytes36 = _rt::Vec::from_raw_parts(
-                                                    l34.cast(),
-                                                    len36,
-                                                    len36,
-                                                );
-                                                _rt::string_lift(bytes36)
-                                            };
-                                            V55::ContextLoading(e55)
-                                        }
-                                        7 => {
-                                            let e55 = {
-                                                let l37 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l38 = *ptr10.add(12).cast::<usize>();
-                                                let len39 = l38;
-                                                let bytes39 = _rt::Vec::from_raw_parts(
-                                                    l37.cast(),
-                                                    len39,
-                                                    len39,
-                                                );
-                                                _rt::string_lift(bytes39)
-                                            };
-                                            V55::ContextValidation(e55)
-                                        }
-                                        8 => {
-                                            let e55 = {
-                                                let l40 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l41 = *ptr10.add(12).cast::<usize>();
-                                                let len42 = l41;
-                                                let bytes42 = _rt::Vec::from_raw_parts(
-                                                    l40.cast(),
-                                                    len42,
-                                                    len42,
-                                                );
-                                                _rt::string_lift(bytes42)
-                                            };
-                                            V55::Llm(e55)
-                                        }
-                                        9 => {
-                                            let e55 = {
-                                                let l43 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l44 = *ptr10.add(12).cast::<usize>();
-                                                let len45 = l44;
-                                                let bytes45 = _rt::Vec::from_raw_parts(
-                                                    l43.cast(),
-                                                    len45,
-                                                    len45,
-                                                );
-                                                _rt::string_lift(bytes45)
-                                            };
-                                            V55::Io(e55)
-                                        }
-                                        10 => {
-                                            let e55 = {
-                                                let l46 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l47 = *ptr10.add(12).cast::<usize>();
-                                                let len48 = l47;
-                                                let bytes48 = _rt::Vec::from_raw_parts(
-                                                    l46.cast(),
-                                                    len48,
-                                                    len48,
-                                                );
-                                                _rt::string_lift(bytes48)
-                                            };
-                                            V55::Transaction(e55)
-                                        }
-                                        11 => {
-                                            let e55 = {
-                                                let l49 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l50 = *ptr10.add(12).cast::<usize>();
-                                                let len51 = l50;
-                                                let bytes51 = _rt::Vec::from_raw_parts(
-                                                    l49.cast(),
-                                                    len51,
-                                                    len51,
-                                                );
-                                                _rt::string_lift(bytes51)
-                                            };
-                                            V55::Utf8(e55)
-                                        }
-                                        n => {
-                                            debug_assert_eq!(n, 12, "invalid enum discriminant");
-                                            let e55 = {
-                                                let l52 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l53 = *ptr10.add(12).cast::<usize>();
-                                                let len54 = l53;
-                                                let bytes54 = _rt::Vec::from_raw_parts(
-                                                    l52.cast(),
-                                                    len54,
-                                                    len54,
-                                                );
-                                                _rt::string_lift(bytes54)
-                                            };
-                                            V55::Other(e55)
-                                        }
-                                    };
-                                    v55
-                                };
-                                Err(e)
-                            }
-                            _ => _rt::invalid_enum_discriminant(),
+                    }
+                    match l11 {
+                        0 => {
+                            let e = {
+                                let l12 = *ptr10.add(4).cast::<*mut u8>();
+                                let l13 = *ptr10.add(8).cast::<usize>();
+                                let len14 = l13;
+                                let bytes14 = _rt::Vec::from_raw_parts(l12.cast(), len14, len14);
+                                _rt::string_lift(bytes14)
+                            };
+                            Ok(e)
                         }
+                        1 => {
+                            let e = {
+                                let l15 = i32::from(*ptr10.add(4).cast::<u8>());
+                                use super::super::super::wavs::agent::errors::AgentError as V55;
+                                let v55 = match l15 {
+                                    0 => {
+                                        let e55 = {
+                                            let l16 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l17 = *ptr10.add(12).cast::<usize>();
+                                            let len18 = l17;
+                                            let bytes18 =
+                                                _rt::Vec::from_raw_parts(l16.cast(), len18, len18);
+                                            _rt::string_lift(bytes18)
+                                        };
+                                        V55::Api(e55)
+                                    }
+                                    1 => {
+                                        let e55 = {
+                                            let l19 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l20 = *ptr10.add(12).cast::<usize>();
+                                            let len21 = l20;
+                                            let bytes21 =
+                                                _rt::Vec::from_raw_parts(l19.cast(), len21, len21);
+                                            _rt::string_lift(bytes21)
+                                        };
+                                        V55::Http(e55)
+                                    }
+                                    2 => {
+                                        let e55 = {
+                                            let l22 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l23 = *ptr10.add(12).cast::<usize>();
+                                            let len24 = l23;
+                                            let bytes24 =
+                                                _rt::Vec::from_raw_parts(l22.cast(), len24, len24);
+                                            _rt::string_lift(bytes24)
+                                        };
+                                        V55::ExternalService(e55)
+                                    }
+                                    3 => {
+                                        let e55 = {
+                                            let l25 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l26 = *ptr10.add(12).cast::<usize>();
+                                            let len27 = l26;
+                                            let bytes27 =
+                                                _rt::Vec::from_raw_parts(l25.cast(), len27, len27);
+                                            _rt::string_lift(bytes27)
+                                        };
+                                        V55::Config(e55)
+                                    }
+                                    4 => {
+                                        let e55 = {
+                                            let l28 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l29 = *ptr10.add(12).cast::<usize>();
+                                            let len30 = l29;
+                                            let bytes30 =
+                                                _rt::Vec::from_raw_parts(l28.cast(), len30, len30);
+                                            _rt::string_lift(bytes30)
+                                        };
+                                        V55::Contract(e55)
+                                    }
+                                    5 => {
+                                        let e55 = {
+                                            let l31 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l32 = *ptr10.add(12).cast::<usize>();
+                                            let len33 = l32;
+                                            let bytes33 =
+                                                _rt::Vec::from_raw_parts(l31.cast(), len33, len33);
+                                            _rt::string_lift(bytes33)
+                                        };
+                                        V55::Configuration(e55)
+                                    }
+                                    6 => {
+                                        let e55 = {
+                                            let l34 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l35 = *ptr10.add(12).cast::<usize>();
+                                            let len36 = l35;
+                                            let bytes36 =
+                                                _rt::Vec::from_raw_parts(l34.cast(), len36, len36);
+                                            _rt::string_lift(bytes36)
+                                        };
+                                        V55::ContextLoading(e55)
+                                    }
+                                    7 => {
+                                        let e55 = {
+                                            let l37 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l38 = *ptr10.add(12).cast::<usize>();
+                                            let len39 = l38;
+                                            let bytes39 =
+                                                _rt::Vec::from_raw_parts(l37.cast(), len39, len39);
+                                            _rt::string_lift(bytes39)
+                                        };
+                                        V55::ContextValidation(e55)
+                                    }
+                                    8 => {
+                                        let e55 = {
+                                            let l40 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l41 = *ptr10.add(12).cast::<usize>();
+                                            let len42 = l41;
+                                            let bytes42 =
+                                                _rt::Vec::from_raw_parts(l40.cast(), len42, len42);
+                                            _rt::string_lift(bytes42)
+                                        };
+                                        V55::Llm(e55)
+                                    }
+                                    9 => {
+                                        let e55 = {
+                                            let l43 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l44 = *ptr10.add(12).cast::<usize>();
+                                            let len45 = l44;
+                                            let bytes45 =
+                                                _rt::Vec::from_raw_parts(l43.cast(), len45, len45);
+                                            _rt::string_lift(bytes45)
+                                        };
+                                        V55::Io(e55)
+                                    }
+                                    10 => {
+                                        let e55 = {
+                                            let l46 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l47 = *ptr10.add(12).cast::<usize>();
+                                            let len48 = l47;
+                                            let bytes48 =
+                                                _rt::Vec::from_raw_parts(l46.cast(), len48, len48);
+                                            _rt::string_lift(bytes48)
+                                        };
+                                        V55::Transaction(e55)
+                                    }
+                                    11 => {
+                                        let e55 = {
+                                            let l49 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l50 = *ptr10.add(12).cast::<usize>();
+                                            let len51 = l50;
+                                            let bytes51 =
+                                                _rt::Vec::from_raw_parts(l49.cast(), len51, len51);
+                                            _rt::string_lift(bytes51)
+                                        };
+                                        V55::Utf8(e55)
+                                    }
+                                    n => {
+                                        debug_assert_eq!(n, 12, "invalid enum discriminant");
+                                        let e55 = {
+                                            let l52 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l53 = *ptr10.add(12).cast::<usize>();
+                                            let len54 = l53;
+                                            let bytes54 =
+                                                _rt::Vec::from_raw_parts(l52.cast(), len54, len54);
+                                            _rt::string_lift(bytes54)
+                                        };
+                                        V55::Other(e55)
+                                    }
+                                };
+                                v55
+                            };
+                            Err(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
                     }
                 }
             }
@@ -8271,7 +8282,7 @@ pub mod wavs {
                 /// Process tool calls and generate a response
                 pub fn process_tool_calls(
                     &self,
-                    client: LlmClient,
+                    client: &LlmClient,
                     initial_messages: &[Message],
                     response: &Message,
                     tool_calls: &[ToolCall],
@@ -8280,134 +8291,190 @@ pub mod wavs {
                     unsafe {
                         let mut cleanup_list = _rt::Vec::new();
                         #[repr(align(4))]
-                        struct RetArea([::core::mem::MaybeUninit<u8>; 92]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 92]);
+                        struct RetArea([::core::mem::MaybeUninit<u8>; 144]);
+                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 144]);
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         *ptr0.add(0).cast::<i32>() = (self).handle() as i32;
-                        *ptr0.add(4).cast::<i32>() = (&client).take_handle() as i32;
-                        let vec13 = initial_messages;
-                        let len13 = vec13.len();
-                        let layout13 =
-                            _rt::alloc::Layout::from_size_align_unchecked(vec13.len() * 56, 4);
-                        let result13 = if layout13.size() != 0 {
-                            let ptr = _rt::alloc::alloc(layout13).cast::<u8>();
+                        let super::super::super::wavs::agent::types::LlmClient {
+                            model: model1,
+                            config: config1,
+                            api_url: api_url1,
+                            api_key: api_key1,
+                        } = client;
+                        let vec2 = model1;
+                        let ptr2 = vec2.as_ptr().cast::<u8>();
+                        let len2 = vec2.len();
+                        *ptr0.add(8).cast::<usize>() = len2;
+                        *ptr0.add(4).cast::<*mut u8>() = ptr2.cast_mut();
+                        let super::super::super::wavs::agent::types::LlmOptions {
+                            temperature: temperature3,
+                            top_p: top_p3,
+                            seed: seed3,
+                            max_tokens: max_tokens3,
+                            context_window: context_window3,
+                        } = config1;
+                        *ptr0.add(12).cast::<f32>() = _rt::as_f32(temperature3);
+                        *ptr0.add(16).cast::<f32>() = _rt::as_f32(top_p3);
+                        *ptr0.add(20).cast::<i32>() = _rt::as_i32(seed3);
+                        match max_tokens3 {
+                            Some(e) => {
+                                *ptr0.add(24).cast::<u8>() = (1i32) as u8;
+                                *ptr0.add(28).cast::<i32>() = _rt::as_i32(e);
+                            }
+                            None => {
+                                *ptr0.add(24).cast::<u8>() = (0i32) as u8;
+                            }
+                        };
+                        match context_window3 {
+                            Some(e) => {
+                                *ptr0.add(32).cast::<u8>() = (1i32) as u8;
+                                *ptr0.add(36).cast::<i32>() = _rt::as_i32(e);
+                            }
+                            None => {
+                                *ptr0.add(32).cast::<u8>() = (0i32) as u8;
+                            }
+                        };
+                        let vec4 = api_url1;
+                        let ptr4 = vec4.as_ptr().cast::<u8>();
+                        let len4 = vec4.len();
+                        *ptr0.add(44).cast::<usize>() = len4;
+                        *ptr0.add(40).cast::<*mut u8>() = ptr4.cast_mut();
+                        match api_key1 {
+                            Some(e) => {
+                                *ptr0.add(48).cast::<u8>() = (1i32) as u8;
+                                let vec5 = e;
+                                let ptr5 = vec5.as_ptr().cast::<u8>();
+                                let len5 = vec5.len();
+                                *ptr0.add(56).cast::<usize>() = len5;
+                                *ptr0.add(52).cast::<*mut u8>() = ptr5.cast_mut();
+                            }
+                            None => {
+                                *ptr0.add(48).cast::<u8>() = (0i32) as u8;
+                            }
+                        };
+                        let vec18 = initial_messages;
+                        let len18 = vec18.len();
+                        let layout18 =
+                            _rt::alloc::Layout::from_size_align_unchecked(vec18.len() * 56, 4);
+                        let result18 = if layout18.size() != 0 {
+                            let ptr = _rt::alloc::alloc(layout18).cast::<u8>();
                             if ptr.is_null() {
-                                _rt::alloc::handle_alloc_error(layout13);
+                                _rt::alloc::handle_alloc_error(layout18);
                             }
                             ptr
                         } else {
                             ::core::ptr::null_mut()
                         };
-                        for (i, e) in vec13.into_iter().enumerate() {
-                            let base = result13.add(i * 56);
+                        for (i, e) in vec18.into_iter().enumerate() {
+                            let base = result18.add(i * 56);
                             {
                                 let super::super::super::wavs::agent::types::Message {
-                                    role: role1,
-                                    content: content1,
-                                    tool_calls: tool_calls1,
-                                    tool_call_id: tool_call_id1,
-                                    name: name1,
+                                    role: role6,
+                                    content: content6,
+                                    tool_calls: tool_calls6,
+                                    tool_call_id: tool_call_id6,
+                                    name: name6,
                                 } = e;
-                                let vec2 = role1;
-                                let ptr2 = vec2.as_ptr().cast::<u8>();
-                                let len2 = vec2.len();
-                                *base.add(4).cast::<usize>() = len2;
-                                *base.add(0).cast::<*mut u8>() = ptr2.cast_mut();
-                                match content1 {
+                                let vec7 = role6;
+                                let ptr7 = vec7.as_ptr().cast::<u8>();
+                                let len7 = vec7.len();
+                                *base.add(4).cast::<usize>() = len7;
+                                *base.add(0).cast::<*mut u8>() = ptr7.cast_mut();
+                                match content6 {
                                     Some(e) => {
                                         *base.add(8).cast::<u8>() = (1i32) as u8;
-                                        let vec3 = e;
-                                        let ptr3 = vec3.as_ptr().cast::<u8>();
-                                        let len3 = vec3.len();
-                                        *base.add(16).cast::<usize>() = len3;
-                                        *base.add(12).cast::<*mut u8>() = ptr3.cast_mut();
+                                        let vec8 = e;
+                                        let ptr8 = vec8.as_ptr().cast::<u8>();
+                                        let len8 = vec8.len();
+                                        *base.add(16).cast::<usize>() = len8;
+                                        *base.add(12).cast::<*mut u8>() = ptr8.cast_mut();
                                     }
                                     None => {
                                         *base.add(8).cast::<u8>() = (0i32) as u8;
                                     }
                                 };
-                                match tool_calls1 {
+                                match tool_calls6 {
                                     Some(e) => {
                                         *base.add(20).cast::<u8>() = (1i32) as u8;
-                                        let vec10 = e;
-                                        let len10 = vec10.len();
-                                        let layout10 =
+                                        let vec15 = e;
+                                        let len15 = vec15.len();
+                                        let layout15 =
                                             _rt::alloc::Layout::from_size_align_unchecked(
-                                                vec10.len() * 32,
+                                                vec15.len() * 32,
                                                 4,
                                             );
-                                        let result10 = if layout10.size() != 0 {
-                                            let ptr = _rt::alloc::alloc(layout10).cast::<u8>();
+                                        let result15 = if layout15.size() != 0 {
+                                            let ptr = _rt::alloc::alloc(layout15).cast::<u8>();
                                             if ptr.is_null() {
-                                                _rt::alloc::handle_alloc_error(layout10);
+                                                _rt::alloc::handle_alloc_error(layout15);
                                             }
                                             ptr
                                         } else {
                                             ::core::ptr::null_mut()
                                         };
-                                        for (i, e) in vec10.into_iter().enumerate() {
-                                            let base = result10.add(i * 32);
+                                        for (i, e) in vec15.into_iter().enumerate() {
+                                            let base = result15.add(i * 32);
                                             {
                                                 let super::super::super::wavs::agent::types::ToolCall {
-                                                    id: id4,
-                                                    tool_type: tool_type4,
-                                                    function: function4,
+                                                    id: id9,
+                                                    tool_type: tool_type9,
+                                                    function: function9,
                                                 } = e;
-                                                let vec5 = id4;
-                                                let ptr5 = vec5.as_ptr().cast::<u8>();
-                                                let len5 = vec5.len();
-                                                *base.add(4).cast::<usize>() = len5;
-                                                *base.add(0).cast::<*mut u8>() = ptr5.cast_mut();
-                                                let vec6 = tool_type4;
-                                                let ptr6 = vec6.as_ptr().cast::<u8>();
-                                                let len6 = vec6.len();
-                                                *base.add(12).cast::<usize>() = len6;
-                                                *base.add(8).cast::<*mut u8>() = ptr6.cast_mut();
+                                                let vec10 = id9;
+                                                let ptr10 = vec10.as_ptr().cast::<u8>();
+                                                let len10 = vec10.len();
+                                                *base.add(4).cast::<usize>() = len10;
+                                                *base.add(0).cast::<*mut u8>() = ptr10.cast_mut();
+                                                let vec11 = tool_type9;
+                                                let ptr11 = vec11.as_ptr().cast::<u8>();
+                                                let len11 = vec11.len();
+                                                *base.add(12).cast::<usize>() = len11;
+                                                *base.add(8).cast::<*mut u8>() = ptr11.cast_mut();
                                                 let super::super::super::wavs::agent::types::ToolCallFunction {
-                                                    name: name7,
-                                                    arguments: arguments7,
-                                                } = function4;
-                                                let vec8 = name7;
-                                                let ptr8 = vec8.as_ptr().cast::<u8>();
-                                                let len8 = vec8.len();
-                                                *base.add(20).cast::<usize>() = len8;
-                                                *base.add(16).cast::<*mut u8>() = ptr8.cast_mut();
-                                                let vec9 = arguments7;
-                                                let ptr9 = vec9.as_ptr().cast::<u8>();
-                                                let len9 = vec9.len();
-                                                *base.add(28).cast::<usize>() = len9;
-                                                *base.add(24).cast::<*mut u8>() = ptr9.cast_mut();
+                                                    name: name12,
+                                                    arguments: arguments12,
+                                                } = function9;
+                                                let vec13 = name12;
+                                                let ptr13 = vec13.as_ptr().cast::<u8>();
+                                                let len13 = vec13.len();
+                                                *base.add(20).cast::<usize>() = len13;
+                                                *base.add(16).cast::<*mut u8>() = ptr13.cast_mut();
+                                                let vec14 = arguments12;
+                                                let ptr14 = vec14.as_ptr().cast::<u8>();
+                                                let len14 = vec14.len();
+                                                *base.add(28).cast::<usize>() = len14;
+                                                *base.add(24).cast::<*mut u8>() = ptr14.cast_mut();
                                             }
                                         }
-                                        *base.add(28).cast::<usize>() = len10;
-                                        *base.add(24).cast::<*mut u8>() = result10;
-                                        cleanup_list.extend_from_slice(&[(result10, layout10)]);
+                                        *base.add(28).cast::<usize>() = len15;
+                                        *base.add(24).cast::<*mut u8>() = result15;
+                                        cleanup_list.extend_from_slice(&[(result15, layout15)]);
                                     }
                                     None => {
                                         *base.add(20).cast::<u8>() = (0i32) as u8;
                                     }
                                 };
-                                match tool_call_id1 {
+                                match tool_call_id6 {
                                     Some(e) => {
                                         *base.add(32).cast::<u8>() = (1i32) as u8;
-                                        let vec11 = e;
-                                        let ptr11 = vec11.as_ptr().cast::<u8>();
-                                        let len11 = vec11.len();
-                                        *base.add(40).cast::<usize>() = len11;
-                                        *base.add(36).cast::<*mut u8>() = ptr11.cast_mut();
+                                        let vec16 = e;
+                                        let ptr16 = vec16.as_ptr().cast::<u8>();
+                                        let len16 = vec16.len();
+                                        *base.add(40).cast::<usize>() = len16;
+                                        *base.add(36).cast::<*mut u8>() = ptr16.cast_mut();
                                     }
                                     None => {
                                         *base.add(32).cast::<u8>() = (0i32) as u8;
                                     }
                                 };
-                                match name1 {
+                                match name6 {
                                     Some(e) => {
                                         *base.add(44).cast::<u8>() = (1i32) as u8;
-                                        let vec12 = e;
-                                        let ptr12 = vec12.as_ptr().cast::<u8>();
-                                        let len12 = vec12.len();
-                                        *base.add(52).cast::<usize>() = len12;
-                                        *base.add(48).cast::<*mut u8>() = ptr12.cast_mut();
+                                        let vec17 = e;
+                                        let ptr17 = vec17.as_ptr().cast::<u8>();
+                                        let len17 = vec17.len();
+                                        *base.add(52).cast::<usize>() = len17;
+                                        *base.add(48).cast::<*mut u8>() = ptr17.cast_mut();
                                     }
                                     None => {
                                         *base.add(44).cast::<u8>() = (0i32) as u8;
@@ -8415,201 +8482,201 @@ pub mod wavs {
                                 };
                             }
                         }
-                        *ptr0.add(12).cast::<usize>() = len13;
-                        *ptr0.add(8).cast::<*mut u8>() = result13;
+                        *ptr0.add(64).cast::<usize>() = len18;
+                        *ptr0.add(60).cast::<*mut u8>() = result18;
                         let super::super::super::wavs::agent::types::Message {
-                            role: role14,
-                            content: content14,
-                            tool_calls: tool_calls14,
-                            tool_call_id: tool_call_id14,
-                            name: name14,
+                            role: role19,
+                            content: content19,
+                            tool_calls: tool_calls19,
+                            tool_call_id: tool_call_id19,
+                            name: name19,
                         } = response;
-                        let vec15 = role14;
-                        let ptr15 = vec15.as_ptr().cast::<u8>();
-                        let len15 = vec15.len();
-                        *ptr0.add(20).cast::<usize>() = len15;
-                        *ptr0.add(16).cast::<*mut u8>() = ptr15.cast_mut();
-                        match content14 {
+                        let vec20 = role19;
+                        let ptr20 = vec20.as_ptr().cast::<u8>();
+                        let len20 = vec20.len();
+                        *ptr0.add(72).cast::<usize>() = len20;
+                        *ptr0.add(68).cast::<*mut u8>() = ptr20.cast_mut();
+                        match content19 {
                             Some(e) => {
-                                *ptr0.add(24).cast::<u8>() = (1i32) as u8;
-                                let vec16 = e;
-                                let ptr16 = vec16.as_ptr().cast::<u8>();
-                                let len16 = vec16.len();
-                                *ptr0.add(32).cast::<usize>() = len16;
-                                *ptr0.add(28).cast::<*mut u8>() = ptr16.cast_mut();
+                                *ptr0.add(76).cast::<u8>() = (1i32) as u8;
+                                let vec21 = e;
+                                let ptr21 = vec21.as_ptr().cast::<u8>();
+                                let len21 = vec21.len();
+                                *ptr0.add(84).cast::<usize>() = len21;
+                                *ptr0.add(80).cast::<*mut u8>() = ptr21.cast_mut();
                             }
                             None => {
-                                *ptr0.add(24).cast::<u8>() = (0i32) as u8;
+                                *ptr0.add(76).cast::<u8>() = (0i32) as u8;
                             }
                         };
-                        match tool_calls14 {
+                        match tool_calls19 {
                             Some(e) => {
-                                *ptr0.add(36).cast::<u8>() = (1i32) as u8;
-                                let vec23 = e;
-                                let len23 = vec23.len();
-                                let layout23 = _rt::alloc::Layout::from_size_align_unchecked(
-                                    vec23.len() * 32,
+                                *ptr0.add(88).cast::<u8>() = (1i32) as u8;
+                                let vec28 = e;
+                                let len28 = vec28.len();
+                                let layout28 = _rt::alloc::Layout::from_size_align_unchecked(
+                                    vec28.len() * 32,
                                     4,
                                 );
-                                let result23 = if layout23.size() != 0 {
-                                    let ptr = _rt::alloc::alloc(layout23).cast::<u8>();
+                                let result28 = if layout28.size() != 0 {
+                                    let ptr = _rt::alloc::alloc(layout28).cast::<u8>();
                                     if ptr.is_null() {
-                                        _rt::alloc::handle_alloc_error(layout23);
+                                        _rt::alloc::handle_alloc_error(layout28);
                                     }
                                     ptr
                                 } else {
                                     ::core::ptr::null_mut()
                                 };
-                                for (i, e) in vec23.into_iter().enumerate() {
-                                    let base = result23.add(i * 32);
+                                for (i, e) in vec28.into_iter().enumerate() {
+                                    let base = result28.add(i * 32);
                                     {
                                         let super::super::super::wavs::agent::types::ToolCall {
-                                            id: id17,
-                                            tool_type: tool_type17,
-                                            function: function17,
+                                            id: id22,
+                                            tool_type: tool_type22,
+                                            function: function22,
                                         } = e;
-                                        let vec18 = id17;
-                                        let ptr18 = vec18.as_ptr().cast::<u8>();
-                                        let len18 = vec18.len();
-                                        *base.add(4).cast::<usize>() = len18;
-                                        *base.add(0).cast::<*mut u8>() = ptr18.cast_mut();
-                                        let vec19 = tool_type17;
-                                        let ptr19 = vec19.as_ptr().cast::<u8>();
-                                        let len19 = vec19.len();
-                                        *base.add(12).cast::<usize>() = len19;
-                                        *base.add(8).cast::<*mut u8>() = ptr19.cast_mut();
+                                        let vec23 = id22;
+                                        let ptr23 = vec23.as_ptr().cast::<u8>();
+                                        let len23 = vec23.len();
+                                        *base.add(4).cast::<usize>() = len23;
+                                        *base.add(0).cast::<*mut u8>() = ptr23.cast_mut();
+                                        let vec24 = tool_type22;
+                                        let ptr24 = vec24.as_ptr().cast::<u8>();
+                                        let len24 = vec24.len();
+                                        *base.add(12).cast::<usize>() = len24;
+                                        *base.add(8).cast::<*mut u8>() = ptr24.cast_mut();
                                         let super::super::super::wavs::agent::types::ToolCallFunction {
-                                            name: name20,
-                                            arguments: arguments20,
-                                        } = function17;
-                                        let vec21 = name20;
-                                        let ptr21 = vec21.as_ptr().cast::<u8>();
-                                        let len21 = vec21.len();
-                                        *base.add(20).cast::<usize>() = len21;
-                                        *base.add(16).cast::<*mut u8>() = ptr21.cast_mut();
-                                        let vec22 = arguments20;
-                                        let ptr22 = vec22.as_ptr().cast::<u8>();
-                                        let len22 = vec22.len();
-                                        *base.add(28).cast::<usize>() = len22;
-                                        *base.add(24).cast::<*mut u8>() = ptr22.cast_mut();
+                                            name: name25,
+                                            arguments: arguments25,
+                                        } = function22;
+                                        let vec26 = name25;
+                                        let ptr26 = vec26.as_ptr().cast::<u8>();
+                                        let len26 = vec26.len();
+                                        *base.add(20).cast::<usize>() = len26;
+                                        *base.add(16).cast::<*mut u8>() = ptr26.cast_mut();
+                                        let vec27 = arguments25;
+                                        let ptr27 = vec27.as_ptr().cast::<u8>();
+                                        let len27 = vec27.len();
+                                        *base.add(28).cast::<usize>() = len27;
+                                        *base.add(24).cast::<*mut u8>() = ptr27.cast_mut();
                                     }
                                 }
-                                *ptr0.add(44).cast::<usize>() = len23;
-                                *ptr0.add(40).cast::<*mut u8>() = result23;
-                                cleanup_list.extend_from_slice(&[(result23, layout23)]);
+                                *ptr0.add(96).cast::<usize>() = len28;
+                                *ptr0.add(92).cast::<*mut u8>() = result28;
+                                cleanup_list.extend_from_slice(&[(result28, layout28)]);
                             }
                             None => {
-                                *ptr0.add(36).cast::<u8>() = (0i32) as u8;
+                                *ptr0.add(88).cast::<u8>() = (0i32) as u8;
                             }
                         };
-                        match tool_call_id14 {
+                        match tool_call_id19 {
                             Some(e) => {
-                                *ptr0.add(48).cast::<u8>() = (1i32) as u8;
-                                let vec24 = e;
-                                let ptr24 = vec24.as_ptr().cast::<u8>();
-                                let len24 = vec24.len();
-                                *ptr0.add(56).cast::<usize>() = len24;
-                                *ptr0.add(52).cast::<*mut u8>() = ptr24.cast_mut();
+                                *ptr0.add(100).cast::<u8>() = (1i32) as u8;
+                                let vec29 = e;
+                                let ptr29 = vec29.as_ptr().cast::<u8>();
+                                let len29 = vec29.len();
+                                *ptr0.add(108).cast::<usize>() = len29;
+                                *ptr0.add(104).cast::<*mut u8>() = ptr29.cast_mut();
                             }
                             None => {
-                                *ptr0.add(48).cast::<u8>() = (0i32) as u8;
+                                *ptr0.add(100).cast::<u8>() = (0i32) as u8;
                             }
                         };
-                        match name14 {
+                        match name19 {
                             Some(e) => {
-                                *ptr0.add(60).cast::<u8>() = (1i32) as u8;
-                                let vec25 = e;
-                                let ptr25 = vec25.as_ptr().cast::<u8>();
-                                let len25 = vec25.len();
-                                *ptr0.add(68).cast::<usize>() = len25;
-                                *ptr0.add(64).cast::<*mut u8>() = ptr25.cast_mut();
+                                *ptr0.add(112).cast::<u8>() = (1i32) as u8;
+                                let vec30 = e;
+                                let ptr30 = vec30.as_ptr().cast::<u8>();
+                                let len30 = vec30.len();
+                                *ptr0.add(120).cast::<usize>() = len30;
+                                *ptr0.add(116).cast::<*mut u8>() = ptr30.cast_mut();
                             }
                             None => {
-                                *ptr0.add(60).cast::<u8>() = (0i32) as u8;
+                                *ptr0.add(112).cast::<u8>() = (0i32) as u8;
                             }
                         };
-                        let vec32 = tool_calls;
-                        let len32 = vec32.len();
-                        let layout32 =
-                            _rt::alloc::Layout::from_size_align_unchecked(vec32.len() * 32, 4);
-                        let result32 = if layout32.size() != 0 {
-                            let ptr = _rt::alloc::alloc(layout32).cast::<u8>();
+                        let vec37 = tool_calls;
+                        let len37 = vec37.len();
+                        let layout37 =
+                            _rt::alloc::Layout::from_size_align_unchecked(vec37.len() * 32, 4);
+                        let result37 = if layout37.size() != 0 {
+                            let ptr = _rt::alloc::alloc(layout37).cast::<u8>();
                             if ptr.is_null() {
-                                _rt::alloc::handle_alloc_error(layout32);
+                                _rt::alloc::handle_alloc_error(layout37);
                             }
                             ptr
                         } else {
                             ::core::ptr::null_mut()
                         };
-                        for (i, e) in vec32.into_iter().enumerate() {
-                            let base = result32.add(i * 32);
+                        for (i, e) in vec37.into_iter().enumerate() {
+                            let base = result37.add(i * 32);
                             {
                                 let super::super::super::wavs::agent::types::ToolCall {
-                                    id: id26,
-                                    tool_type: tool_type26,
-                                    function: function26,
+                                    id: id31,
+                                    tool_type: tool_type31,
+                                    function: function31,
                                 } = e;
-                                let vec27 = id26;
-                                let ptr27 = vec27.as_ptr().cast::<u8>();
-                                let len27 = vec27.len();
-                                *base.add(4).cast::<usize>() = len27;
-                                *base.add(0).cast::<*mut u8>() = ptr27.cast_mut();
-                                let vec28 = tool_type26;
-                                let ptr28 = vec28.as_ptr().cast::<u8>();
-                                let len28 = vec28.len();
-                                *base.add(12).cast::<usize>() = len28;
-                                *base.add(8).cast::<*mut u8>() = ptr28.cast_mut();
+                                let vec32 = id31;
+                                let ptr32 = vec32.as_ptr().cast::<u8>();
+                                let len32 = vec32.len();
+                                *base.add(4).cast::<usize>() = len32;
+                                *base.add(0).cast::<*mut u8>() = ptr32.cast_mut();
+                                let vec33 = tool_type31;
+                                let ptr33 = vec33.as_ptr().cast::<u8>();
+                                let len33 = vec33.len();
+                                *base.add(12).cast::<usize>() = len33;
+                                *base.add(8).cast::<*mut u8>() = ptr33.cast_mut();
                                 let super::super::super::wavs::agent::types::ToolCallFunction {
-                                    name: name29,
-                                    arguments: arguments29,
-                                } = function26;
-                                let vec30 = name29;
-                                let ptr30 = vec30.as_ptr().cast::<u8>();
-                                let len30 = vec30.len();
-                                *base.add(20).cast::<usize>() = len30;
-                                *base.add(16).cast::<*mut u8>() = ptr30.cast_mut();
-                                let vec31 = arguments29;
-                                let ptr31 = vec31.as_ptr().cast::<u8>();
-                                let len31 = vec31.len();
-                                *base.add(28).cast::<usize>() = len31;
-                                *base.add(24).cast::<*mut u8>() = ptr31.cast_mut();
+                                    name: name34,
+                                    arguments: arguments34,
+                                } = function31;
+                                let vec35 = name34;
+                                let ptr35 = vec35.as_ptr().cast::<u8>();
+                                let len35 = vec35.len();
+                                *base.add(20).cast::<usize>() = len35;
+                                *base.add(16).cast::<*mut u8>() = ptr35.cast_mut();
+                                let vec36 = arguments34;
+                                let ptr36 = vec36.as_ptr().cast::<u8>();
+                                let len36 = vec36.len();
+                                *base.add(28).cast::<usize>() = len36;
+                                *base.add(24).cast::<*mut u8>() = ptr36.cast_mut();
                             }
                         }
-                        *ptr0.add(76).cast::<usize>() = len32;
-                        *ptr0.add(72).cast::<*mut u8>() = result32;
+                        *ptr0.add(128).cast::<usize>() = len37;
+                        *ptr0.add(124).cast::<*mut u8>() = result37;
                         match &custom_handlers {
                             Some(e) => {
-                                *ptr0.add(80).cast::<u8>() = (1i32) as u8;
-                                let vec33 = e;
-                                let len33 = vec33.len();
-                                let layout33 = _rt::alloc::Layout::from_size_align_unchecked(
-                                    vec33.len() * 4,
+                                *ptr0.add(132).cast::<u8>() = (1i32) as u8;
+                                let vec38 = e;
+                                let len38 = vec38.len();
+                                let layout38 = _rt::alloc::Layout::from_size_align_unchecked(
+                                    vec38.len() * 4,
                                     4,
                                 );
-                                let result33 = if layout33.size() != 0 {
-                                    let ptr = _rt::alloc::alloc(layout33).cast::<u8>();
+                                let result38 = if layout38.size() != 0 {
+                                    let ptr = _rt::alloc::alloc(layout38).cast::<u8>();
                                     if ptr.is_null() {
-                                        _rt::alloc::handle_alloc_error(layout33);
+                                        _rt::alloc::handle_alloc_error(layout38);
                                     }
                                     ptr
                                 } else {
                                     ::core::ptr::null_mut()
                                 };
-                                for (i, e) in vec33.into_iter().enumerate() {
-                                    let base = result33.add(i * 4);
+                                for (i, e) in vec38.into_iter().enumerate() {
+                                    let base = result38.add(i * 4);
                                     {
                                         *base.add(0).cast::<i32>() = (e).take_handle() as i32;
                                     }
                                 }
-                                *ptr0.add(88).cast::<usize>() = len33;
-                                *ptr0.add(84).cast::<*mut u8>() = result33;
-                                cleanup_list.extend_from_slice(&[(result33, layout33)]);
+                                *ptr0.add(140).cast::<usize>() = len38;
+                                *ptr0.add(136).cast::<*mut u8>() = result38;
+                                cleanup_list.extend_from_slice(&[(result38, layout38)]);
                             }
                             None => {
-                                *ptr0.add(80).cast::<u8>() = (0i32) as u8;
+                                *ptr0.add(132).cast::<u8>() = (0i32) as u8;
                             }
                         };
-                        let ptr34 = ret_area.0.as_mut_ptr().cast::<u8>();
+                        let ptr39 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/tools@0.0.1")]
                         extern "C" {
@@ -8620,39 +8687,39 @@ pub mod wavs {
                         fn wit_import(_: *mut u8, _: *mut u8) {
                             unreachable!()
                         }
-                        wit_import(ptr0, ptr34);
-                        let l35 = i32::from(*ptr34.add(0).cast::<u8>());
-                        if layout13.size() != 0 {
-                            _rt::alloc::dealloc(result13.cast(), layout13);
+                        wit_import(ptr0, ptr39);
+                        let l40 = i32::from(*ptr39.add(0).cast::<u8>());
+                        if layout18.size() != 0 {
+                            _rt::alloc::dealloc(result18.cast(), layout18);
                         }
-                        if layout32.size() != 0 {
-                            _rt::alloc::dealloc(result32.cast(), layout32);
+                        if layout37.size() != 0 {
+                            _rt::alloc::dealloc(result37.cast(), layout37);
                         }
                         for (ptr, layout) in cleanup_list {
                             if layout.size() != 0 {
                                 _rt::alloc::dealloc(ptr.cast(), layout);
                             }
                         }
-                        match l35 {
+                        match l40 {
                             0 => {
                                 let e = {
-                                    let l36 = *ptr34.add(4).cast::<*mut u8>();
-                                    let l37 = *ptr34.add(8).cast::<usize>();
-                                    let len38 = l37;
-                                    let bytes38 =
-                                        _rt::Vec::from_raw_parts(l36.cast(), len38, len38);
-                                    _rt::string_lift(bytes38)
+                                    let l41 = *ptr39.add(4).cast::<*mut u8>();
+                                    let l42 = *ptr39.add(8).cast::<usize>();
+                                    let len43 = l42;
+                                    let bytes43 =
+                                        _rt::Vec::from_raw_parts(l41.cast(), len43, len43);
+                                    _rt::string_lift(bytes43)
                                 };
                                 Ok(e)
                             }
                             1 => {
                                 let e = {
-                                    let l39 = *ptr34.add(4).cast::<*mut u8>();
-                                    let l40 = *ptr34.add(8).cast::<usize>();
-                                    let len41 = l40;
-                                    let bytes41 =
-                                        _rt::Vec::from_raw_parts(l39.cast(), len41, len41);
-                                    _rt::string_lift(bytes41)
+                                    let l44 = *ptr39.add(4).cast::<*mut u8>();
+                                    let l45 = *ptr39.add(8).cast::<usize>();
+                                    let len46 = l45;
+                                    let bytes46 =
+                                        _rt::Vec::from_raw_parts(l44.cast(), len46, len46);
+                                    _rt::string_lift(bytes46)
                                 };
                                 Err(e)
                             }
@@ -9343,8 +9410,8 @@ pub(crate) use __export_layer_trigger_world_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[link_section = "component-type:wit-bindgen:0.35.0:component:dao-agent:layer-trigger-world:encoded world"]
 #[doc(hidden)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 6128] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xe6.\x01A\x02\x01A'\x01\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 6156] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\x82/\x01A\x02\x01A(\x01\
 B#\x01r\x02\x0bbech32-addrs\x0aprefix-leny\x04\0\x0ecosmos-address\x03\0\0\x01o\x02\
 ss\x01p\x02\x01r\x02\x02tys\x0aattributes\x03\x04\0\x0ccosmos-event\x03\0\x04\x01\
 ks\x01r\x07\x08chain-ids\x0crpc-endpoint\x06\x0dgrpc-endpoint\x06\x11grpc-web-en\
@@ -9369,7 +9436,7 @@ n\x03\0\x1f\x01q\x05\x05error\0\0\x04warn\0\0\x04info\0\0\x05debug\0\0\x05trace\
 i\x01s\0\x04http\x01s\0\x10external-service\x01s\0\x06config\x01s\0\x08contract\x01\
 s\0\x0dconfiguration\x01s\0\x0fcontext-loading\x01s\0\x12context-validation\x01s\
 \0\x03llm\x01s\0\x02io\x01s\0\x0btransaction\x01s\0\x04utf8\x01s\0\x05other\x01s\
-\0\x04\0\x0bagent-error\x03\0\0\x03\0\x17wavs:agent/errors@0.0.1\x05\x03\x01B)\x01\
+\0\x04\0\x0bagent-error\x03\0\0\x03\0\x17wavs:agent/errors@0.0.1\x05\x03\x01B+\x01\
 ks\x01r\x03\x04name\0\x0bdescription\0\x0eparameter-type\0\x04\0\x12function-par\
 ameter\x03\0\x01\x01r\x03\x04names\x0bdescription\0\x0aparameters\0\x04\0\x08fun\
 ction\x03\0\x03\x01r\x02\x09tool-types\x08function\x04\x04\0\x04tool\x03\0\x05\x01\
@@ -9378,79 +9445,80 @@ ds\x09tool-types\x08function\x08\x04\0\x09tool-call\x03\0\x09\x01p\x0a\x01k\x0b\
 r\x05\x04roles\x07content\0\x0atool-calls\x0c\x0ctool-call-id\0\x04name\0\x04\0\x07\
 message\x03\0\x0d\x04\0\x13custom-tool-handler\x03\x01\x01ky\x01r\x05\x0btempera\
 turev\x05top-pv\x04seedy\x0amax-tokens\x10\x0econtext-window\x10\x04\0\x0bllm-op\
-tions\x03\0\x11\x01r\x04\x04names\x07addresss\x03abis\x0bdescription\0\x04\0\x08\
-contract\x03\0\x13\x01p\x14\x01p\x0e\x01o\x02ss\x01p\x17\x01r\x05\x09contracts\x15\
-\x0allm-config\x12\x05models\x08messages\x16\x06config\x18\x04\0\x06config\x03\0\
-\x19\x01ps\x01r\x02\x08functions\x04args\x1b\x04\0\x0dcontract-call\x03\0\x1c\x01\
-k\x1d\x01r\x05\x02tos\x05values\x0dcontract-call\x1e\x04datas\x0bdescriptions\x04\
-\0\x0btransaction\x03\0\x1f\x01q\x02\x0btransaction\x01\x20\0\x04text\x01s\0\x04\
-\0\x0cllm-response\x03\0!\x01h\x0f\x01@\x02\x04self#\x09tool-names\0\x7f\x04\0&[\
-method]custom-tool-handler.can-handle\x01$\x01j\x01s\x01s\x01@\x02\x04self#\x09t\
-ool-call\x0a\0%\x04\0#[method]custom-tool-handler.execute\x01&\x03\0\x16wavs:age\
+tions\x03\0\x11\x01r\x04\x05models\x06config\x12\x07api-urls\x07api-key\0\x04\0\x0a\
+llm-client\x03\0\x13\x01r\x04\x04names\x07addresss\x03abis\x0bdescription\0\x04\0\
+\x08contract\x03\0\x15\x01p\x16\x01p\x0e\x01o\x02ss\x01p\x19\x01r\x05\x09contrac\
+ts\x17\x0allm-config\x12\x05models\x08messages\x18\x06config\x1a\x04\0\x06config\
+\x03\0\x1b\x01ps\x01r\x02\x08functions\x04args\x1d\x04\0\x0dcontract-call\x03\0\x1e\
+\x01k\x1f\x01r\x05\x02tos\x05values\x0dcontract-call\x20\x04datas\x0bdescription\
+s\x04\0\x0btransaction\x03\0!\x01q\x02\x0btransaction\x01\"\0\x04text\x01s\0\x04\
+\0\x0cllm-response\x03\0#\x01h\x0f\x01@\x02\x04self%\x09tool-names\0\x7f\x04\0&[\
+method]custom-tool-handler.can-handle\x01&\x01j\x01s\x01s\x01@\x02\x04self%\x09t\
+ool-call\x0a\0'\x04\0#[method]custom-tool-handler.execute\x01(\x03\0\x16wavs:age\
 nt/types@0.0.1\x05\x04\x02\x03\0\x01\x0bagent-error\x02\x03\0\x02\x07message\x02\
 \x03\0\x02\x04tool\x02\x03\0\x02\x09tool-call\x02\x03\0\x02\x13custom-tool-handl\
 er\x02\x03\0\x02\x0cllm-response\x02\x03\0\x02\x0btransaction\x02\x03\0\x02\x06c\
-onfig\x02\x03\0\x02\x0bllm-options\x01B/\x02\x03\x02\x01\x05\x04\0\x0bagent-erro\
-r\x03\0\0\x02\x03\x02\x01\x06\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\x07\x04\
-\0\x04tool\x03\0\x04\x02\x03\x02\x01\x08\x04\0\x09tool-call\x03\0\x06\x02\x03\x02\
-\x01\x09\x04\0\x13custom-tool-handler\x03\0\x08\x02\x03\x02\x01\x0a\x04\0\x0cllm\
--response\x03\0\x0a\x02\x03\x02\x01\x0b\x04\0\x0btransaction\x03\0\x0c\x02\x03\x02\
-\x01\x0c\x04\0\x06config\x03\0\x0e\x02\x03\x02\x01\x0d\x04\0\x0bllm-options\x03\0\
-\x10\x04\0\x0allm-client\x03\x01\x01h\x12\x01i\x12\x01j\x01\x14\x01\x01\x01@\x02\
-\x04self\x13\x05models\0\x15\x04\0\x16[method]llm-client.new\x01\x16\x01@\x03\x04\
-self\x13\x05models\x0bjson-configs\0\x15\x04\0\x1c[method]llm-client.from-json\x01\
-\x17\x01@\x03\x04self\x13\x05models\x06config\x11\0\x15\x04\0\x1e[method]llm-cli\
-ent.with-config\x01\x18\x01@\x01\x04self\x13\0s\x04\0\x1c[method]llm-client.get-\
-model\x01\x19\x01@\x01\x04self\x13\0\x11\x04\0\x1d[method]llm-client.get-config\x01\
-\x1a\x01p\x03\x01p\x05\x01k\x1c\x01j\x01\x03\x01\x01\x01@\x03\x04self\x13\x08mes\
-sages\x1b\x05tools\x1d\0\x1e\x04\0\"[method]llm-client.chat-completion\x01\x1f\x01\
-j\x01s\x01\x01\x01@\x02\x04self\x13\x08messages\x1b\0\x20\x04\0'[method]llm-clie\
-nt.chat-completion-text\x01!\x01i\x09\x01p\"\x01k#\x01j\x01\x0b\x01\x01\x01@\x05\
-\x04self\x13\x06prompts\x06config\x0f\x0ccustom-tools\x1d\x0fcustom-handlers$\0%\
-\x04\0![method]llm-client.process-prompt\x01&\x03\0\x17wavs:agent/client@0.0.1\x05\
-\x0e\x02\x03\0\x02\x08contract\x01B.\x02\x03\x02\x01\x05\x04\0\x0bagent-error\x03\
-\0\0\x02\x03\x02\x01\x06\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\x0c\x04\0\x06\
-config\x03\0\x04\x02\x03\x02\x01\x0d\x04\0\x0bllm-options\x03\0\x06\x02\x03\x02\x01\
-\x0f\x04\0\x08contract\x03\0\x08\x04\0\x11llm-options-funcs\x03\x01\x04\0\x0econ\
-fig-manager\x03\x01\x01h\x0a\x01@\x01\x04self\x0c\0\x07\x04\0\x1d[method]llm-opt\
-ions-funcs.new\x01\x0d\x01@\x02\x04self\x0c\x04tempv\0\x07\x04\0%[method]llm-opt\
-ions-funcs.temperature\x01\x0e\x01@\x02\x04self\x0c\x05top-pv\0\x07\x04\0\x1f[me\
-thod]llm-options-funcs.top-p\x01\x0f\x01@\x02\x04self\x0c\x04seedy\0\x07\x04\0\x1e\
-[method]llm-options-funcs.seed\x01\x10\x01ky\x01@\x02\x04self\x0c\x0amax-tokens\x11\
-\0\x07\x04\0$[method]llm-options-funcs.max-tokens\x01\x12\x01@\x02\x04self\x0c\x0e\
-context-window\x11\0\x07\x04\0([method]llm-options-funcs.context-window\x01\x13\x01\
-h\x0b\x01j\x01\x05\x01s\x01@\x01\x04self\x14\0\x15\x04\0\x1b[method]config-manag\
-er.load\x01\x16\x01@\x02\x04self\x14\x03uris\0\x15\x04\0$[method]config-manager.\
-load-from-uri\x01\x17\x01j\x01\x05\x01\x01\x01@\x02\x04self\x14\x04jsons\0\x18\x04\
-\0\x20[method]config-manager.from-json\x01\x19\x01j\x01s\x01s\x01@\x01\x04self\x14\
-\0\x1a\x04\0\x1e[method]config-manager.to-json\x01\x1b\x01@\x01\x04self\x14\0s\x04\
-\03[method]config-manager.format-contract-descriptions\x01\x1c\x01k\x09\x01@\x02\
-\x04self\x14\x04names\0\x1d\x04\0+[method]config-manager.get-contract-by-name\x01\
-\x1e\x01j\0\x01\x01\x01@\x01\x04self\x14\0\x1f\x04\0\x1f[method]config-manager.v\
-alidate\x01\x20\x03\0\x17wavs:agent/config@0.0.1\x05\x10\x02\x03\0\x02\x0dcontra\
-ct-call\x01B#\x02\x03\x02\x01\x05\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x0f\
-\x04\0\x08contract\x03\0\x02\x02\x03\x02\x01\x11\x04\0\x0dcontract-call\x03\0\x04\
-\x02\x03\x02\x01\x0b\x04\0\x0btransaction\x03\0\x06\x04\0\x10contract-manager\x03\
-\x01\x04\0\x13transaction-manager\x03\x01\x01h\x08\x01@\x04\x04self\x0a\x04names\
-\x07addresss\x03abis\0\x03\x04\0\x1c[method]contract-manager.new\x01\x0b\x01@\x05\
-\x04self\x0a\x04names\x07addresss\x03abis\x0bdescriptions\0\x03\x04\0-[method]co\
-ntract-manager.new-with-description\x01\x0c\x01j\x01s\x01\x01\x01@\x02\x04self\x0a\
-\x08contract\x03\0\x0d\x04\0\"[method]contract-manager.parse-abi\x01\x0e\x01ps\x01\
-p}\x01j\x01\x10\x01\x01\x01@\x04\x04self\x0a\x08contract\x03\x0dfunction-names\x04\
-args\x0f\0\x11\x04\0-[method]contract-manager.encode-function-call\x01\x12\x01@\x03\
-\x04self\x0a\x08contract\x03\x0dfunction-names\0\x0d\x04\0&[method]contract-mana\
-ger.find-function\x01\x13\x01j\0\x01\x01\x01@\x04\x04self\x0a\x08contract\x03\x0d\
-function-names\x04args\x0f\0\x14\x04\0/[method]contract-manager.validate-functio\
-n-call\x01\x15\x01h\x09\x01@\x02\x04self\x16\x0btransaction\x07\0\x7f\x04\0$[met\
-hod]transaction-manager.is-valid\x01\x17\x01@\x02\x04self\x16\x0btransaction\x07\
-\0\x14\x04\00[method]transaction-manager.validate-transaction\x01\x18\x01@\x02\x04\
-self\x16\x0btransaction\x07\0\x0d\x04\02[method]transaction-manager.create-paylo\
-ad-from-tx\x01\x19\x03\0\x1awavs:agent/contracts@0.0.1\x05\x12\x02\x03\0\x03\x0a\
-llm-client\x02\x03\0\x02\x08function\x01B$\x02\x03\x02\x01\x13\x04\0\x0allm-clie\
+onfig\x02\x03\0\x02\x0bllm-options\x02\x03\0\x02\x0allm-client\x01B0\x02\x03\x02\
+\x01\x05\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x06\x04\0\x07message\x03\0\
+\x02\x02\x03\x02\x01\x07\x04\0\x04tool\x03\0\x04\x02\x03\x02\x01\x08\x04\0\x09to\
+ol-call\x03\0\x06\x02\x03\x02\x01\x09\x04\0\x13custom-tool-handler\x03\0\x08\x02\
+\x03\x02\x01\x0a\x04\0\x0cllm-response\x03\0\x0a\x02\x03\x02\x01\x0b\x04\0\x0btr\
+ansaction\x03\0\x0c\x02\x03\x02\x01\x0c\x04\0\x06config\x03\0\x0e\x02\x03\x02\x01\
+\x0d\x04\0\x0bllm-options\x03\0\x10\x02\x03\x02\x01\x0e\x04\0\x0allm-client\x03\0\
+\x12\x04\0\x12llm-client-manager\x03\x01\x01h\x14\x01@\x01\x04self\x15\0s\x04\0$\
+[method]llm-client-manager.get-model\x01\x16\x01@\x01\x04self\x15\0\x11\x04\0%[m\
+ethod]llm-client-manager.get-config\x01\x17\x01p\x03\x01p\x05\x01k\x19\x01j\x01\x03\
+\x01\x01\x01@\x03\x04self\x15\x08messages\x18\x05tools\x1a\0\x1b\x04\0*[method]l\
+lm-client-manager.chat-completion\x01\x1c\x01j\x01s\x01\x01\x01@\x02\x04self\x15\
+\x08messages\x18\0\x1d\x04\0/[method]llm-client-manager.chat-completion-text\x01\
+\x1e\x01i\x09\x01p\x1f\x01k\x20\x01j\x01\x0b\x01\x01\x01@\x05\x04self\x15\x06pro\
+mpts\x06config\x0f\x0ccustom-tools\x1a\x0fcustom-handlers!\0\"\x04\0)[method]llm\
+-client-manager.process-prompt\x01#\x01j\x01\x13\x01\x01\x01@\x01\x05models\0$\x04\
+\0\x0anew-client\x01%\x01@\x02\x05models\x0bjson-configs\0$\x04\0\x09from-json\x01\
+&\x01@\x02\x05models\x06config\x11\0$\x04\0\x0bwith-config\x01'\x03\0\x17wavs:ag\
+ent/client@0.0.1\x05\x0f\x02\x03\0\x02\x08contract\x01B.\x02\x03\x02\x01\x05\x04\
+\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x06\x04\0\x07message\x03\0\x02\x02\x03\
+\x02\x01\x0c\x04\0\x06config\x03\0\x04\x02\x03\x02\x01\x0d\x04\0\x0bllm-options\x03\
+\0\x06\x02\x03\x02\x01\x10\x04\0\x08contract\x03\0\x08\x04\0\x11llm-options-func\
+s\x03\x01\x04\0\x0econfig-manager\x03\x01\x01h\x0a\x01@\x01\x04self\x0c\0\x07\x04\
+\0\x1d[method]llm-options-funcs.new\x01\x0d\x01@\x02\x04self\x0c\x04tempv\0\x07\x04\
+\0%[method]llm-options-funcs.temperature\x01\x0e\x01@\x02\x04self\x0c\x05top-pv\0\
+\x07\x04\0\x1f[method]llm-options-funcs.top-p\x01\x0f\x01@\x02\x04self\x0c\x04se\
+edy\0\x07\x04\0\x1e[method]llm-options-funcs.seed\x01\x10\x01ky\x01@\x02\x04self\
+\x0c\x0amax-tokens\x11\0\x07\x04\0$[method]llm-options-funcs.max-tokens\x01\x12\x01\
+@\x02\x04self\x0c\x0econtext-window\x11\0\x07\x04\0([method]llm-options-funcs.co\
+ntext-window\x01\x13\x01h\x0b\x01j\x01\x05\x01s\x01@\x01\x04self\x14\0\x15\x04\0\
+\x1b[method]config-manager.load\x01\x16\x01@\x02\x04self\x14\x03uris\0\x15\x04\0\
+$[method]config-manager.load-from-uri\x01\x17\x01j\x01\x05\x01\x01\x01@\x02\x04s\
+elf\x14\x04jsons\0\x18\x04\0\x20[method]config-manager.from-json\x01\x19\x01j\x01\
+s\x01s\x01@\x01\x04self\x14\0\x1a\x04\0\x1e[method]config-manager.to-json\x01\x1b\
+\x01@\x01\x04self\x14\0s\x04\03[method]config-manager.format-contract-descriptio\
+ns\x01\x1c\x01k\x09\x01@\x02\x04self\x14\x04names\0\x1d\x04\0+[method]config-man\
+ager.get-contract-by-name\x01\x1e\x01j\0\x01\x01\x01@\x01\x04self\x14\0\x1f\x04\0\
+\x1f[method]config-manager.validate\x01\x20\x03\0\x17wavs:agent/config@0.0.1\x05\
+\x11\x02\x03\0\x02\x0dcontract-call\x01B#\x02\x03\x02\x01\x05\x04\0\x0bagent-err\
+or\x03\0\0\x02\x03\x02\x01\x10\x04\0\x08contract\x03\0\x02\x02\x03\x02\x01\x12\x04\
+\0\x0dcontract-call\x03\0\x04\x02\x03\x02\x01\x0b\x04\0\x0btransaction\x03\0\x06\
+\x04\0\x10contract-manager\x03\x01\x04\0\x13transaction-manager\x03\x01\x01h\x08\
+\x01@\x04\x04self\x0a\x04names\x07addresss\x03abis\0\x03\x04\0\x1c[method]contra\
+ct-manager.new\x01\x0b\x01@\x05\x04self\x0a\x04names\x07addresss\x03abis\x0bdesc\
+riptions\0\x03\x04\0-[method]contract-manager.new-with-description\x01\x0c\x01j\x01\
+s\x01\x01\x01@\x02\x04self\x0a\x08contract\x03\0\x0d\x04\0\"[method]contract-man\
+ager.parse-abi\x01\x0e\x01ps\x01p}\x01j\x01\x10\x01\x01\x01@\x04\x04self\x0a\x08\
+contract\x03\x0dfunction-names\x04args\x0f\0\x11\x04\0-[method]contract-manager.\
+encode-function-call\x01\x12\x01@\x03\x04self\x0a\x08contract\x03\x0dfunction-na\
+mes\0\x0d\x04\0&[method]contract-manager.find-function\x01\x13\x01j\0\x01\x01\x01\
+@\x04\x04self\x0a\x08contract\x03\x0dfunction-names\x04args\x0f\0\x14\x04\0/[met\
+hod]contract-manager.validate-function-call\x01\x15\x01h\x09\x01@\x02\x04self\x16\
+\x0btransaction\x07\0\x7f\x04\0$[method]transaction-manager.is-valid\x01\x17\x01\
+@\x02\x04self\x16\x0btransaction\x07\0\x14\x04\00[method]transaction-manager.val\
+idate-transaction\x01\x18\x01@\x01\x0btransaction\x07\0\x0d\x04\0\x16create-payl\
+oad-from-tx\x01\x19\x03\0\x1awavs:agent/contracts@0.0.1\x05\x13\x02\x03\0\x03\x0a\
+llm-client\x02\x03\0\x02\x08function\x01B#\x02\x03\x02\x01\x14\x04\0\x0allm-clie\
 nt\x03\0\0\x02\x03\x02\x01\x06\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\x07\x04\
 \0\x04tool\x03\0\x04\x02\x03\x02\x01\x08\x04\0\x09tool-call\x03\0\x06\x02\x03\x02\
-\x01\x14\x04\0\x08function\x03\0\x08\x02\x03\x02\x01\x09\x04\0\x13custom-tool-ha\
-ndler\x03\0\x0a\x02\x03\x02\x01\x0f\x04\0\x08contract\x03\0\x0c\x04\0\x0dtools-b\
+\x01\x15\x04\0\x08function\x03\0\x08\x02\x03\x02\x01\x09\x04\0\x13custom-tool-ha\
+ndler\x03\0\x0a\x02\x03\x02\x01\x10\x04\0\x08contract\x03\0\x0c\x04\0\x0dtools-b\
 uilder\x03\x01\x01h\x0e\x01@\x01\x04self\x0f\0\x05\x04\0#[method]tools-builder.s\
 end-eth-tool\x01\x10\x01p\x05\x01@\x02\x04self\x0f\x08contract\x0d\0\x11\x04\0)[\
 method]tools-builder.tools-from-contract\x01\x12\x01@\x04\x04self\x0f\x04names\x0b\
@@ -9458,20 +9526,19 @@ descriptions\x0aparameterss\0\x05\x04\0![method]tools-builder.custom-tool\x01\x1
 \x01i\x0b\x01p\x14\x01k\x15\x01j\x01s\x01s\x01@\x03\x04self\x0f\x09tool-call\x07\
 \x0fcustom-handlers\x16\0\x17\x04\0'[method]tools-builder.execute-tool-call\x01\x18\
 \x01@\x02\x04self\x0f\x09tool-call\x07\0\x17\x04\0+[method]tools-builder.parse-e\
-th-transaction\x01\x19\x01i\x01\x01p\x03\x01p\x07\x01@\x06\x04self\x0f\x06client\
-\x1a\x10initial-messages\x1b\x08response\x03\x0atool-calls\x1c\x0fcustom-handler\
-s\x16\0\x17\x04\0([method]tools-builder.process-tool-calls\x01\x1d\x03\0\x16wavs\
-:agent/tools@0.0.1\x05\x15\x02\x03\0\0\x10eth-chain-config\x02\x03\0\0\x13cosmos\
--chain-config\x02\x03\0\0\x09log-level\x01B\x0e\x02\x03\x02\x01\x16\x04\0\x10eth\
--chain-config\x03\0\0\x02\x03\x02\x01\x17\x04\0\x13cosmos-chain-config\x03\0\x02\
-\x02\x03\x02\x01\x18\x04\0\x09log-level\x03\0\x04\x01k\x01\x01@\x01\x0achain-nam\
-es\0\x06\x04\0\x14get-eth-chain-config\x01\x07\x01k\x03\x01@\x01\x0achain-names\0\
-\x08\x04\0\x17get-cosmos-chain-config\x01\x09\x01@\x02\x05level\x05\x07messages\x01\
-\0\x04\0\x03log\x01\x0a\x03\0\x04host\x05\x19\x01p}\x01k\x1a\x01j\x01\x1b\x01s\x01\
-@\x01\x0etrigger-action\x02\0\x1c\x04\0\x03run\x01\x1d\x04\0'component:dao-agent\
-/layer-trigger-world\x04\0\x0b\x19\x01\0\x13layer-trigger-world\x03\0\0\0G\x09pr\
-oducers\x01\x0cprocessed-by\x02\x0dwit-component\x070.220.0\x10wit-bindgen-rust\x06\
-0.35.0";
+th-transaction\x01\x19\x01p\x03\x01p\x07\x01@\x06\x04self\x0f\x06client\x01\x10i\
+nitial-messages\x1a\x08response\x03\x0atool-calls\x1b\x0fcustom-handlers\x16\0\x17\
+\x04\0([method]tools-builder.process-tool-calls\x01\x1c\x03\0\x16wavs:agent/tool\
+s@0.0.1\x05\x16\x02\x03\0\0\x10eth-chain-config\x02\x03\0\0\x13cosmos-chain-conf\
+ig\x02\x03\0\0\x09log-level\x01B\x0e\x02\x03\x02\x01\x17\x04\0\x10eth-chain-conf\
+ig\x03\0\0\x02\x03\x02\x01\x18\x04\0\x13cosmos-chain-config\x03\0\x02\x02\x03\x02\
+\x01\x19\x04\0\x09log-level\x03\0\x04\x01k\x01\x01@\x01\x0achain-names\0\x06\x04\
+\0\x14get-eth-chain-config\x01\x07\x01k\x03\x01@\x01\x0achain-names\0\x08\x04\0\x17\
+get-cosmos-chain-config\x01\x09\x01@\x02\x05level\x05\x07messages\x01\0\x04\0\x03\
+log\x01\x0a\x03\0\x04host\x05\x1a\x01p}\x01k\x1b\x01j\x01\x1c\x01s\x01@\x01\x0et\
+rigger-action\x02\0\x1d\x04\0\x03run\x01\x1e\x04\0'component:dao-agent/layer-tri\
+gger-world\x04\0\x0b\x19\x01\0\x13layer-trigger-world\x03\0\0\0G\x09producers\x01\
+\x0cprocessed-by\x02\x0dwit-component\x070.220.0\x10wit-bindgen-rust\x060.35.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

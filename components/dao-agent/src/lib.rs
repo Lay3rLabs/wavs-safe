@@ -1,6 +1,9 @@
+#[allow(warnings)]
 mod bindings;
 pub mod context;
+pub mod sol_interfaces;
 
+use crate::sol_interfaces::TransactionPayload;
 use alloy_sol_types::SolType;
 use bindings::{
     export,
@@ -9,11 +12,7 @@ use bindings::{
 };
 use context::DaoContext;
 use serde_json;
-use wavs_llm::{
-    client::LlmClientImpl,
-    traits::GuestLlmClient,
-    types::{LlmOptions, LlmResponse},
-};
+use wavs_llm::{client::new_client, traits::GuestLlmClientManager, types::LlmResponse};
 
 struct Component;
 
@@ -41,30 +40,22 @@ impl Guest for Component {
         let context = DaoContext::load()?;
         let llm_context = context.llm_context.clone();
 
-        // Create LLM client implementation
-        let llm_client_impl = LlmClientImpl::create_configured(
-            llm_context.model.clone(),
-            llm_context.llm_config.clone(),
-        );
+        // Create LLM client implementation using the standalone constructor
+        let llm_client = new_client(llm_context.model.clone()).map_err(|e| e.to_string())?;
 
         // Use the helper function to process the prompt
-        let result = LlmClientImpl::process_prompt(
-            &llm_client_impl,
-            prompt,
-            llm_context.clone(),
-            None,
-            None,
-        )
-        .map_err(|e| e.to_string())?;
+        let result = llm_client
+            .process_prompt(prompt, llm_context.clone(), None, None)
+            .map_err(|e| e.to_string())?;
 
         // Handle the response
         match result {
             LlmResponse::Transaction(tx) => {
                 println!("Transaction to execute: {:?}", tx);
 
+                // TODO fix encoding
                 // Serialize transaction for execution
-                let payload = serde_json::to_vec(&tx)
-                    .map_err(|e| format!("Failed to serialize transaction: {}", e))?;
+                let payload = TransactionPayload { to: tx.to, value: tx.value, data: tx.data };
                 println!("Payload: {:?}", payload);
 
                 Ok(Some(payload))

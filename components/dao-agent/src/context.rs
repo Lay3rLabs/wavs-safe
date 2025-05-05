@@ -7,11 +7,7 @@ use alloy_sol_types::{sol, SolCall};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::str::FromStr;
-use wavs_llm::{
-    traits::GuestLlmClient,
-    types::{Config, Contract, LlmOptions, Message},
-    AgentError, LlmClientImpl,
-};
+use wavs_llm::types::{Config, Contract, LlmOptions, Message};
 use wavs_wasi_chain::ethereum::new_eth_provider;
 use wavs_wasi_chain::http::{fetch_json, http_request_get};
 use wstd::{http::HeaderValue, runtime::block_on};

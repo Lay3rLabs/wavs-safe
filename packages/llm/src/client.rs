@@ -9,6 +9,7 @@ use wstd::{
 };
 
 use crate::bindings::exports::wavs::agent::client;
+pub use crate::bindings::exports::wavs::agent::client::LlmClient;
 use crate::bindings::exports::wavs::agent::errors::AgentError;
 use crate::bindings::exports::wavs::agent::tools::GuestToolsBuilder;
 use crate::bindings::exports::wavs::agent::types::{
@@ -49,170 +50,109 @@ impl From<LlmOptionsJson> for LlmOptions {
     }
 }
 
-pub struct LlmClientImpl {
-    pub model: String,
-    pub config: LlmOptions,
-    pub api_url: String,
-    pub api_key: Option<String>,
-}
-
-impl LlmClientImpl {
-    /// Create a properly configured LlmClientImpl instance directly
-    /// This is a helper method that doesn't go through the WIT interface
-    pub fn create_configured(model: String, config: LlmOptions) -> Self {
-        // Get API key if using OpenAI models
-        let api_key = match model.as_str() {
-            "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
-                match std::env::var("WAVS_ENV_OPENAI_API_KEY") {
-                    Ok(key) => Some(key),
-                    Err(_) => None, // Only read if exists, don't return an error
-                }
-            }
-            _ => None, // Local models don't need an API key
-        };
-
-        // Set API URL based on model type
-        let api_url = match model.as_str() {
-            "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
-                "https://api.openai.com/v1/chat/completions".to_string()
-            }
-            _ => format!(
-                "{}/api/chat",
-                std::env::var("WAVS_ENV_OLLAMA_API_URL")
-                    .unwrap_or_else(|_| "http://localhost:11434".to_string())
-            ),
-        };
-
-        Self { model, config, api_url, api_key }
+// Standalone constructor functions
+pub fn new_client(model: String) -> Result<LlmClient, AgentError> {
+    // Validate model name
+    if model.trim().is_empty() {
+        return Err(AgentError::Llm("Model name cannot be empty".into()));
     }
-}
 
-impl client::GuestLlmClient for LlmClientImpl {
-    fn new(&self, model: String) -> Result<client::LlmClient, AgentError> {
-        // Validate model name
-        if model.trim().is_empty() {
-            return Err(AgentError::Llm("Model name cannot be empty".into()));
+    // Get API key if using OpenAI models
+    let api_key = match model.as_str() {
+        "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
+            match std::env::var("WAVS_ENV_OPENAI_API_KEY") {
+                Ok(key) => Some(key),
+                Err(_) => None, // Only read if exists, don't return an error
+            }
         }
+        _ => None, // Local models don't need an API key
+    };
 
-        // Get API key if using OpenAI models
-        let api_key = match model.as_str() {
-            "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
-                match std::env::var("WAVS_ENV_OPENAI_API_KEY") {
-                    Ok(key) => Some(key),
-                    Err(_) => None, // Only read if exists, don't return an error
-                }
+    // Set API URL based on model type
+    let api_url = match model.as_str() {
+        "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
+            "https://api.openai.com/v1/chat/completions".to_string()
+        }
+        _ => format!(
+            "{}/api/chat",
+            env::var("WAVS_ENV_OLLAMA_API_URL")
+                .unwrap_or_else(|_| "http://localhost:11434".to_string())
+        ),
+    };
+
+    // Default configuration
+    let config = LlmOptions {
+        temperature: 0.7,
+        top_p: 1.0,
+        seed: 0,
+        max_tokens: None,
+        context_window: None,
+    };
+
+    // Create the new client instance
+    Ok(LlmClient { model, config, api_url, api_key })
+}
+
+pub fn from_json(model: String, json_config: String) -> Result<LlmClient, AgentError> {
+    let config_json: LlmOptionsJson = serde_json::from_str(&json_config)
+        .map_err(|e| AgentError::Other(format!("Invalid JSON: {}", e)))?;
+
+    // Get API key if using OpenAI models
+    let api_key = match model.as_str() {
+        "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
+            match std::env::var("WAVS_ENV_OPENAI_API_KEY") {
+                Ok(key) => Some(key),
+                Err(_) => None,
             }
-            _ => None, // Local models don't need an API key
-        };
+        }
+        _ => None,
+    };
 
-        // Set API URL based on model type
-        let api_url = match model.as_str() {
-            "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
-                "https://api.openai.com/v1/chat/completions".to_string()
+    // Set API URL based on model type
+    let api_url = match model.as_str() {
+        "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
+            "https://api.openai.com/v1/chat/completions".to_string()
+        }
+        _ => format!(
+            "{}/api/chat",
+            env::var("WAVS_ENV_OLLAMA_API_URL")
+                .unwrap_or_else(|_| "http://localhost:11434".to_string())
+        ),
+    };
+
+    // Create the new client instance
+    Ok(LlmClient { model, config: config_json.into(), api_url, api_key })
+}
+
+pub fn with_config(model: String, config: LlmOptions) -> Result<LlmClient, AgentError> {
+    // Get API key if using OpenAI models
+    let api_key = match model.as_str() {
+        "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
+            match std::env::var("WAVS_ENV_OPENAI_API_KEY") {
+                Ok(key) => Some(key),
+                Err(_) => None,
             }
-            _ => format!(
-                "{}/api/chat",
-                env::var("WAVS_ENV_OLLAMA_API_URL")
-                    .unwrap_or_else(|_| "http://localhost:11434".to_string())
-            ),
-        };
-        // Default configuration
-        let config = LlmOptions {
-            temperature: 0.7,
-            top_p: 1.0,
-            seed: 0,
-            max_tokens: None,
-            context_window: None,
-        };
+        }
+        _ => None,
+    };
 
-        Ok(client::LlmClient::new(Self { model, config, api_url, api_key }))
-    }
+    // Set API URL based on model type
+    let api_url = match model.as_str() {
+        "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
+            "https://api.openai.com/v1/chat/completions".to_string()
+        }
+        _ => format!(
+            "{}/api/chat",
+            env::var("WAVS_ENV_OLLAMA_API_URL")
+                .unwrap_or_else(|_| "http://localhost:11434".to_string())
+        ),
+    };
 
-    fn from_json(
-        &self,
-        model: String,
-        json_config: String,
-    ) -> Result<client::LlmClient, AgentError> {
-        let config_json: LlmOptionsJson = serde_json::from_str(&json_config)
-            .map_err(|e| AgentError::Other(format!("Invalid JSON: {}", e)))?;
+    // Create the new client instance
+    Ok(LlmClient { model, config, api_url, api_key })
+}
 
-        // Create a new LlmClient with the provided model and JSON config
-        let mut client = LlmClientImpl {
-            model: model.clone(),
-            config: config_json.into(),
-            api_url: String::new(),
-            api_key: None,
-        };
-
-        // Get API key if using OpenAI models
-        let api_key = match model.as_str() {
-            "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
-                match std::env::var("WAVS_ENV_OPENAI_API_KEY") {
-                    Ok(key) => Some(key),
-                    Err(_) => None,
-                }
-            }
-            _ => None,
-        };
-
-        // Set API URL based on model type
-        let api_url = match model.as_str() {
-            "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
-                "https://api.openai.com/v1/chat/completions".to_string()
-            }
-            _ => format!(
-                "{}/api/chat",
-                env::var("WAVS_ENV_OLLAMA_API_URL")
-                    .unwrap_or_else(|_| "http://localhost:11434".to_string())
-            ),
-        };
-
-        // Update client with API key and URL
-        client.api_key = api_key;
-        client.api_url = api_url;
-
-        Ok(client::LlmClient::new(client))
-    }
-
-    fn with_config(
-        &self,
-        model: String,
-        config: LlmOptions,
-    ) -> Result<client::LlmClient, AgentError> {
-        // Create a new LlmClient with the provided model and config
-        let mut client =
-            LlmClientImpl { model: model.clone(), config, api_url: String::new(), api_key: None };
-
-        // Get API key if using OpenAI models
-        let api_key = match model.as_str() {
-            "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
-                match std::env::var("WAVS_ENV_OPENAI_API_KEY") {
-                    Ok(key) => Some(key),
-                    Err(_) => None,
-                }
-            }
-            _ => None,
-        };
-
-        // Set API URL based on model type
-        let api_url = match model.as_str() {
-            "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
-                "https://api.openai.com/v1/chat/completions".to_string()
-            }
-            _ => format!(
-                "{}/api/chat",
-                env::var("WAVS_ENV_OLLAMA_API_URL")
-                    .unwrap_or_else(|_| "http://localhost:11434".to_string())
-            ),
-        };
-
-        // Update client with API key and URL
-        client.api_key = api_key;
-        client.api_url = api_url;
-
-        Ok(client::LlmClient::new(client))
-    }
-
+impl client::GuestLlmClientManager for LlmClient {
     fn get_model(&self) -> String {
         self.model.clone()
     }
@@ -533,7 +473,7 @@ impl client::GuestLlmClient for LlmClientImpl {
                 // Call the tools builder to process tool calls
                 // Here we need to adapt our types to the function signatures
                 let result = tool_builder.process_tool_calls(
-                    client::LlmClient::new(self.clone()),
+                    self.clone(),
                     Vec::new(), // Initial messages not used in our implementation
                     response.clone(),
                     tool_calls,
@@ -572,18 +512,6 @@ impl client::GuestLlmClient for LlmClientImpl {
 
         // No tool calls or content means no action needed
         Ok(LlmResponse::Text("".into()))
-    }
-}
-
-// Clone implementation for LlmClientImpl
-impl Clone for LlmClientImpl {
-    fn clone(&self) -> Self {
-        Self {
-            model: self.model.clone(),
-            config: self.config.clone(),
-            api_url: self.api_url.clone(),
-            api_key: self.api_key.clone(),
-        }
     }
 }
 
@@ -633,12 +561,12 @@ impl From<serde_json::Error> for AgentError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::bindings::exports::wavs::agent::client::GuestLlmClient;
+    use crate::bindings::exports::wavs::agent::client::GuestLlmClientManager;
     use crate::bindings::exports::wavs::agent::types::{LlmOptions, Message};
 
     #[test]
     fn test_client_init() {
-        let client_impl = LlmClientImpl {
+        let client_impl = LlmClient {
             model: "test-model".into(),
             config: LlmOptions {
                 temperature: 0.7,
@@ -673,7 +601,7 @@ mod tests {
     #[test]
     fn test_request_json_formation() {
         // Create a client
-        let client_impl = LlmClientImpl {
+        let client_impl = LlmClient {
             model: "gpt-4".into(),
             config: LlmOptions {
                 temperature: 0.5,
