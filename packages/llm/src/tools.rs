@@ -1,5 +1,5 @@
 use crate::bindings::exports::wavs::agent::client::LlmClient;
-use crate::bindings::exports::wavs::agent::tools::{self, GuestToolsBuilder};
+use crate::bindings::exports::wavs::agent::tools::{self};
 use crate::bindings::exports::wavs::agent::types::{
     Contract, CustomToolHandler, Function, Message, Tool, ToolCall,
 };
@@ -303,6 +303,7 @@ fn parse_contract_function_call(tool_call: &ToolCall) -> Result<String, String> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::bindings::exports::wavs::agent::tools::GuestToolsBuilder;
     use crate::bindings::exports::wavs::agent::types::ToolCallFunction;
 
     // Helper function to create a test ToolCall

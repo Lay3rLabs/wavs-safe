@@ -49,6 +49,13 @@ impl bindings::exports::wavs::agent::config::Guest for Component {
 impl bindings::exports::wavs::agent::contracts::Guest for Component {
     type ContractManager = contracts::ContractManagerImpl;
     type TransactionManager = contracts::TransactionManagerImpl;
+
+    fn create_payload_from_tx(
+        transaction: bindings::exports::wavs::agent::types::Transaction,
+    ) -> Result<String, bindings::exports::wavs::agent::errors::AgentError> {
+        // Delegate to our static implementation
+        contracts::create_payload_from_tx(transaction)
+    }
 }
 
 impl bindings::exports::wavs::agent::tools::Guest for Component {
@@ -80,18 +87,3 @@ impl bindings::exports::wavs::agent::types::GuestCustomToolHandler for CustomToo
 
 // Export the component
 bindings::export!(Component with_types_in bindings);
-
-// Helper function to process a prompt without needing direct access to LlmClient methods
-pub fn process_prompt_with_client(
-    client_impl: &LlmClientImpl,
-    model: String,
-    prompt: String,
-    config: types::Config,
-    custom_tools: Option<Vec<types::Tool>>,
-    custom_handlers: Option<Vec<types::CustomToolHandler>>,
-) -> Result<types::LlmResponse, AgentError> {
-    use bindings::exports::wavs::agent::client::GuestLlmClient;
-
-    // Using the implementation directly rather than trying to call through opaque type
-    client_impl.process_prompt(prompt, config, custom_tools, custom_handlers)
-}

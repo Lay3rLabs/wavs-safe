@@ -48,8 +48,8 @@ interface contracts {
 
     /// Validate a transaction
     validate-transaction: func(transaction: transaction) -> result<_, agent-error>;
-
-    /// Helper function to create a transaction payload from a Transaction
-    create-payload-from-tx: func(transaction: transaction) -> result<string, agent-error>;
   }
+  
+  /// Helper function to create a transaction payload from a Transaction
+  create-payload-from-tx: func(transaction: transaction) -> result<string, agent-error>;
 }

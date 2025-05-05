@@ -120,86 +120,103 @@ impl contracts::GuestContractManager for ContractManagerImpl {
     }
 }
 
-// Implementation for TransactionManager
+// Static helper function for is_valid
+pub fn is_valid_transaction(transaction: Transaction) -> bool {
+    // Check destination address format
+    if transaction.to.len() != 42 || !transaction.to.starts_with("0x") {
+        return false;
+    }
+
+    // Check if value is a valid number
+    if transaction.value.parse::<u128>().is_err() {
+        return false;
+    }
+
+    // Check if contract call is coherent
+    if let Some(call) = &transaction.contract_call {
+        if call.function.is_empty() {
+            return false;
+        }
+    }
+
+    true
+}
+
+// Static helper function for validate_transaction
+pub fn validate_transaction_standalone(transaction: Transaction) -> Result<(), AgentError> {
+    // Basic validation
+    if !is_valid_transaction(transaction.clone()) {
+        return Err(AgentError::Transaction("Invalid transaction".into()));
+    }
+
+    // More thorough validation
+    if transaction.to.len() != 42 || !transaction.to.starts_with("0x") {
+        return Err(AgentError::Transaction("Invalid destination address".into()));
+    }
+
+    if transaction.value.parse::<u128>().is_err() {
+        return Err(AgentError::Transaction("Invalid value".into()));
+    }
+
+    // If there's a contract call, validate it
+    if let Some(contract_call) = &transaction.contract_call {
+        if contract_call.function.is_empty() {
+            return Err(AgentError::Transaction("Empty function name".into()));
+        }
+
+        // In a complete implementation, we would validate args against the ABI
+        // But we'd need to look up the contract ABI from somewhere
+    }
+
+    Ok(())
+}
+
+// Static helper function for create_payload_from_tx
+pub fn create_payload_from_tx(transaction: Transaction) -> Result<String, AgentError> {
+    // Validate the transaction
+    validate_transaction_standalone(transaction.clone())?;
+
+    // Prepare the payload structure
+    let mut payload = serde_json::json!({
+        "to": transaction.to,
+        "value": transaction.value,
+        "data": transaction.data,
+    });
+
+    // If there's a contract call, we would encode it here
+    if let Some(contract_call) = transaction.contract_call {
+        // Generate a description of the call
+        payload["description"] = serde_json::json!(format!(
+            "Calling {} with args: {}",
+            contract_call.function,
+            contract_call.args.join(", ")
+        ));
+    } else {
+        payload["description"] = serde_json::json!(transaction.description);
+    }
+
+    // Serialize the payload to a JSON string
+    serde_json::to_string(&payload).map_err(|e| {
+        AgentError::Transaction(format!("Failed to serialize transaction payload: {}", e))
+    })
+}
+
+// A minimal struct just to provide WIT interface compatibility.
+// This is only needed because the WIT defines these functions as methods on a resource.
+// For actual usage, prefer the standalone functions above.
+#[derive(Default)]
 pub struct TransactionManagerImpl;
 
+// Implementation that delegates to the standalone functions
 impl contracts::GuestTransactionManager for TransactionManagerImpl {
     fn is_valid(&self, transaction: Transaction) -> bool {
-        // Check destination address format
-        if transaction.to.len() != 42 || !transaction.to.starts_with("0x") {
-            return false;
-        }
-
-        // Check if value is a valid number
-        if transaction.value.parse::<u128>().is_err() {
-            return false;
-        }
-
-        // Check if contract call is coherent
-        if let Some(call) = &transaction.contract_call {
-            if call.function.is_empty() {
-                return false;
-            }
-        }
-
-        true
+        // Delegate to static helper function that doesn't need self
+        is_valid_transaction(transaction)
     }
 
     fn validate_transaction(&self, transaction: Transaction) -> Result<(), AgentError> {
-        // Basic validation
-        if !self.is_valid(transaction.clone()) {
-            return Err(AgentError::Transaction("Invalid transaction".into()));
-        }
-
-        // More thorough validation
-        if transaction.to.len() != 42 || !transaction.to.starts_with("0x") {
-            return Err(AgentError::Transaction("Invalid destination address".into()));
-        }
-
-        if transaction.value.parse::<u128>().is_err() {
-            return Err(AgentError::Transaction("Invalid value".into()));
-        }
-
-        // If there's a contract call, validate it
-        if let Some(contract_call) = &transaction.contract_call {
-            if contract_call.function.is_empty() {
-                return Err(AgentError::Transaction("Empty function name".into()));
-            }
-
-            // In a complete implementation, we would validate args against the ABI
-            // But we'd need to look up the contract ABI from somewhere
-        }
-
-        Ok(())
-    }
-
-    fn create_payload_from_tx(&self, transaction: Transaction) -> Result<String, AgentError> {
-        // Validate the transaction
-        self.validate_transaction(transaction.clone())?;
-
-        // Prepare the payload structure
-        let mut payload = serde_json::json!({
-            "to": transaction.to,
-            "value": transaction.value,
-            "data": transaction.data,
-        });
-
-        // If there's a contract call, we would encode it here
-        if let Some(contract_call) = transaction.contract_call {
-            // Generate a description of the call
-            payload["description"] = serde_json::json!(format!(
-                "Calling {} with args: {}",
-                contract_call.function,
-                contract_call.args.join(", ")
-            ));
-        } else {
-            payload["description"] = serde_json::json!(transaction.description);
-        }
-
-        // Serialize the payload to a JSON string
-        serde_json::to_string(&payload).map_err(|e| {
-            AgentError::Transaction(format!("Failed to serialize transaction payload: {}", e))
-        })
+        // Delegate to static helper function that doesn't need self
+        validate_transaction_standalone(transaction)
     }
 }
 
@@ -309,8 +326,11 @@ mod tests {
             contract_call: None,
         };
 
+        // Test both instance method and static helper function
         assert!(manager.is_valid(valid_tx.clone()));
-        assert!(manager.validate_transaction(valid_tx).is_ok());
+        assert!(is_valid_transaction(valid_tx.clone()));
+        assert!(manager.validate_transaction(valid_tx.clone()).is_ok());
+        assert!(validate_transaction_standalone(valid_tx).is_ok());
 
         // Invalid address
         let invalid_addr_tx = Transaction {
@@ -321,8 +341,11 @@ mod tests {
             contract_call: None,
         };
 
+        // Test both instance method and static helper function
         assert!(!manager.is_valid(invalid_addr_tx.clone()));
-        assert!(manager.validate_transaction(invalid_addr_tx).is_err());
+        assert!(!is_valid_transaction(invalid_addr_tx.clone()));
+        assert!(manager.validate_transaction(invalid_addr_tx.clone()).is_err());
+        assert!(validate_transaction_standalone(invalid_addr_tx).is_err());
 
         // Invalid value
         let invalid_value_tx = Transaction {
@@ -333,8 +356,11 @@ mod tests {
             contract_call: None,
         };
 
+        // Test both instance method and static helper function
         assert!(!manager.is_valid(invalid_value_tx.clone()));
-        assert!(manager.validate_transaction(invalid_value_tx).is_err());
+        assert!(!is_valid_transaction(invalid_value_tx.clone()));
+        assert!(manager.validate_transaction(invalid_value_tx.clone()).is_err());
+        assert!(validate_transaction_standalone(invalid_value_tx).is_err());
 
         // With contract call
         let contract_tx = Transaction {
@@ -348,14 +374,15 @@ mod tests {
             }),
         };
 
+        // Test both instance method and static helper function
         assert!(manager.is_valid(contract_tx.clone()));
-        assert!(manager.validate_transaction(contract_tx).is_ok());
+        assert!(is_valid_transaction(contract_tx.clone()));
+        assert!(manager.validate_transaction(contract_tx.clone()).is_ok());
+        assert!(validate_transaction_standalone(contract_tx).is_ok());
     }
 
     #[test]
     fn test_create_payload_from_tx() {
-        let manager = TransactionManagerImpl;
-
         // Simple ETH transfer
         let eth_tx = Transaction {
             to: "0x1234567890123456789012345678901234567890".into(),
@@ -365,7 +392,9 @@ mod tests {
             contract_call: None,
         };
 
-        let payload_result = manager.create_payload_from_tx(eth_tx);
+        // Test the standalone function
+        let payload_result = create_payload_from_tx(eth_tx);
+
         assert!(payload_result.is_ok());
 
         let payload = payload_result.unwrap();
@@ -387,7 +416,9 @@ mod tests {
             }),
         };
 
-        let contract_payload_result = manager.create_payload_from_tx(contract_tx);
+        // Test the standalone function
+        let contract_payload_result = create_payload_from_tx(contract_tx);
+
         assert!(contract_payload_result.is_ok());
 
         let contract_payload = contract_payload_result.unwrap();

@@ -1,17 +1,5 @@
 # [WAVS](https://docs.wavs.xyz) Safe Example
 
-TODO:
-
-- [ ] New wavs-llm README
-- [ ] Fix encoding error `TransactionPayload` not being ABI encoded
-- [ ] Test Open AI
-- [ ] Make sure environment variables get set
-- [ ] Test config uri
-- [ ] Better model support and detection
-- [ ] More tests
-- [ ] EVERYTHING should use WIT! Kill `create_configured` hack
-- [ ] Golang example
-
 Contains WAVS-enabled Safe Module and Guard contracts, as well as a DEFINITELY NOT PRODUCTION-ready agent which controls the custom Safe Module.
 
 The DAO Agent WAVS component leverages deterministic inferencing. See the [DETERMINISM.md](./DETERMINISM.md) file for more notes on making deterministic agents and the nuances involved.

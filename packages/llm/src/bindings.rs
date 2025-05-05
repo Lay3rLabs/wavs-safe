@@ -7201,112 +7201,88 @@ pub mod wavs {
                     }
                 }
             }
-            impl TransactionManager {
-                #[allow(unused_unsafe, clippy::all)]
-                /// Helper function to create a transaction payload from a Transaction
-                pub fn create_payload_from_tx(
-                    &self,
-                    transaction: &Transaction,
-                ) -> Result<_rt::String, AgentError> {
-                    unsafe {
-                        let mut cleanup_list = _rt::Vec::new();
-                        #[repr(align(4))]
-                        struct RetArea([::core::mem::MaybeUninit<u8>; 16]);
-                        let mut ret_area = RetArea(
-                            [::core::mem::MaybeUninit::uninit(); 16],
-                        );
-                        let super::super::super::wavs::agent::types::Transaction {
-                            to: to0,
-                            value: value0,
-                            contract_call: contract_call0,
-                            data: data0,
-                            description: description0,
-                        } = transaction;
-                        let vec1 = to0;
-                        let ptr1 = vec1.as_ptr().cast::<u8>();
-                        let len1 = vec1.len();
-                        let vec2 = value0;
-                        let ptr2 = vec2.as_ptr().cast::<u8>();
-                        let len2 = vec2.len();
-                        let (result7_0, result7_1, result7_2, result7_3, result7_4) = match contract_call0 {
-                            Some(e) => {
-                                let super::super::super::wavs::agent::types::ContractCall {
-                                    function: function3,
-                                    args: args3,
-                                } = e;
-                                let vec4 = function3;
-                                let ptr4 = vec4.as_ptr().cast::<u8>();
-                                let len4 = vec4.len();
-                                let vec6 = args3;
-                                let len6 = vec6.len();
-                                let layout6 = _rt::alloc::Layout::from_size_align_unchecked(
-                                    vec6.len() * 8,
-                                    4,
-                                );
-                                let result6 = if layout6.size() != 0 {
-                                    let ptr = _rt::alloc::alloc(layout6).cast::<u8>();
-                                    if ptr.is_null() {
-                                        _rt::alloc::handle_alloc_error(layout6);
-                                    }
-                                    ptr
-                                } else {
-                                    ::core::ptr::null_mut()
-                                };
-                                for (i, e) in vec6.into_iter().enumerate() {
-                                    let base = result6.add(i * 8);
-                                    {
-                                        let vec5 = e;
-                                        let ptr5 = vec5.as_ptr().cast::<u8>();
-                                        let len5 = vec5.len();
-                                        *base.add(4).cast::<usize>() = len5;
-                                        *base.add(0).cast::<*mut u8>() = ptr5.cast_mut();
-                                    }
-                                }
-                                cleanup_list.extend_from_slice(&[(result6, layout6)]);
-                                (1i32, ptr4.cast_mut(), len4, result6, len6)
-                            }
-                            None => {
-                                (
-                                    0i32,
-                                    ::core::ptr::null_mut(),
-                                    0usize,
-                                    ::core::ptr::null_mut(),
-                                    0usize,
-                                )
-                            }
-                        };
-                        let vec8 = data0;
-                        let ptr8 = vec8.as_ptr().cast::<u8>();
-                        let len8 = vec8.len();
-                        let vec9 = description0;
-                        let ptr9 = vec9.as_ptr().cast::<u8>();
-                        let len9 = vec9.len();
-                        let ptr10 = ret_area.0.as_mut_ptr().cast::<u8>();
-                        #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "wavs:agent/contracts@0.0.1")]
-                        extern "C" {
-                            #[link_name = "[method]transaction-manager.create-payload-from-tx"]
-                            fn wit_import(
-                                _: i32,
-                                _: *mut u8,
-                                _: usize,
-                                _: *mut u8,
-                                _: usize,
-                                _: i32,
-                                _: *mut u8,
-                                _: usize,
-                                _: *mut u8,
-                                _: usize,
-                                _: *mut u8,
-                                _: usize,
-                                _: *mut u8,
-                                _: usize,
-                                _: *mut u8,
+            #[allow(unused_unsafe, clippy::all)]
+            /// Helper function to create a transaction payload from a Transaction
+            pub fn create_payload_from_tx(
+                transaction: &Transaction,
+            ) -> Result<_rt::String, AgentError> {
+                unsafe {
+                    let mut cleanup_list = _rt::Vec::new();
+                    #[repr(align(4))]
+                    struct RetArea([::core::mem::MaybeUninit<u8>; 16]);
+                    let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 16]);
+                    let super::super::super::wavs::agent::types::Transaction {
+                        to: to0,
+                        value: value0,
+                        contract_call: contract_call0,
+                        data: data0,
+                        description: description0,
+                    } = transaction;
+                    let vec1 = to0;
+                    let ptr1 = vec1.as_ptr().cast::<u8>();
+                    let len1 = vec1.len();
+                    let vec2 = value0;
+                    let ptr2 = vec2.as_ptr().cast::<u8>();
+                    let len2 = vec2.len();
+                    let (result7_0, result7_1, result7_2, result7_3, result7_4) = match contract_call0 {
+                        Some(e) => {
+                            let super::super::super::wavs::agent::types::ContractCall {
+                                function: function3,
+                                args: args3,
+                            } = e;
+                            let vec4 = function3;
+                            let ptr4 = vec4.as_ptr().cast::<u8>();
+                            let len4 = vec4.len();
+                            let vec6 = args3;
+                            let len6 = vec6.len();
+                            let layout6 = _rt::alloc::Layout::from_size_align_unchecked(
+                                vec6.len() * 8,
+                                4,
                             );
+                            let result6 = if layout6.size() != 0 {
+                                let ptr = _rt::alloc::alloc(layout6).cast::<u8>();
+                                if ptr.is_null() {
+                                    _rt::alloc::handle_alloc_error(layout6);
+                                }
+                                ptr
+                            } else {
+                                ::core::ptr::null_mut()
+                            };
+                            for (i, e) in vec6.into_iter().enumerate() {
+                                let base = result6.add(i * 8);
+                                {
+                                    let vec5 = e;
+                                    let ptr5 = vec5.as_ptr().cast::<u8>();
+                                    let len5 = vec5.len();
+                                    *base.add(4).cast::<usize>() = len5;
+                                    *base.add(0).cast::<*mut u8>() = ptr5.cast_mut();
+                                }
+                            }
+                            cleanup_list.extend_from_slice(&[(result6, layout6)]);
+                            (1i32, ptr4.cast_mut(), len4, result6, len6)
                         }
-                        #[cfg(not(target_arch = "wasm32"))]
+                        None => {
+                            (
+                                0i32,
+                                ::core::ptr::null_mut(),
+                                0usize,
+                                ::core::ptr::null_mut(),
+                                0usize,
+                            )
+                        }
+                    };
+                    let vec8 = data0;
+                    let ptr8 = vec8.as_ptr().cast::<u8>();
+                    let len8 = vec8.len();
+                    let vec9 = description0;
+                    let ptr9 = vec9.as_ptr().cast::<u8>();
+                    let len9 = vec9.len();
+                    let ptr10 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "wavs:agent/contracts@0.0.1")]
+                    extern "C" {
+                        #[link_name = "create-payload-from-tx"]
                         fn wit_import(
-                            _: i32,
                             _: *mut u8,
                             _: usize,
                             _: *mut u8,
@@ -7321,242 +7297,258 @@ pub mod wavs {
                             _: *mut u8,
                             _: usize,
                             _: *mut u8,
-                        ) {
-                            unreachable!()
-                        }
-                        wit_import(
-                            (self).handle() as i32,
-                            ptr1.cast_mut(),
-                            len1,
-                            ptr2.cast_mut(),
-                            len2,
-                            result7_0,
-                            result7_1,
-                            result7_2,
-                            result7_3,
-                            result7_4,
-                            ptr8.cast_mut(),
-                            len8,
-                            ptr9.cast_mut(),
-                            len9,
-                            ptr10,
                         );
-                        let l11 = i32::from(*ptr10.add(0).cast::<u8>());
-                        for (ptr, layout) in cleanup_list {
-                            if layout.size() != 0 {
-                                _rt::alloc::dealloc(ptr.cast(), layout);
-                            }
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    fn wit_import(
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: i32,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                    ) {
+                        unreachable!()
+                    }
+                    wit_import(
+                        ptr1.cast_mut(),
+                        len1,
+                        ptr2.cast_mut(),
+                        len2,
+                        result7_0,
+                        result7_1,
+                        result7_2,
+                        result7_3,
+                        result7_4,
+                        ptr8.cast_mut(),
+                        len8,
+                        ptr9.cast_mut(),
+                        len9,
+                        ptr10,
+                    );
+                    let l11 = i32::from(*ptr10.add(0).cast::<u8>());
+                    for (ptr, layout) in cleanup_list {
+                        if layout.size() != 0 {
+                            _rt::alloc::dealloc(ptr.cast(), layout);
                         }
-                        match l11 {
-                            0 => {
-                                let e = {
-                                    let l12 = *ptr10.add(4).cast::<*mut u8>();
-                                    let l13 = *ptr10.add(8).cast::<usize>();
-                                    let len14 = l13;
-                                    let bytes14 = _rt::Vec::from_raw_parts(
-                                        l12.cast(),
-                                        len14,
-                                        len14,
-                                    );
-                                    _rt::string_lift(bytes14)
-                                };
-                                Ok(e)
-                            }
-                            1 => {
-                                let e = {
-                                    let l15 = i32::from(*ptr10.add(4).cast::<u8>());
-                                    use super::super::super::wavs::agent::errors::AgentError as V55;
-                                    let v55 = match l15 {
-                                        0 => {
-                                            let e55 = {
-                                                let l16 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l17 = *ptr10.add(12).cast::<usize>();
-                                                let len18 = l17;
-                                                let bytes18 = _rt::Vec::from_raw_parts(
-                                                    l16.cast(),
-                                                    len18,
-                                                    len18,
-                                                );
-                                                _rt::string_lift(bytes18)
-                                            };
-                                            V55::Api(e55)
-                                        }
-                                        1 => {
-                                            let e55 = {
-                                                let l19 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l20 = *ptr10.add(12).cast::<usize>();
-                                                let len21 = l20;
-                                                let bytes21 = _rt::Vec::from_raw_parts(
-                                                    l19.cast(),
-                                                    len21,
-                                                    len21,
-                                                );
-                                                _rt::string_lift(bytes21)
-                                            };
-                                            V55::Http(e55)
-                                        }
-                                        2 => {
-                                            let e55 = {
-                                                let l22 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l23 = *ptr10.add(12).cast::<usize>();
-                                                let len24 = l23;
-                                                let bytes24 = _rt::Vec::from_raw_parts(
-                                                    l22.cast(),
-                                                    len24,
-                                                    len24,
-                                                );
-                                                _rt::string_lift(bytes24)
-                                            };
-                                            V55::ExternalService(e55)
-                                        }
-                                        3 => {
-                                            let e55 = {
-                                                let l25 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l26 = *ptr10.add(12).cast::<usize>();
-                                                let len27 = l26;
-                                                let bytes27 = _rt::Vec::from_raw_parts(
-                                                    l25.cast(),
-                                                    len27,
-                                                    len27,
-                                                );
-                                                _rt::string_lift(bytes27)
-                                            };
-                                            V55::Config(e55)
-                                        }
-                                        4 => {
-                                            let e55 = {
-                                                let l28 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l29 = *ptr10.add(12).cast::<usize>();
-                                                let len30 = l29;
-                                                let bytes30 = _rt::Vec::from_raw_parts(
-                                                    l28.cast(),
-                                                    len30,
-                                                    len30,
-                                                );
-                                                _rt::string_lift(bytes30)
-                                            };
-                                            V55::Contract(e55)
-                                        }
-                                        5 => {
-                                            let e55 = {
-                                                let l31 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l32 = *ptr10.add(12).cast::<usize>();
-                                                let len33 = l32;
-                                                let bytes33 = _rt::Vec::from_raw_parts(
-                                                    l31.cast(),
-                                                    len33,
-                                                    len33,
-                                                );
-                                                _rt::string_lift(bytes33)
-                                            };
-                                            V55::Configuration(e55)
-                                        }
-                                        6 => {
-                                            let e55 = {
-                                                let l34 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l35 = *ptr10.add(12).cast::<usize>();
-                                                let len36 = l35;
-                                                let bytes36 = _rt::Vec::from_raw_parts(
-                                                    l34.cast(),
-                                                    len36,
-                                                    len36,
-                                                );
-                                                _rt::string_lift(bytes36)
-                                            };
-                                            V55::ContextLoading(e55)
-                                        }
-                                        7 => {
-                                            let e55 = {
-                                                let l37 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l38 = *ptr10.add(12).cast::<usize>();
-                                                let len39 = l38;
-                                                let bytes39 = _rt::Vec::from_raw_parts(
-                                                    l37.cast(),
-                                                    len39,
-                                                    len39,
-                                                );
-                                                _rt::string_lift(bytes39)
-                                            };
-                                            V55::ContextValidation(e55)
-                                        }
-                                        8 => {
-                                            let e55 = {
-                                                let l40 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l41 = *ptr10.add(12).cast::<usize>();
-                                                let len42 = l41;
-                                                let bytes42 = _rt::Vec::from_raw_parts(
-                                                    l40.cast(),
-                                                    len42,
-                                                    len42,
-                                                );
-                                                _rt::string_lift(bytes42)
-                                            };
-                                            V55::Llm(e55)
-                                        }
-                                        9 => {
-                                            let e55 = {
-                                                let l43 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l44 = *ptr10.add(12).cast::<usize>();
-                                                let len45 = l44;
-                                                let bytes45 = _rt::Vec::from_raw_parts(
-                                                    l43.cast(),
-                                                    len45,
-                                                    len45,
-                                                );
-                                                _rt::string_lift(bytes45)
-                                            };
-                                            V55::Io(e55)
-                                        }
-                                        10 => {
-                                            let e55 = {
-                                                let l46 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l47 = *ptr10.add(12).cast::<usize>();
-                                                let len48 = l47;
-                                                let bytes48 = _rt::Vec::from_raw_parts(
-                                                    l46.cast(),
-                                                    len48,
-                                                    len48,
-                                                );
-                                                _rt::string_lift(bytes48)
-                                            };
-                                            V55::Transaction(e55)
-                                        }
-                                        11 => {
-                                            let e55 = {
-                                                let l49 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l50 = *ptr10.add(12).cast::<usize>();
-                                                let len51 = l50;
-                                                let bytes51 = _rt::Vec::from_raw_parts(
-                                                    l49.cast(),
-                                                    len51,
-                                                    len51,
-                                                );
-                                                _rt::string_lift(bytes51)
-                                            };
-                                            V55::Utf8(e55)
-                                        }
-                                        n => {
-                                            debug_assert_eq!(n, 12, "invalid enum discriminant");
-                                            let e55 = {
-                                                let l52 = *ptr10.add(8).cast::<*mut u8>();
-                                                let l53 = *ptr10.add(12).cast::<usize>();
-                                                let len54 = l53;
-                                                let bytes54 = _rt::Vec::from_raw_parts(
-                                                    l52.cast(),
-                                                    len54,
-                                                    len54,
-                                                );
-                                                _rt::string_lift(bytes54)
-                                            };
-                                            V55::Other(e55)
-                                        }
-                                    };
-                                    v55
-                                };
-                                Err(e)
-                            }
-                            _ => _rt::invalid_enum_discriminant(),
+                    }
+                    match l11 {
+                        0 => {
+                            let e = {
+                                let l12 = *ptr10.add(4).cast::<*mut u8>();
+                                let l13 = *ptr10.add(8).cast::<usize>();
+                                let len14 = l13;
+                                let bytes14 = _rt::Vec::from_raw_parts(
+                                    l12.cast(),
+                                    len14,
+                                    len14,
+                                );
+                                _rt::string_lift(bytes14)
+                            };
+                            Ok(e)
                         }
+                        1 => {
+                            let e = {
+                                let l15 = i32::from(*ptr10.add(4).cast::<u8>());
+                                use super::super::super::wavs::agent::errors::AgentError as V55;
+                                let v55 = match l15 {
+                                    0 => {
+                                        let e55 = {
+                                            let l16 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l17 = *ptr10.add(12).cast::<usize>();
+                                            let len18 = l17;
+                                            let bytes18 = _rt::Vec::from_raw_parts(
+                                                l16.cast(),
+                                                len18,
+                                                len18,
+                                            );
+                                            _rt::string_lift(bytes18)
+                                        };
+                                        V55::Api(e55)
+                                    }
+                                    1 => {
+                                        let e55 = {
+                                            let l19 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l20 = *ptr10.add(12).cast::<usize>();
+                                            let len21 = l20;
+                                            let bytes21 = _rt::Vec::from_raw_parts(
+                                                l19.cast(),
+                                                len21,
+                                                len21,
+                                            );
+                                            _rt::string_lift(bytes21)
+                                        };
+                                        V55::Http(e55)
+                                    }
+                                    2 => {
+                                        let e55 = {
+                                            let l22 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l23 = *ptr10.add(12).cast::<usize>();
+                                            let len24 = l23;
+                                            let bytes24 = _rt::Vec::from_raw_parts(
+                                                l22.cast(),
+                                                len24,
+                                                len24,
+                                            );
+                                            _rt::string_lift(bytes24)
+                                        };
+                                        V55::ExternalService(e55)
+                                    }
+                                    3 => {
+                                        let e55 = {
+                                            let l25 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l26 = *ptr10.add(12).cast::<usize>();
+                                            let len27 = l26;
+                                            let bytes27 = _rt::Vec::from_raw_parts(
+                                                l25.cast(),
+                                                len27,
+                                                len27,
+                                            );
+                                            _rt::string_lift(bytes27)
+                                        };
+                                        V55::Config(e55)
+                                    }
+                                    4 => {
+                                        let e55 = {
+                                            let l28 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l29 = *ptr10.add(12).cast::<usize>();
+                                            let len30 = l29;
+                                            let bytes30 = _rt::Vec::from_raw_parts(
+                                                l28.cast(),
+                                                len30,
+                                                len30,
+                                            );
+                                            _rt::string_lift(bytes30)
+                                        };
+                                        V55::Contract(e55)
+                                    }
+                                    5 => {
+                                        let e55 = {
+                                            let l31 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l32 = *ptr10.add(12).cast::<usize>();
+                                            let len33 = l32;
+                                            let bytes33 = _rt::Vec::from_raw_parts(
+                                                l31.cast(),
+                                                len33,
+                                                len33,
+                                            );
+                                            _rt::string_lift(bytes33)
+                                        };
+                                        V55::Configuration(e55)
+                                    }
+                                    6 => {
+                                        let e55 = {
+                                            let l34 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l35 = *ptr10.add(12).cast::<usize>();
+                                            let len36 = l35;
+                                            let bytes36 = _rt::Vec::from_raw_parts(
+                                                l34.cast(),
+                                                len36,
+                                                len36,
+                                            );
+                                            _rt::string_lift(bytes36)
+                                        };
+                                        V55::ContextLoading(e55)
+                                    }
+                                    7 => {
+                                        let e55 = {
+                                            let l37 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l38 = *ptr10.add(12).cast::<usize>();
+                                            let len39 = l38;
+                                            let bytes39 = _rt::Vec::from_raw_parts(
+                                                l37.cast(),
+                                                len39,
+                                                len39,
+                                            );
+                                            _rt::string_lift(bytes39)
+                                        };
+                                        V55::ContextValidation(e55)
+                                    }
+                                    8 => {
+                                        let e55 = {
+                                            let l40 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l41 = *ptr10.add(12).cast::<usize>();
+                                            let len42 = l41;
+                                            let bytes42 = _rt::Vec::from_raw_parts(
+                                                l40.cast(),
+                                                len42,
+                                                len42,
+                                            );
+                                            _rt::string_lift(bytes42)
+                                        };
+                                        V55::Llm(e55)
+                                    }
+                                    9 => {
+                                        let e55 = {
+                                            let l43 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l44 = *ptr10.add(12).cast::<usize>();
+                                            let len45 = l44;
+                                            let bytes45 = _rt::Vec::from_raw_parts(
+                                                l43.cast(),
+                                                len45,
+                                                len45,
+                                            );
+                                            _rt::string_lift(bytes45)
+                                        };
+                                        V55::Io(e55)
+                                    }
+                                    10 => {
+                                        let e55 = {
+                                            let l46 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l47 = *ptr10.add(12).cast::<usize>();
+                                            let len48 = l47;
+                                            let bytes48 = _rt::Vec::from_raw_parts(
+                                                l46.cast(),
+                                                len48,
+                                                len48,
+                                            );
+                                            _rt::string_lift(bytes48)
+                                        };
+                                        V55::Transaction(e55)
+                                    }
+                                    11 => {
+                                        let e55 = {
+                                            let l49 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l50 = *ptr10.add(12).cast::<usize>();
+                                            let len51 = l50;
+                                            let bytes51 = _rt::Vec::from_raw_parts(
+                                                l49.cast(),
+                                                len51,
+                                                len51,
+                                            );
+                                            _rt::string_lift(bytes51)
+                                        };
+                                        V55::Utf8(e55)
+                                    }
+                                    n => {
+                                        debug_assert_eq!(n, 12, "invalid enum discriminant");
+                                        let e55 = {
+                                            let l52 = *ptr10.add(8).cast::<*mut u8>();
+                                            let l53 = *ptr10.add(12).cast::<usize>();
+                                            let len54 = l53;
+                                            let bytes54 = _rt::Vec::from_raw_parts(
+                                                l52.cast(),
+                                                len54,
+                                                len54,
+                                            );
+                                            _rt::string_lift(bytes54)
+                                        };
+                                        V55::Other(e55)
+                                    }
+                                };
+                                v55
+                            };
+                            Err(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
                     }
                 }
             }
@@ -16782,80 +16774,74 @@ pub mod exports {
                 }
                 #[doc(hidden)]
                 #[allow(non_snake_case)]
-                pub unsafe fn _export_method_transaction_manager_create_payload_from_tx_cabi<
-                    T: GuestTransactionManager,
-                >(
+                pub unsafe fn _export_create_payload_from_tx_cabi<T: Guest>(
                     arg0: *mut u8,
-                    arg1: *mut u8,
-                    arg2: usize,
-                    arg3: *mut u8,
-                    arg4: usize,
-                    arg5: i32,
-                    arg6: *mut u8,
-                    arg7: usize,
-                    arg8: *mut u8,
-                    arg9: usize,
-                    arg10: *mut u8,
-                    arg11: usize,
-                    arg12: *mut u8,
-                    arg13: usize,
+                    arg1: usize,
+                    arg2: *mut u8,
+                    arg3: usize,
+                    arg4: i32,
+                    arg5: *mut u8,
+                    arg6: usize,
+                    arg7: *mut u8,
+                    arg8: usize,
+                    arg9: *mut u8,
+                    arg10: usize,
+                    arg11: *mut u8,
+                    arg12: usize,
                 ) -> *mut u8 {
                     #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
-                    let len0 = arg2;
-                    let bytes0 = _rt::Vec::from_raw_parts(arg1.cast(), len0, len0);
-                    let len1 = arg4;
-                    let bytes1 = _rt::Vec::from_raw_parts(arg3.cast(), len1, len1);
-                    let len7 = arg11;
-                    let bytes7 = _rt::Vec::from_raw_parts(arg10.cast(), len7, len7);
-                    let len8 = arg13;
-                    let bytes8 = _rt::Vec::from_raw_parts(arg12.cast(), len8, len8);
-                    let result9 = T::create_payload_from_tx(
-                        TransactionManagerBorrow::lift(arg0 as u32 as usize).get(),
-                        super::super::super::super::exports::wavs::agent::types::Transaction {
-                            to: _rt::string_lift(bytes0),
-                            value: _rt::string_lift(bytes1),
-                            contract_call: match arg5 {
-                                0 => None,
-                                1 => {
-                                    let e = {
-                                        let len2 = arg7;
-                                        let bytes2 = _rt::Vec::from_raw_parts(
-                                            arg6.cast(),
-                                            len2,
-                                            len2,
-                                        );
-                                        let base6 = arg8;
-                                        let len6 = arg9;
-                                        let mut result6 = _rt::Vec::with_capacity(len6);
-                                        for i in 0..len6 {
-                                            let base = base6.add(i * 8);
-                                            let e6 = {
-                                                let l3 = *base.add(0).cast::<*mut u8>();
-                                                let l4 = *base.add(4).cast::<usize>();
-                                                let len5 = l4;
-                                                let bytes5 = _rt::Vec::from_raw_parts(
-                                                    l3.cast(),
-                                                    len5,
-                                                    len5,
-                                                );
-                                                _rt::string_lift(bytes5)
-                                            };
-                                            result6.push(e6);
-                                        }
-                                        _rt::cabi_dealloc(base6, len6 * 8, 4);
-                                        super::super::super::super::exports::wavs::agent::types::ContractCall {
-                                            function: _rt::string_lift(bytes2),
-                                            args: result6,
-                                        }
-                                    };
-                                    Some(e)
-                                }
-                                _ => _rt::invalid_enum_discriminant(),
-                            },
-                            data: _rt::string_lift(bytes7),
-                            description: _rt::string_lift(bytes8),
+                    let len0 = arg1;
+                    let bytes0 = _rt::Vec::from_raw_parts(arg0.cast(), len0, len0);
+                    let len1 = arg3;
+                    let bytes1 = _rt::Vec::from_raw_parts(arg2.cast(), len1, len1);
+                    let len7 = arg10;
+                    let bytes7 = _rt::Vec::from_raw_parts(arg9.cast(), len7, len7);
+                    let len8 = arg12;
+                    let bytes8 = _rt::Vec::from_raw_parts(arg11.cast(), len8, len8);
+                    let result9 = T::create_payload_from_tx(super::super::super::super::exports::wavs::agent::types::Transaction {
+                        to: _rt::string_lift(bytes0),
+                        value: _rt::string_lift(bytes1),
+                        contract_call: match arg4 {
+                            0 => None,
+                            1 => {
+                                let e = {
+                                    let len2 = arg6;
+                                    let bytes2 = _rt::Vec::from_raw_parts(
+                                        arg5.cast(),
+                                        len2,
+                                        len2,
+                                    );
+                                    let base6 = arg7;
+                                    let len6 = arg8;
+                                    let mut result6 = _rt::Vec::with_capacity(len6);
+                                    for i in 0..len6 {
+                                        let base = base6.add(i * 8);
+                                        let e6 = {
+                                            let l3 = *base.add(0).cast::<*mut u8>();
+                                            let l4 = *base.add(4).cast::<usize>();
+                                            let len5 = l4;
+                                            let bytes5 = _rt::Vec::from_raw_parts(
+                                                l3.cast(),
+                                                len5,
+                                                len5,
+                                            );
+                                            _rt::string_lift(bytes5)
+                                        };
+                                        result6.push(e6);
+                                    }
+                                    _rt::cabi_dealloc(base6, len6 * 8, 4);
+                                    super::super::super::super::exports::wavs::agent::types::ContractCall {
+                                        function: _rt::string_lift(bytes2),
+                                        args: result6,
+                                    }
+                                };
+                                Some(e)
+                            }
+                            _ => _rt::invalid_enum_discriminant(),
                         },
-                    );
+                        data: _rt::string_lift(bytes7),
+                        description: _rt::string_lift(bytes8),
+                    });
                     let ptr10 = _RET_AREA.0.as_mut_ptr().cast::<u8>();
                     match result9 {
                         Ok(e) => {
@@ -16995,9 +16981,9 @@ pub mod exports {
                 }
                 #[doc(hidden)]
                 #[allow(non_snake_case)]
-                pub unsafe fn __post_return_method_transaction_manager_create_payload_from_tx<
-                    T: GuestTransactionManager,
-                >(arg0: *mut u8) {
+                pub unsafe fn __post_return_create_payload_from_tx<T: Guest>(
+                    arg0: *mut u8,
+                ) {
                     let l0 = i32::from(*arg0.add(0).cast::<u8>());
                     match l0 {
                         0 => {
@@ -17080,6 +17066,10 @@ pub mod exports {
                 pub trait Guest {
                     type ContractManager: GuestContractManager;
                     type TransactionManager: GuestTransactionManager;
+                    /// Helper function to create a transaction payload from a Transaction
+                    fn create_payload_from_tx(
+                        transaction: Transaction,
+                    ) -> Result<_rt::String, AgentError>;
                 }
                 pub trait GuestContractManager: 'static {
                     #[doc(hidden)]
@@ -17219,11 +17209,6 @@ pub mod exports {
                         &self,
                         transaction: Transaction,
                     ) -> Result<(), AgentError>;
-                    /// Helper function to create a transaction payload from a Transaction
-                    fn create_payload_from_tx(
-                        &self,
-                        transaction: Transaction,
-                    ) -> Result<_rt::String, AgentError>;
                 }
                 #[doc(hidden)]
                 macro_rules! __export_wavs_agent_contracts_0_0_1_cabi {
@@ -17359,24 +17344,19 @@ pub mod exports {
                         __post_return_method_transaction_manager_validate_transaction::<<$ty
                         as $($path_to_types)*:: Guest >::TransactionManager > (arg0) }
                         #[export_name =
-                        "wavs:agent/contracts@0.0.1#[method]transaction-manager.create-payload-from-tx"]
-                        unsafe extern "C" fn
-                        export_method_transaction_manager_create_payload_from_tx(arg0 : *
-                        mut u8, arg1 : * mut u8, arg2 : usize, arg3 : * mut u8, arg4 :
-                        usize, arg5 : i32, arg6 : * mut u8, arg7 : usize, arg8 : * mut
-                        u8, arg9 : usize, arg10 : * mut u8, arg11 : usize, arg12 : * mut
-                        u8, arg13 : usize,) -> * mut u8 { $($path_to_types)*::
-                        _export_method_transaction_manager_create_payload_from_tx_cabi::<<$ty
-                        as $($path_to_types)*:: Guest >::TransactionManager > (arg0,
-                        arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10,
-                        arg11, arg12, arg13) } #[export_name =
-                        "cabi_post_wavs:agent/contracts@0.0.1#[method]transaction-manager.create-payload-from-tx"]
-                        unsafe extern "C" fn
-                        _post_return_method_transaction_manager_create_payload_from_tx(arg0
-                        : * mut u8,) { $($path_to_types)*::
-                        __post_return_method_transaction_manager_create_payload_from_tx::<<$ty
-                        as $($path_to_types)*:: Guest >::TransactionManager > (arg0) }
-                        const _ : () = { #[doc(hidden)] #[export_name =
+                        "wavs:agent/contracts@0.0.1#create-payload-from-tx"] unsafe
+                        extern "C" fn export_create_payload_from_tx(arg0 : * mut u8, arg1
+                        : usize, arg2 : * mut u8, arg3 : usize, arg4 : i32, arg5 : * mut
+                        u8, arg6 : usize, arg7 : * mut u8, arg8 : usize, arg9 : * mut u8,
+                        arg10 : usize, arg11 : * mut u8, arg12 : usize,) -> * mut u8 {
+                        $($path_to_types)*:: _export_create_payload_from_tx_cabi::<$ty >
+                        (arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9,
+                        arg10, arg11, arg12) } #[export_name =
+                        "cabi_post_wavs:agent/contracts@0.0.1#create-payload-from-tx"]
+                        unsafe extern "C" fn _post_return_create_payload_from_tx(arg0 : *
+                        mut u8,) { $($path_to_types)*::
+                        __post_return_create_payload_from_tx::<$ty > (arg0) } const _ :
+                        () = { #[doc(hidden)] #[export_name =
                         "wavs:agent/contracts@0.0.1#[dtor]contract-manager"]
                         #[allow(non_snake_case)] unsafe extern "C" fn dtor(rep : * mut
                         u8) { $($path_to_types)*:: ContractManager::dtor::< <$ty as
@@ -18916,8 +18896,8 @@ pub(crate) use __export_wavs_agent_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[link_section = "component-type:wit-bindgen:0.35.0:wavs:agent@0.0.1:wavs-agent:encoded world"]
 #[doc(hidden)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 9065] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xe8E\x01A\x02\x01A%\x01\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 8997] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xa4E\x01A\x02\x01A%\x01\
 B\x02\x01q\x0d\x03api\x01s\0\x04http\x01s\0\x10external-service\x01s\0\x06config\
 \x01s\0\x08contract\x01s\0\x0dconfiguration\x01s\0\x0fcontext-loading\x01s\0\x12\
 context-validation\x01s\0\x03llm\x01s\0\x02io\x01s\0\x0btransaction\x01s\0\x04ut\
@@ -18996,117 +18976,117 @@ f\x0a\x08contract\x03\x0dfunction-names\x04args\x0f\0\x14\x04\0/[method]contract
 -manager.validate-function-call\x01\x15\x01h\x09\x01@\x02\x04self\x16\x0btransac\
 tion\x07\0\x7f\x04\0$[method]transaction-manager.is-valid\x01\x17\x01@\x02\x04se\
 lf\x16\x0btransaction\x07\0\x14\x04\00[method]transaction-manager.validate-trans\
-action\x01\x18\x01@\x02\x04self\x16\x0btransaction\x07\0\x0d\x04\02[method]trans\
-action-manager.create-payload-from-tx\x01\x19\x03\0\x1awavs:agent/contracts@0.0.\
-1\x05\x0f\x02\x03\0\x02\x0allm-client\x02\x03\0\x01\x08function\x01B$\x02\x03\x02\
-\x01\x10\x04\0\x0allm-client\x03\0\0\x02\x03\x02\x01\x03\x04\0\x07message\x03\0\x02\
-\x02\x03\x02\x01\x04\x04\0\x04tool\x03\0\x04\x02\x03\x02\x01\x05\x04\0\x09tool-c\
-all\x03\0\x06\x02\x03\x02\x01\x11\x04\0\x08function\x03\0\x08\x02\x03\x02\x01\x06\
-\x04\0\x13custom-tool-handler\x03\0\x0a\x02\x03\x02\x01\x0c\x04\0\x08contract\x03\
-\0\x0c\x04\0\x0dtools-builder\x03\x01\x01h\x0e\x01@\x01\x04self\x0f\0\x05\x04\0#\
-[method]tools-builder.send-eth-tool\x01\x10\x01p\x05\x01@\x02\x04self\x0f\x08con\
-tract\x0d\0\x11\x04\0)[method]tools-builder.tools-from-contract\x01\x12\x01@\x04\
-\x04self\x0f\x04names\x0bdescriptions\x0aparameterss\0\x05\x04\0![method]tools-b\
-uilder.custom-tool\x01\x13\x01i\x0b\x01p\x14\x01k\x15\x01j\x01s\x01s\x01@\x03\x04\
-self\x0f\x09tool-call\x07\x0fcustom-handlers\x16\0\x17\x04\0'[method]tools-build\
-er.execute-tool-call\x01\x18\x01@\x02\x04self\x0f\x09tool-call\x07\0\x17\x04\0+[\
-method]tools-builder.parse-eth-transaction\x01\x19\x01i\x01\x01p\x03\x01p\x07\x01\
-@\x06\x04self\x0f\x06client\x1a\x10initial-messages\x1b\x08response\x03\x0atool-\
-calls\x1c\x0fcustom-handlers\x16\0\x17\x04\0([method]tools-builder.process-tool-\
-calls\x01\x1d\x03\0\x16wavs:agent/tools@0.0.1\x05\x12\x01B\x02\x01q\x0d\x03api\x01\
-s\0\x04http\x01s\0\x10external-service\x01s\0\x06config\x01s\0\x08contract\x01s\0\
-\x0dconfiguration\x01s\0\x0fcontext-loading\x01s\0\x12context-validation\x01s\0\x03\
-llm\x01s\0\x02io\x01s\0\x0btransaction\x01s\0\x04utf8\x01s\0\x05other\x01s\0\x04\
-\0\x0bagent-error\x03\0\0\x04\0\x17wavs:agent/errors@0.0.1\x05\x13\x01B)\x01ks\x01\
-r\x03\x04name\0\x0bdescription\0\x0eparameter-type\0\x04\0\x12function-parameter\
-\x03\0\x01\x01r\x03\x04names\x0bdescription\0\x0aparameters\0\x04\0\x08function\x03\
-\0\x03\x01r\x02\x09tool-types\x08function\x04\x04\0\x04tool\x03\0\x05\x01r\x02\x04\
-names\x09argumentss\x04\0\x12tool-call-function\x03\0\x07\x01r\x03\x02ids\x09too\
-l-types\x08function\x08\x04\0\x09tool-call\x03\0\x09\x01p\x0a\x01k\x0b\x01r\x05\x04\
-roles\x07content\0\x0atool-calls\x0c\x0ctool-call-id\0\x04name\0\x04\0\x07messag\
-e\x03\0\x0d\x04\0\x13custom-tool-handler\x03\x01\x01ky\x01r\x05\x0btemperaturev\x05\
-top-pv\x04seedy\x0amax-tokens\x10\x0econtext-window\x10\x04\0\x0bllm-options\x03\
-\0\x11\x01r\x04\x04names\x07addresss\x03abis\x0bdescription\0\x04\0\x08contract\x03\
-\0\x13\x01p\x14\x01p\x0e\x01o\x02ss\x01p\x17\x01r\x05\x09contracts\x15\x0allm-co\
-nfig\x12\x05models\x08messages\x16\x06config\x18\x04\0\x06config\x03\0\x19\x01ps\
-\x01r\x02\x08functions\x04args\x1b\x04\0\x0dcontract-call\x03\0\x1c\x01k\x1d\x01\
-r\x05\x02tos\x05values\x0dcontract-call\x1e\x04datas\x0bdescriptions\x04\0\x0btr\
-ansaction\x03\0\x1f\x01q\x02\x0btransaction\x01\x20\0\x04text\x01s\0\x04\0\x0cll\
-m-response\x03\0!\x01h\x0f\x01@\x02\x04self#\x09tool-names\0\x7f\x04\0&[method]c\
-ustom-tool-handler.can-handle\x01$\x01j\x01s\x01s\x01@\x02\x04self#\x09tool-call\
-\x0a\0%\x04\0#[method]custom-tool-handler.execute\x01&\x04\0\x16wavs:agent/types\
-@0.0.1\x05\x14\x01B/\x02\x03\x02\x01\x02\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\
-\x01\x03\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\x04\x04\0\x04tool\x03\0\x04\x02\
-\x03\x02\x01\x05\x04\0\x09tool-call\x03\0\x06\x02\x03\x02\x01\x06\x04\0\x13custo\
-m-tool-handler\x03\0\x08\x02\x03\x02\x01\x07\x04\0\x0cllm-response\x03\0\x0a\x02\
-\x03\x02\x01\x08\x04\0\x0btransaction\x03\0\x0c\x02\x03\x02\x01\x09\x04\0\x06con\
-fig\x03\0\x0e\x02\x03\x02\x01\x0a\x04\0\x0bllm-options\x03\0\x10\x04\0\x0allm-cl\
-ient\x03\x01\x01h\x12\x01i\x12\x01j\x01\x14\x01\x01\x01@\x02\x04self\x13\x05mode\
-ls\0\x15\x04\0\x16[method]llm-client.new\x01\x16\x01@\x03\x04self\x13\x05models\x0b\
-json-configs\0\x15\x04\0\x1c[method]llm-client.from-json\x01\x17\x01@\x03\x04sel\
-f\x13\x05models\x06config\x11\0\x15\x04\0\x1e[method]llm-client.with-config\x01\x18\
-\x01@\x01\x04self\x13\0s\x04\0\x1c[method]llm-client.get-model\x01\x19\x01@\x01\x04\
-self\x13\0\x11\x04\0\x1d[method]llm-client.get-config\x01\x1a\x01p\x03\x01p\x05\x01\
-k\x1c\x01j\x01\x03\x01\x01\x01@\x03\x04self\x13\x08messages\x1b\x05tools\x1d\0\x1e\
-\x04\0\"[method]llm-client.chat-completion\x01\x1f\x01j\x01s\x01\x01\x01@\x02\x04\
-self\x13\x08messages\x1b\0\x20\x04\0'[method]llm-client.chat-completion-text\x01\
-!\x01i\x09\x01p\"\x01k#\x01j\x01\x0b\x01\x01\x01@\x05\x04self\x13\x06prompts\x06\
-config\x0f\x0ccustom-tools\x1d\x0fcustom-handlers$\0%\x04\0![method]llm-client.p\
-rocess-prompt\x01&\x04\0\x17wavs:agent/client@0.0.1\x05\x15\x01B.\x02\x03\x02\x01\
+action\x01\x18\x01@\x01\x0btransaction\x07\0\x0d\x04\0\x16create-payload-from-tx\
+\x01\x19\x03\0\x1awavs:agent/contracts@0.0.1\x05\x0f\x02\x03\0\x02\x0allm-client\
+\x02\x03\0\x01\x08function\x01B$\x02\x03\x02\x01\x10\x04\0\x0allm-client\x03\0\0\
+\x02\x03\x02\x01\x03\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\x04\x04\0\x04too\
+l\x03\0\x04\x02\x03\x02\x01\x05\x04\0\x09tool-call\x03\0\x06\x02\x03\x02\x01\x11\
+\x04\0\x08function\x03\0\x08\x02\x03\x02\x01\x06\x04\0\x13custom-tool-handler\x03\
+\0\x0a\x02\x03\x02\x01\x0c\x04\0\x08contract\x03\0\x0c\x04\0\x0dtools-builder\x03\
+\x01\x01h\x0e\x01@\x01\x04self\x0f\0\x05\x04\0#[method]tools-builder.send-eth-to\
+ol\x01\x10\x01p\x05\x01@\x02\x04self\x0f\x08contract\x0d\0\x11\x04\0)[method]too\
+ls-builder.tools-from-contract\x01\x12\x01@\x04\x04self\x0f\x04names\x0bdescript\
+ions\x0aparameterss\0\x05\x04\0![method]tools-builder.custom-tool\x01\x13\x01i\x0b\
+\x01p\x14\x01k\x15\x01j\x01s\x01s\x01@\x03\x04self\x0f\x09tool-call\x07\x0fcusto\
+m-handlers\x16\0\x17\x04\0'[method]tools-builder.execute-tool-call\x01\x18\x01@\x02\
+\x04self\x0f\x09tool-call\x07\0\x17\x04\0+[method]tools-builder.parse-eth-transa\
+ction\x01\x19\x01i\x01\x01p\x03\x01p\x07\x01@\x06\x04self\x0f\x06client\x1a\x10i\
+nitial-messages\x1b\x08response\x03\x0atool-calls\x1c\x0fcustom-handlers\x16\0\x17\
+\x04\0([method]tools-builder.process-tool-calls\x01\x1d\x03\0\x16wavs:agent/tool\
+s@0.0.1\x05\x12\x01B\x02\x01q\x0d\x03api\x01s\0\x04http\x01s\0\x10external-servi\
+ce\x01s\0\x06config\x01s\0\x08contract\x01s\0\x0dconfiguration\x01s\0\x0fcontext\
+-loading\x01s\0\x12context-validation\x01s\0\x03llm\x01s\0\x02io\x01s\0\x0btrans\
+action\x01s\0\x04utf8\x01s\0\x05other\x01s\0\x04\0\x0bagent-error\x03\0\0\x04\0\x17\
+wavs:agent/errors@0.0.1\x05\x13\x01B)\x01ks\x01r\x03\x04name\0\x0bdescription\0\x0e\
+parameter-type\0\x04\0\x12function-parameter\x03\0\x01\x01r\x03\x04names\x0bdesc\
+ription\0\x0aparameters\0\x04\0\x08function\x03\0\x03\x01r\x02\x09tool-types\x08\
+function\x04\x04\0\x04tool\x03\0\x05\x01r\x02\x04names\x09argumentss\x04\0\x12to\
+ol-call-function\x03\0\x07\x01r\x03\x02ids\x09tool-types\x08function\x08\x04\0\x09\
+tool-call\x03\0\x09\x01p\x0a\x01k\x0b\x01r\x05\x04roles\x07content\0\x0atool-cal\
+ls\x0c\x0ctool-call-id\0\x04name\0\x04\0\x07message\x03\0\x0d\x04\0\x13custom-to\
+ol-handler\x03\x01\x01ky\x01r\x05\x0btemperaturev\x05top-pv\x04seedy\x0amax-toke\
+ns\x10\x0econtext-window\x10\x04\0\x0bllm-options\x03\0\x11\x01r\x04\x04names\x07\
+addresss\x03abis\x0bdescription\0\x04\0\x08contract\x03\0\x13\x01p\x14\x01p\x0e\x01\
+o\x02ss\x01p\x17\x01r\x05\x09contracts\x15\x0allm-config\x12\x05models\x08messag\
+es\x16\x06config\x18\x04\0\x06config\x03\0\x19\x01ps\x01r\x02\x08functions\x04ar\
+gs\x1b\x04\0\x0dcontract-call\x03\0\x1c\x01k\x1d\x01r\x05\x02tos\x05values\x0dco\
+ntract-call\x1e\x04datas\x0bdescriptions\x04\0\x0btransaction\x03\0\x1f\x01q\x02\
+\x0btransaction\x01\x20\0\x04text\x01s\0\x04\0\x0cllm-response\x03\0!\x01h\x0f\x01\
+@\x02\x04self#\x09tool-names\0\x7f\x04\0&[method]custom-tool-handler.can-handle\x01\
+$\x01j\x01s\x01s\x01@\x02\x04self#\x09tool-call\x0a\0%\x04\0#[method]custom-tool\
+-handler.execute\x01&\x04\0\x16wavs:agent/types@0.0.1\x05\x14\x01B/\x02\x03\x02\x01\
 \x02\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x03\x04\0\x07message\x03\0\x02\
-\x02\x03\x02\x01\x09\x04\0\x06config\x03\0\x04\x02\x03\x02\x01\x0a\x04\0\x0bllm-\
-options\x03\0\x06\x02\x03\x02\x01\x0c\x04\0\x08contract\x03\0\x08\x04\0\x11llm-o\
-ptions-funcs\x03\x01\x04\0\x0econfig-manager\x03\x01\x01h\x0a\x01@\x01\x04self\x0c\
-\0\x07\x04\0\x1d[method]llm-options-funcs.new\x01\x0d\x01@\x02\x04self\x0c\x04te\
-mpv\0\x07\x04\0%[method]llm-options-funcs.temperature\x01\x0e\x01@\x02\x04self\x0c\
-\x05top-pv\0\x07\x04\0\x1f[method]llm-options-funcs.top-p\x01\x0f\x01@\x02\x04se\
-lf\x0c\x04seedy\0\x07\x04\0\x1e[method]llm-options-funcs.seed\x01\x10\x01ky\x01@\
-\x02\x04self\x0c\x0amax-tokens\x11\0\x07\x04\0$[method]llm-options-funcs.max-tok\
-ens\x01\x12\x01@\x02\x04self\x0c\x0econtext-window\x11\0\x07\x04\0([method]llm-o\
-ptions-funcs.context-window\x01\x13\x01h\x0b\x01j\x01\x05\x01s\x01@\x01\x04self\x14\
-\0\x15\x04\0\x1b[method]config-manager.load\x01\x16\x01@\x02\x04self\x14\x03uris\
-\0\x15\x04\0$[method]config-manager.load-from-uri\x01\x17\x01j\x01\x05\x01\x01\x01\
-@\x02\x04self\x14\x04jsons\0\x18\x04\0\x20[method]config-manager.from-json\x01\x19\
-\x01j\x01s\x01s\x01@\x01\x04self\x14\0\x1a\x04\0\x1e[method]config-manager.to-js\
-on\x01\x1b\x01@\x01\x04self\x14\0s\x04\03[method]config-manager.format-contract-\
-descriptions\x01\x1c\x01k\x09\x01@\x02\x04self\x14\x04names\0\x1d\x04\0+[method]\
-config-manager.get-contract-by-name\x01\x1e\x01j\0\x01\x01\x01@\x01\x04self\x14\0\
-\x1f\x04\0\x1f[method]config-manager.validate\x01\x20\x04\0\x17wavs:agent/config\
-@0.0.1\x05\x16\x01B#\x02\x03\x02\x01\x02\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\
-\x01\x0c\x04\0\x08contract\x03\0\x02\x02\x03\x02\x01\x0e\x04\0\x0dcontract-call\x03\
-\0\x04\x02\x03\x02\x01\x08\x04\0\x0btransaction\x03\0\x06\x04\0\x10contract-mana\
-ger\x03\x01\x04\0\x13transaction-manager\x03\x01\x01h\x08\x01@\x04\x04self\x0a\x04\
-names\x07addresss\x03abis\0\x03\x04\0\x1c[method]contract-manager.new\x01\x0b\x01\
-@\x05\x04self\x0a\x04names\x07addresss\x03abis\x0bdescriptions\0\x03\x04\0-[meth\
-od]contract-manager.new-with-description\x01\x0c\x01j\x01s\x01\x01\x01@\x02\x04s\
-elf\x0a\x08contract\x03\0\x0d\x04\0\"[method]contract-manager.parse-abi\x01\x0e\x01\
-ps\x01p}\x01j\x01\x10\x01\x01\x01@\x04\x04self\x0a\x08contract\x03\x0dfunction-n\
-ames\x04args\x0f\0\x11\x04\0-[method]contract-manager.encode-function-call\x01\x12\
-\x01@\x03\x04self\x0a\x08contract\x03\x0dfunction-names\0\x0d\x04\0&[method]cont\
-ract-manager.find-function\x01\x13\x01j\0\x01\x01\x01@\x04\x04self\x0a\x08contra\
-ct\x03\x0dfunction-names\x04args\x0f\0\x14\x04\0/[method]contract-manager.valida\
-te-function-call\x01\x15\x01h\x09\x01@\x02\x04self\x16\x0btransaction\x07\0\x7f\x04\
-\0$[method]transaction-manager.is-valid\x01\x17\x01@\x02\x04self\x16\x0btransact\
-ion\x07\0\x14\x04\00[method]transaction-manager.validate-transaction\x01\x18\x01\
-@\x02\x04self\x16\x0btransaction\x07\0\x0d\x04\02[method]transaction-manager.cre\
-ate-payload-from-tx\x01\x19\x04\0\x1awavs:agent/contracts@0.0.1\x05\x17\x01B$\x02\
-\x03\x02\x01\x10\x04\0\x0allm-client\x03\0\0\x02\x03\x02\x01\x03\x04\0\x07messag\
-e\x03\0\x02\x02\x03\x02\x01\x04\x04\0\x04tool\x03\0\x04\x02\x03\x02\x01\x05\x04\0\
-\x09tool-call\x03\0\x06\x02\x03\x02\x01\x11\x04\0\x08function\x03\0\x08\x02\x03\x02\
-\x01\x06\x04\0\x13custom-tool-handler\x03\0\x0a\x02\x03\x02\x01\x0c\x04\0\x08con\
-tract\x03\0\x0c\x04\0\x0dtools-builder\x03\x01\x01h\x0e\x01@\x01\x04self\x0f\0\x05\
-\x04\0#[method]tools-builder.send-eth-tool\x01\x10\x01p\x05\x01@\x02\x04self\x0f\
-\x08contract\x0d\0\x11\x04\0)[method]tools-builder.tools-from-contract\x01\x12\x01\
-@\x04\x04self\x0f\x04names\x0bdescriptions\x0aparameterss\0\x05\x04\0![method]to\
-ols-builder.custom-tool\x01\x13\x01i\x0b\x01p\x14\x01k\x15\x01j\x01s\x01s\x01@\x03\
-\x04self\x0f\x09tool-call\x07\x0fcustom-handlers\x16\0\x17\x04\0'[method]tools-b\
-uilder.execute-tool-call\x01\x18\x01@\x02\x04self\x0f\x09tool-call\x07\0\x17\x04\
-\0+[method]tools-builder.parse-eth-transaction\x01\x19\x01i\x01\x01p\x03\x01p\x07\
-\x01@\x06\x04self\x0f\x06client\x1a\x10initial-messages\x1b\x08response\x03\x0at\
-ool-calls\x1c\x0fcustom-handlers\x16\0\x17\x04\0([method]tools-builder.process-t\
-ool-calls\x01\x1d\x04\0\x16wavs:agent/tools@0.0.1\x05\x18\x04\0\x1bwavs:agent/wa\
-vs-agent@0.0.1\x04\0\x0b\x10\x01\0\x0awavs-agent\x03\0\0\0G\x09producers\x01\x0c\
-processed-by\x02\x0dwit-component\x070.220.0\x10wit-bindgen-rust\x060.35.0";
+\x02\x03\x02\x01\x04\x04\0\x04tool\x03\0\x04\x02\x03\x02\x01\x05\x04\0\x09tool-c\
+all\x03\0\x06\x02\x03\x02\x01\x06\x04\0\x13custom-tool-handler\x03\0\x08\x02\x03\
+\x02\x01\x07\x04\0\x0cllm-response\x03\0\x0a\x02\x03\x02\x01\x08\x04\0\x0btransa\
+ction\x03\0\x0c\x02\x03\x02\x01\x09\x04\0\x06config\x03\0\x0e\x02\x03\x02\x01\x0a\
+\x04\0\x0bllm-options\x03\0\x10\x04\0\x0allm-client\x03\x01\x01h\x12\x01i\x12\x01\
+j\x01\x14\x01\x01\x01@\x02\x04self\x13\x05models\0\x15\x04\0\x16[method]llm-clie\
+nt.new\x01\x16\x01@\x03\x04self\x13\x05models\x0bjson-configs\0\x15\x04\0\x1c[me\
+thod]llm-client.from-json\x01\x17\x01@\x03\x04self\x13\x05models\x06config\x11\0\
+\x15\x04\0\x1e[method]llm-client.with-config\x01\x18\x01@\x01\x04self\x13\0s\x04\
+\0\x1c[method]llm-client.get-model\x01\x19\x01@\x01\x04self\x13\0\x11\x04\0\x1d[\
+method]llm-client.get-config\x01\x1a\x01p\x03\x01p\x05\x01k\x1c\x01j\x01\x03\x01\
+\x01\x01@\x03\x04self\x13\x08messages\x1b\x05tools\x1d\0\x1e\x04\0\"[method]llm-\
+client.chat-completion\x01\x1f\x01j\x01s\x01\x01\x01@\x02\x04self\x13\x08message\
+s\x1b\0\x20\x04\0'[method]llm-client.chat-completion-text\x01!\x01i\x09\x01p\"\x01\
+k#\x01j\x01\x0b\x01\x01\x01@\x05\x04self\x13\x06prompts\x06config\x0f\x0ccustom-\
+tools\x1d\x0fcustom-handlers$\0%\x04\0![method]llm-client.process-prompt\x01&\x04\
+\0\x17wavs:agent/client@0.0.1\x05\x15\x01B.\x02\x03\x02\x01\x02\x04\0\x0bagent-e\
+rror\x03\0\0\x02\x03\x02\x01\x03\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\x09\x04\
+\0\x06config\x03\0\x04\x02\x03\x02\x01\x0a\x04\0\x0bllm-options\x03\0\x06\x02\x03\
+\x02\x01\x0c\x04\0\x08contract\x03\0\x08\x04\0\x11llm-options-funcs\x03\x01\x04\0\
+\x0econfig-manager\x03\x01\x01h\x0a\x01@\x01\x04self\x0c\0\x07\x04\0\x1d[method]\
+llm-options-funcs.new\x01\x0d\x01@\x02\x04self\x0c\x04tempv\0\x07\x04\0%[method]\
+llm-options-funcs.temperature\x01\x0e\x01@\x02\x04self\x0c\x05top-pv\0\x07\x04\0\
+\x1f[method]llm-options-funcs.top-p\x01\x0f\x01@\x02\x04self\x0c\x04seedy\0\x07\x04\
+\0\x1e[method]llm-options-funcs.seed\x01\x10\x01ky\x01@\x02\x04self\x0c\x0amax-t\
+okens\x11\0\x07\x04\0$[method]llm-options-funcs.max-tokens\x01\x12\x01@\x02\x04s\
+elf\x0c\x0econtext-window\x11\0\x07\x04\0([method]llm-options-funcs.context-wind\
+ow\x01\x13\x01h\x0b\x01j\x01\x05\x01s\x01@\x01\x04self\x14\0\x15\x04\0\x1b[metho\
+d]config-manager.load\x01\x16\x01@\x02\x04self\x14\x03uris\0\x15\x04\0$[method]c\
+onfig-manager.load-from-uri\x01\x17\x01j\x01\x05\x01\x01\x01@\x02\x04self\x14\x04\
+jsons\0\x18\x04\0\x20[method]config-manager.from-json\x01\x19\x01j\x01s\x01s\x01\
+@\x01\x04self\x14\0\x1a\x04\0\x1e[method]config-manager.to-json\x01\x1b\x01@\x01\
+\x04self\x14\0s\x04\03[method]config-manager.format-contract-descriptions\x01\x1c\
+\x01k\x09\x01@\x02\x04self\x14\x04names\0\x1d\x04\0+[method]config-manager.get-c\
+ontract-by-name\x01\x1e\x01j\0\x01\x01\x01@\x01\x04self\x14\0\x1f\x04\0\x1f[meth\
+od]config-manager.validate\x01\x20\x04\0\x17wavs:agent/config@0.0.1\x05\x16\x01B\
+#\x02\x03\x02\x01\x02\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x0c\x04\0\x08\
+contract\x03\0\x02\x02\x03\x02\x01\x0e\x04\0\x0dcontract-call\x03\0\x04\x02\x03\x02\
+\x01\x08\x04\0\x0btransaction\x03\0\x06\x04\0\x10contract-manager\x03\x01\x04\0\x13\
+transaction-manager\x03\x01\x01h\x08\x01@\x04\x04self\x0a\x04names\x07addresss\x03\
+abis\0\x03\x04\0\x1c[method]contract-manager.new\x01\x0b\x01@\x05\x04self\x0a\x04\
+names\x07addresss\x03abis\x0bdescriptions\0\x03\x04\0-[method]contract-manager.n\
+ew-with-description\x01\x0c\x01j\x01s\x01\x01\x01@\x02\x04self\x0a\x08contract\x03\
+\0\x0d\x04\0\"[method]contract-manager.parse-abi\x01\x0e\x01ps\x01p}\x01j\x01\x10\
+\x01\x01\x01@\x04\x04self\x0a\x08contract\x03\x0dfunction-names\x04args\x0f\0\x11\
+\x04\0-[method]contract-manager.encode-function-call\x01\x12\x01@\x03\x04self\x0a\
+\x08contract\x03\x0dfunction-names\0\x0d\x04\0&[method]contract-manager.find-fun\
+ction\x01\x13\x01j\0\x01\x01\x01@\x04\x04self\x0a\x08contract\x03\x0dfunction-na\
+mes\x04args\x0f\0\x14\x04\0/[method]contract-manager.validate-function-call\x01\x15\
+\x01h\x09\x01@\x02\x04self\x16\x0btransaction\x07\0\x7f\x04\0$[method]transactio\
+n-manager.is-valid\x01\x17\x01@\x02\x04self\x16\x0btransaction\x07\0\x14\x04\00[\
+method]transaction-manager.validate-transaction\x01\x18\x01@\x01\x0btransaction\x07\
+\0\x0d\x04\0\x16create-payload-from-tx\x01\x19\x04\0\x1awavs:agent/contracts@0.0\
+.1\x05\x17\x01B$\x02\x03\x02\x01\x10\x04\0\x0allm-client\x03\0\0\x02\x03\x02\x01\
+\x03\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\x04\x04\0\x04tool\x03\0\x04\x02\x03\
+\x02\x01\x05\x04\0\x09tool-call\x03\0\x06\x02\x03\x02\x01\x11\x04\0\x08function\x03\
+\0\x08\x02\x03\x02\x01\x06\x04\0\x13custom-tool-handler\x03\0\x0a\x02\x03\x02\x01\
+\x0c\x04\0\x08contract\x03\0\x0c\x04\0\x0dtools-builder\x03\x01\x01h\x0e\x01@\x01\
+\x04self\x0f\0\x05\x04\0#[method]tools-builder.send-eth-tool\x01\x10\x01p\x05\x01\
+@\x02\x04self\x0f\x08contract\x0d\0\x11\x04\0)[method]tools-builder.tools-from-c\
+ontract\x01\x12\x01@\x04\x04self\x0f\x04names\x0bdescriptions\x0aparameterss\0\x05\
+\x04\0![method]tools-builder.custom-tool\x01\x13\x01i\x0b\x01p\x14\x01k\x15\x01j\
+\x01s\x01s\x01@\x03\x04self\x0f\x09tool-call\x07\x0fcustom-handlers\x16\0\x17\x04\
+\0'[method]tools-builder.execute-tool-call\x01\x18\x01@\x02\x04self\x0f\x09tool-\
+call\x07\0\x17\x04\0+[method]tools-builder.parse-eth-transaction\x01\x19\x01i\x01\
+\x01p\x03\x01p\x07\x01@\x06\x04self\x0f\x06client\x1a\x10initial-messages\x1b\x08\
+response\x03\x0atool-calls\x1c\x0fcustom-handlers\x16\0\x17\x04\0([method]tools-\
+builder.process-tool-calls\x01\x1d\x04\0\x16wavs:agent/tools@0.0.1\x05\x18\x04\0\
+\x1bwavs:agent/wavs-agent@0.0.1\x04\0\x0b\x10\x01\0\x0awavs-agent\x03\0\0\0G\x09\
+producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.220.0\x10wit-bindgen-rus\
+t\x060.35.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {
