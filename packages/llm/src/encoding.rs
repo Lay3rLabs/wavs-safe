@@ -102,7 +102,6 @@ pub struct SolFunction {
     pub inputs: Vec<SolParam>,
 }
 
-// TODO add to wit
 /// Encode a function call using a function definition and arguments
 pub fn encode_function_call(function_json: &Value, args: &[Value]) -> Result<Vec<u8>, String> {
     // Parse the function definition into a simpler structure
@@ -117,6 +116,8 @@ pub fn encode_function_call(function_json: &Value, args: &[Value]) -> Result<Vec
     // Combine selector and encoded args
     let mut calldata = selector;
     calldata.extend_from_slice(&encoded_args);
+
+    println!("Calldata: {:?}", calldata);
 
     Ok(calldata)
 }

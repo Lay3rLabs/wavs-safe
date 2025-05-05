@@ -43,16 +43,24 @@ impl contracts::GuestContractManager for ContractManagerImpl {
         // Find the function definition in the ABI
         let function = self.find_function(contract.clone(), function_name.clone())?;
 
+        println!("Function: {}", function);
+
         // Parse the function definition
         let function_json: Value = serde_json::from_str(&function)
             .map_err(|e| AgentError::Contract(format!("Invalid function JSON: {}", e)))?;
+
+        println!("Function JSON: {}", function_json);
 
         // Parse args to serde_json::Value objects
         let args_values: Result<Vec<Value>, _> =
             args.iter().map(|arg| serde_json::from_str(arg)).collect();
 
+        println!("Args values: {:?}", args_values);
+
         let args_values = args_values
             .map_err(|e| AgentError::Contract(format!("Invalid argument format: {}", e)))?;
+
+        println!("Args values: {:?}", args_values);
 
         // Use the encoding module to encode the function call
         encoding::encode_function_call(&function_json, &args_values)
