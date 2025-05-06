@@ -5,7 +5,7 @@ use serde_json::Value;
 use std::str::FromStr;
 use tiny_keccak::{Hasher, Keccak};
 
-use crate::bindings::exports::wavs::agent::errors::AgentError;
+use crate::wit::exports::wavs::agent::errors::AgentError;
 
 /// Convert a string to a DynSolValue based on the type
 pub fn json_to_sol_value(

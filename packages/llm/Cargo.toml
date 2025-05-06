@@ -8,6 +8,7 @@ repository.workspace = true
 
 [dependencies]
 wavs-wasi-chain = { workspace = true }
+wit-bindgen = { workspace = true }
 wstd = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
@@ -34,8 +35,8 @@ debug = false
 strip = true
 lto = true
 
-[package.metadata.component]
-package = "component:wavs-llm"
+# [package.metadata.component]
+# package = "component:wavs-llm"
 
-[package.metadata.component.target]
-path = "./wit"
+# [package.metadata.component.target]
+# path = "./wit"

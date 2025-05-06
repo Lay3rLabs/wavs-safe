@@ -1,7 +1,7 @@
-use crate::bindings::exports::wavs::agent::contracts::{self};
-use crate::bindings::exports::wavs::agent::errors::AgentError;
-use crate::bindings::exports::wavs::agent::types::{Contract, Transaction};
 use crate::encoding;
+use crate::wit::exports::wavs::agent::contracts::{self};
+use crate::wit::exports::wavs::agent::errors::AgentError;
+use crate::wit::exports::wavs::agent::types::{Contract, Transaction};
 use serde_json::{self, Value};
 
 // Implementation for ContractManager
@@ -231,10 +231,10 @@ impl contracts::GuestTransactionManager for TransactionManagerImpl {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::bindings::exports::wavs::agent::contracts::{
+    use crate::wit::exports::wavs::agent::contracts::{
         GuestContractManager, GuestTransactionManager,
     };
-    use crate::bindings::exports::wavs::agent::types::{ContractCall, Transaction};
+    use crate::wit::exports::wavs::agent::types::{ContractCall, Transaction};
 
     fn get_sample_contract() -> Contract {
         Contract {

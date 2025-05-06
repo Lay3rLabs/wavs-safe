@@ -14,10 +14,10 @@ use bindings::{
 use context::DaoContext;
 use std::str::FromStr;
 use wavs_llm::{
-    client::new_client,
+    client::with_config,
     contracts::{self, ContractManagerImpl},
     traits::{GuestContractManager, GuestLlmClientManager},
-    types::LlmResponse,
+    types::{LlmResponse, Message},
     AgentError,
 };
 
@@ -45,10 +45,32 @@ impl Guest for Component {
 
         // Get the DAO context with all our configuration
         let context = DaoContext::load()?;
-        let llm_context = context.llm_context.clone();
+        let mut llm_context = context.llm_context.clone();
+
+        // Get the current DAO state with balances
+        let dao_state = context.get_context_with_balances();
+
+        // Get the original system message to append our state
+        if let Some(system_msg) = llm_context.messages.iter_mut().find(|msg| msg.role == "system") {
+            // Append the current DAO state to the system message
+            if let Some(content) = &system_msg.content {
+                let new_content = format!("{}\n\n{}", content, dao_state);
+                system_msg.content = Some(new_content);
+            }
+        } else {
+            // If no system message exists, create one with the DAO state
+            llm_context.messages.push(Message {
+                role: "system".into(),
+                content: Some(dao_state),
+                tool_calls: None,
+                tool_call_id: None,
+                name: None,
+            });
+        }
 
         // Create LLM client implementation using the standalone constructor
-        let llm_client = new_client(llm_context.model.clone()).map_err(|e| e.to_string())?;
+        let llm_client = with_config(llm_context.model.clone(), llm_context.llm_config.clone())
+            .map_err(|e| e.to_string())?;
 
         // Use the helper function to process the prompt
         let result = llm_client

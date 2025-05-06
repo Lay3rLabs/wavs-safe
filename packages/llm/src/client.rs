@@ -8,11 +8,11 @@ use wstd::{
     runtime::block_on,
 };
 
-use crate::bindings::exports::wavs::agent::client;
-pub use crate::bindings::exports::wavs::agent::client::LlmClient;
-use crate::bindings::exports::wavs::agent::errors::AgentError;
-use crate::bindings::exports::wavs::agent::tools::GuestToolsBuilder;
-use crate::bindings::exports::wavs::agent::types::{
+use crate::wit::exports::wavs::agent::client;
+pub use crate::wit::exports::wavs::agent::client::LlmClient;
+use crate::wit::exports::wavs::agent::errors::AgentError;
+use crate::wit::exports::wavs::agent::tools::GuestToolsBuilder;
+use crate::wit::exports::wavs::agent::types::{
     Config, CustomToolHandler, LlmOptions, LlmResponse, Message, Tool,
 };
 
@@ -381,16 +381,17 @@ impl client::GuestLlmClientManager for LlmClient {
 
                             println!("Arguments converted to string: {}", arguments);
 
-                            processed_tool_calls
-                                .push(crate::bindings::exports::wavs::agent::types::ToolCall {
-                                id: format!("call_{}", idx),
-                                tool_type: "function".to_string(),
-                                function:
-                                    crate::bindings::exports::wavs::agent::types::ToolCallFunction {
-                                        name: name.to_string(),
-                                        arguments,
-                                    },
-                            });
+                            processed_tool_calls.push(
+                                crate::wit::exports::wavs::agent::types::ToolCall {
+                                    id: format!("call_{}", idx),
+                                    tool_type: "function".to_string(),
+                                    function:
+                                        crate::wit::exports::wavs::agent::types::ToolCallFunction {
+                                            name: name.to_string(),
+                                            arguments,
+                                        },
+                                },
+                            );
                         }
                     }
 
@@ -485,7 +486,7 @@ impl client::GuestLlmClientManager for LlmClient {
                     Ok(tool_result) => {
                         // Try to parse as a transaction
                         if let Ok(transaction) = serde_json::from_str::<
-                            crate::bindings::exports::wavs::agent::types::Transaction,
+                            crate::wit::exports::wavs::agent::types::Transaction,
                         >(&tool_result)
                         {
                             return Ok(LlmResponse::Transaction(transaction));
@@ -519,7 +520,7 @@ impl client::GuestLlmClientManager for LlmClient {
 fn create_send_eth_tool() -> Tool {
     Tool {
         tool_type: "function".into(),
-        function: crate::bindings::exports::wavs::agent::types::Function {
+        function: crate::wit::exports::wavs::agent::types::Function {
             name: "send_eth".into(),
             description: Some("Send ETH to an address".into()),
             parameters: Some(
@@ -545,7 +546,7 @@ fn create_send_eth_tool() -> Tool {
 
 // Helper function to create tools for a contract
 fn create_contract_tools(
-    contract: &crate::bindings::exports::wavs::agent::types::Contract,
+    contract: &crate::wit::exports::wavs::agent::types::Contract,
 ) -> Vec<Tool> {
     // Use the tools module to create tools from contract
     crate::tools::ToolsBuilderImpl.tools_from_contract(contract.clone())
@@ -561,8 +562,8 @@ impl From<serde_json::Error> for AgentError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::bindings::exports::wavs::agent::client::GuestLlmClientManager;
-    use crate::bindings::exports::wavs::agent::types::{LlmOptions, Message};
+    use crate::wit::exports::wavs::agent::client::GuestLlmClientManager;
+    use crate::wit::exports::wavs::agent::types::{LlmOptions, Message};
 
     #[test]
     fn test_client_init() {

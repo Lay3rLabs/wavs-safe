@@ -1,4 +1,4 @@
-use crate::bindings::exports::wavs::agent::errors::AgentError;
+use crate::wit::exports::wavs::agent::errors::AgentError;
 
 // Add additional error type for NotImplemented
 impl AgentError {

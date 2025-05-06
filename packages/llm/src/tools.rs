@@ -1,7 +1,7 @@
-use crate::bindings::exports::wavs::agent::client::LlmClient;
-use crate::bindings::exports::wavs::agent::config::GuestConfigManager;
-use crate::bindings::exports::wavs::agent::tools::{self};
-use crate::bindings::exports::wavs::agent::types::{
+use crate::wit::exports::wavs::agent::client::LlmClient;
+use crate::wit::exports::wavs::agent::config::GuestConfigManager;
+use crate::wit::exports::wavs::agent::tools::{self};
+use crate::wit::exports::wavs::agent::types::{
     Contract, CustomToolHandler, Function, Message, Tool, ToolCall,
 };
 use serde_json::{json, Value};
@@ -420,8 +420,8 @@ fn parse_contract_function_call(tool_call: &ToolCall) -> Result<String, String> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::bindings::exports::wavs::agent::tools::GuestToolsBuilder;
-    use crate::bindings::exports::wavs::agent::types::ToolCallFunction;
+    use crate::wit::exports::wavs::agent::tools::GuestToolsBuilder;
+    use crate::wit::exports::wavs::agent::types::ToolCallFunction;
 
     // Helper function to create a test ToolCall
     fn create_test_tool_call(id: &str, name: &str, arguments: &str) -> ToolCall {

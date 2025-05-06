@@ -1,67 +1,13 @@
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::env;
 
-use crate::bindings::exports::wavs::agent::config::{self, GuestLlmOptionsFuncs};
-use crate::bindings::exports::wavs::agent::errors::AgentError;
-use crate::bindings::exports::wavs::agent::types::{Config, Contract, LlmOptions, Message};
+use crate::wit::exports::wavs::agent::config::{self, GuestLlmOptionsFuncs};
+use crate::wit::exports::wavs::agent::errors::AgentError;
+use crate::wit::exports::wavs::agent::types::{Config, Contract, LlmOptions, Message};
 
 // Constants for default values
 const DEFAULT_MODEL: &str = "gpt-4";
 const DEFAULT_API_BASE_URL: &str = "https://api.openai.com/v1";
 const DEFAULT_MAX_TOKENS: u32 = 2048;
-
-// JSON-serializable versions of our types
-#[derive(Serialize, Deserialize)]
-struct LlmOptionsJson {
-    temperature: f32,
-    top_p: f32,
-    seed: u32,
-    max_tokens: Option<u32>,
-    context_window: Option<u32>,
-}
-
-#[derive(Serialize, Deserialize)]
-struct ContractJson {
-    name: String,
-    address: String,
-    abi: String,
-    description: Option<String>,
-}
-
-#[derive(Serialize, Deserialize)]
-struct ConfigJson {
-    contracts: Vec<ContractJson>,
-    llm_config: LlmOptionsJson,
-    model: String,
-    messages: Vec<serde_json::Value>, // Using Value for complex Message type
-    config: HashMap<String, String>,
-}
-
-// Conversion implementations
-impl From<LlmOptions> for LlmOptionsJson {
-    fn from(options: LlmOptions) -> Self {
-        Self {
-            temperature: options.temperature,
-            top_p: options.top_p,
-            seed: options.seed,
-            max_tokens: options.max_tokens,
-            context_window: options.context_window,
-        }
-    }
-}
-
-impl From<LlmOptionsJson> for LlmOptions {
-    fn from(json: LlmOptionsJson) -> Self {
-        Self {
-            temperature: json.temperature,
-            top_p: json.top_p,
-            seed: json.seed,
-            max_tokens: json.max_tokens,
-            context_window: json.context_window,
-        }
-    }
-}
 
 // Implementation for LlmOptionsFuncs
 pub struct LlmOptionsFuncsImpl;
@@ -183,61 +129,10 @@ impl ConfigManagerImpl {
     }
 
     pub fn parse_config(&self, json: String) -> Result<Config, String> {
-        // Simple parsing implementation for tests
-        // Just check if the JSON is valid
-        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&json) {
-            // Create a simplified config with just the essential fields
-            let model = val.get("model").and_then(|m| m.as_str()).unwrap_or(DEFAULT_MODEL);
-
-            let temp = val.get("temperature").and_then(|t| t.as_f64()).unwrap_or(0.7) as f32;
-
-            let top_p = val.get("top_p").and_then(|t| t.as_f64()).unwrap_or(0.9) as f32;
-
-            let seed = val.get("seed").and_then(|s| s.as_u64()).unwrap_or(42) as u32;
-
-            let max_tokens = val.get("max_tokens").and_then(|m| m.as_u64()).map(|m| m as u32);
-
-            let context_window =
-                val.get("context_window").and_then(|c| c.as_u64()).map(|c| c as u32);
-
-            // Extract messages if they exist
-            let messages = val
-                .get("messages")
-                .and_then(|m| m.as_array())
-                .map(|arr| {
-                    arr.iter()
-                        .filter_map(|msg| {
-                            let role = msg.get("role")?.as_str()?;
-                            let content = msg.get("content").and_then(|c| c.as_str());
-
-                            Some(Message {
-                                role: role.into(),
-                                content: content.map(|s| s.into()),
-                                tool_calls: None,
-                                tool_call_id: None,
-                                name: None,
-                            })
-                        })
-                        .collect()
-                })
-                .unwrap_or_else(Vec::new);
-
-            // Create the config
-            Ok(Config {
-                contracts: vec![],
-                llm_config: LlmOptions {
-                    temperature: temp,
-                    top_p,
-                    seed,
-                    max_tokens,
-                    context_window,
-                },
-                model: model.into(),
-                messages,
-                config: vec![],
-            })
-        } else {
-            Err("Invalid JSON format".into())
+        // Now that Config implements Deserialize, we can directly deserialize from the JSON string
+        match serde_json::from_str::<Config>(&json) {
+            Ok(config) => Ok(config),
+            Err(e) => Err(format!("Failed to parse Config JSON: {}", e)),
         }
     }
 }
@@ -275,27 +170,9 @@ impl config::GuestConfigManager for ConfigManagerImpl {
     }
 
     fn from_json(&self, json: String) -> Result<Config, AgentError> {
-        let config_json: ConfigJson = serde_json::from_str(&json).map_err(|e| {
+        let config = serde_json::from_str(&json).map_err(|e| {
             AgentError::Configuration(format!("Failed to parse Config JSON: {}", e))
         })?;
-
-        // Convert to our type
-        let config = Config {
-            contracts: config_json
-                .contracts
-                .into_iter()
-                .map(|c| Contract {
-                    name: c.name,
-                    address: c.address,
-                    abi: c.abi,
-                    description: c.description,
-                })
-                .collect(),
-            llm_config: config_json.llm_config.into(),
-            model: config_json.model,
-            messages: vec![], // TODO: convert messages when we have the right types
-            config: config_json.config.into_iter().collect(),
-        };
 
         // Validate the config
         self.validate()?;
@@ -309,25 +186,7 @@ impl config::GuestConfigManager for ConfigManagerImpl {
             None => &self.default_config(),
         };
 
-        // Convert to our serializable JSON type
-        let config_json = ConfigJson {
-            contracts: config
-                .contracts
-                .iter()
-                .map(|c| ContractJson {
-                    name: c.name.clone(),
-                    address: c.address.clone(),
-                    abi: c.abi.clone(),
-                    description: c.description.clone(),
-                })
-                .collect(),
-            llm_config: config.llm_config.clone().into(),
-            model: config.model.clone(),
-            messages: vec![], // TODO: convert messages
-            config: config.config.iter().cloned().collect(),
-        };
-
-        serde_json::to_string_pretty(&config_json)
+        serde_json::to_string_pretty(config)
             .map_err(|e| format!("Failed to serialize Config to JSON: {}", e))
     }
 

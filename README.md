@@ -211,7 +211,7 @@ TRIGGER_ADDR=$(jq -r '.triggerContract' .docker/module_deployments.json)
 MODULE_ADDR=$(jq -r '.wavsSafeModule' .docker/module_deployments.json)
 
 # Set service config
-SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL", "WAVS_ENV_OLLAMA_API_URL"],"kv":[["config_uri", "ipfs://bafkreifl7gsdpd2lj6up2vjatqaik7nz2qj46gtk5d3tcjsdxvca3o3qhi"]],"workflow_id":"default","component_id":"default"}'
+SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL", "WAVS_ENV_OLLAMA_API_URL"],"kv":[["config_uri", "ipfs://bafkreigflglas3bfv2qe5dik3lwag5lyuotwzbp5p6fw5cd73ibr5qczc4"]],"workflow_id":"default","component_id":"default"}'
 
 # Deploy the service
 COMPONENT_FILENAME=dao_agent.wasm SERVICE_TRIGGER_ADDR=$TRIGGER_ADDR SERVICE_SUBMISSION_ADDR=$MODULE_ADDR SERVICE_CONFIG=$SERVICE_CONFIG make deploy-service
