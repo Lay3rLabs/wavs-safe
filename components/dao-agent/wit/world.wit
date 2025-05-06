@@ -22,8 +22,6 @@ world layer-trigger-world {
   import wavs:agent/tools@0.0.1;
   import wavs:agent/types@0.0.1;
 
-  // include wavs:worker/layer-trigger-world@0.3.0;
-
   import host: interface {
     use wavs:worker/layer-types@0.3.0.{eth-chain-config, cosmos-chain-config, log-level};
 

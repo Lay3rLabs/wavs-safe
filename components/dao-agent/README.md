@@ -1,26 +1,39 @@
-# DAO Agent
+# DAO Agent Component
+
+A WASI-based agent that controls a Gnosis Safe Module. This component uses an LLM to make financial decisions and execute transactions on behalf of a DAO.
 
 ## Overview
 
-The DAO Agent is an AI-powered autonomous agent for Gnosis Safe that can make financial decisions and execute transactions on behalf of a DAO. Built using WAVS (WebAssembly Autonomous Verification System), it combines the security of multi-signature wallets with the flexibility of AI-assisted decision making.
+The DAO Agent acts as an AI-powered financial controller for a Gnosis Safe wallet. It can:
 
-## Features
-
-- **AI-Powered Decision Making**: Uses LLMs to interpret requests and decide on appropriate financial actions
-- **ETH Transfers**: Securely sends ETH to allowed addresses
-- **Smart Contract Interaction**: Calls functions on verified contracts like ERC20 tokens
-- **Dynamic Balance Checking**: Queries on-chain balances for ETH and ERC20 tokens in real-time
-- **Configurable Behavior**: Customizable through JSON configuration that can be loaded from HTTP or IPFS
+- Process natural language instructions about financial transactions
+- Send ETH to allowlisted addresses
+- Transfer ERC20 tokens (e.g., USDC) to allowlisted addresses
+- Interact with smart contracts
+- Validate transactions based on security rules
 
 ## Configuration
 
-The agent loads its configuration from a JSON file, which can be specified through the `config_uri` environment variable. Configuration can be hosted on HTTP/HTTPS or IPFS.
+The DAO Agent can be configured via a JSON configuration file, which can be loaded from:
 
-### Configuration Options
+- HTTP/HTTPS URLs
+- IPFS URLs (using the format `ipfs://HASH`)
+
+The configuration can be passed via the `config_uri` key-value pair when deploying the service:
+
+```bash
+SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL", "WAVS_ENV_OLLAMA_API_URL"],"kv":[["config_uri", "ipfs://bafkreigflglas3bfv2qe5dik3lwag5lyuotwzbp5p6fw5cd73ibr5qczc4"]],"workflow_id":"default","component_id":"default"}'
+```
+
+If no configuration is provided, the component will use the default settings defined in `context.rs`.
+
+### Configuration Format
+
+The configuration file should follow this structure:
 
 ```json
 {
-  "account_address": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+  "account_address": "0x47937d0d01b7d71201ca10138ebc14d22618ebce",
   "allowlisted_addresses": ["0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3"],
   "supported_tokens": [
     {
@@ -30,61 +43,129 @@ The agent loads its configuration from a JSON file, which can be specified throu
       "description": "Native Ethereum token"
     },
     {
-      "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "address": "0xb7278a61aa25c888815afc32ad3cc52ff24fe575",
       "symbol": "USDC",
       "decimals": 6,
-      "description": "USD Coin stablecoin"
+      "description": "USD Coin - a stablecoin pegged to the US Dollar"
     }
   ],
-  "contracts": [
-    {
-      "name": "USDC",
-      "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-      "abi": "[{\"constant\":false,\"inputs\":[{\"name\":\"_to\",\"type\":\"address\"},{\"name\":\"_value\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"type\":\"function\"}]",
-      "description": "USDC is a stablecoin pegged to the US Dollar"
-    }
-  ],
-  "llm_config": {
-    "temperature": 0,
-    "top_p": 0.1,
-    "seed": 42,
-    "max_tokens": 500,
-    "context_window": 4096
-  },
-  "model": "llama3.2",
-  "system_prompt_template": "..."
+  "llm_context": {
+    "model": "llama3.2",
+    "llm_config": {
+      "temperature": 0.0,
+      "top_p": 1.0,
+      "seed": 42,
+      "max_tokens": 500,
+      "context_window": 4096
+    },
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a DAO agent responsible for making and executing financial decisions through a Gnosis Safe Module..."
+      }
+    ],
+    "contracts": [
+      {
+        "name": "USDC",
+        "address": "0xb7278a61aa25c888815afc32ad3cc52ff24fe575",
+        "abi": "[{\"type\":\"function\",\"name\":\"transfer\",\"inputs\":[{\"name\":\"to\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"nonpayable\"}]",
+        "description": "USDC is a stablecoin pegged to the US Dollar"
+      }
+    ],
+    "config": []
+  }
 }
 ```
 
+See `agent-config.example.json` for a full example.
+
 ## Environment Variables
 
-The agent requires the following environment variables:
+The DAO Agent requires the following environment variables:
 
-- `ETH_RPC_URL`: The Ethereum RPC URL for querying on-chain data
-- `ETH_CHAIN` (optional): The Ethereum chain to use (defaults to "sepolia")
+- `WAVS_ENV_OPENAI_API_KEY`: OpenAI API key for LLM access
+- `WAVS_ENV_OPENAI_API_URL`: OpenAI API endpoint (default: "https://api.openai.com/v1/chat/completions")
+- `WAVS_ENV_IPFS_GATEWAY_URL`: IPFS gateway URL for loading configurations (default: "https://gateway.lighthouse.storage")
+- `WAVS_ENV_OLLAMA_API_URL`: Ollama Server API endpoint (default: "http://localhost:localhost:11434")
 
-## Dynamic Balance Checking
+## Building and Running
 
-The agent now dynamically queries on-chain balances in real-time using the Ethereum JSON-RPC API. This ensures decisions are made based on the most up-to-date financial information. The agent:
+### Build the Component
 
-1. Queries ETH balance directly from the blockchain
-2. Retrieves ERC20 token balances by calling the `balanceOf` function on each token contract
-3. Formats these balances for display in the system prompt
-
-## Usage
-
-The DAO Agent is designed to be triggered by events, typically from the Gnosis Safe Module. It can also be triggered directly for testing purposes.
-
-### Example Prompts
-
-```
-Send 0.1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3 for development expenses
+```bash
+cd components/dao-agent
+cargo component build --release
 ```
 
-```
-Transfer 500 USDC to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3 for community grants
+Or use the project-level build command:
+
+```bash
+make wasi-build
 ```
 
-## License
+### Run Locally
 
-This project is licensed under the MIT License - see the [LICENSE](../../LICENSE) file for details.
+You can test the DAO Agent locally with:
+
+```bash
+COMPONENT_FILENAME="dao_agent.wasm" PROMPT='We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3.' SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL", "WAVS_ENV_OLLAMA_API_URL"],"kv":[["config_uri", "ipfs://bafkreiaqticxepygpav5h52kcqtid3ls2mm55i2so7edxmrdbn3z3rnyny"]],"workflow_id":"default","component_id":"default"}' make wasi-exec
+```
+
+## Security Considerations
+
+The DAO Agent includes several security measures:
+
+1. **Allowlisted Addresses**: Only addresses in the allowlist can receive funds
+2. **Supported Tokens**: Only explicitly supported tokens can be transferred
+3. **Token Amount Limits**: Transfers are limited to prevent large, unauthorized moves
+4. **Decimal Handling**: Careful handling of token decimals to avoid mistakes
+5. **Balance Checks**: Transactions that would spend more than the current balance are rejected
+6. **Suspicious Request Detection**: The agent is programmed to reject unclear or suspicious requests
+
+## Technical Implementation
+
+### Dynamic Balance Fetching
+
+The agent can query current token balances on-chain to verify transactions:
+
+```rust
+// Query all supported token balances
+let balances = context.query_all_token_balances()?;
+```
+
+### Smart Contract Interactions
+
+The agent can interact with smart contracts using their ABIs:
+
+```rust
+// Execute a USDC transfer
+let transfer_call = ... // Create transfer call from ABI
+let transaction = ... // Build transaction
+let result = provider.send_transaction(transaction).await?;
+```
+
+### Token Decimal Handling
+
+The agent automatically handles token decimal conversion:
+
+- ETH: 18 decimals (1 ETH = 10^18 wei)
+- USDC: 6 decimals (1 USDC = 10^6 base units)
+
+All human-readable amounts are converted to the correct base units before transactions are executed.
+
+## Extending the Agent
+
+To add support for new tokens or contracts:
+
+1. Add the token to the `supported_tokens` array in your configuration
+2. Add the contract ABI to the `contracts` array
+3. Update the system prompt to include instructions for the new token/contract
+
+## Limitations
+
+This is a demonstration agent and has several limitations:
+
+- Limited to pre-defined token types
+- No complex DeFi operations
+- No governance capabilities
+- Simple security rules
