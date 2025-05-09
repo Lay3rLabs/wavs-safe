@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use std::str::FromStr;
 use wavs_llm::types::{Config, Contract, LlmOptions, Message};
-use wavs_wasi_chain::ethereum::new_eth_provider;
-use wavs_wasi_chain::http::{fetch_json, http_request_get};
+use wavs_wasi_utils::evm::new_evm_provider;
+use wavs_wasi_utils::http::{fetch_json, http_request_get};
 use wstd::{http::HeaderValue, runtime::block_on};
 
 // ERC20 interface definition using alloy-sol-types
@@ -176,7 +176,7 @@ impl DaoContext {
         block_on(async move {
             let chain_config = get_eth_chain_config("local").unwrap();
             let provider: RootProvider<Ethereum> =
-                new_eth_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
+                new_evm_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
 
             let address = Address::from_str(&self.account_address)
                 .map_err(|_| format!("Invalid address format: {}", self.account_address))?;
@@ -193,7 +193,7 @@ impl DaoContext {
         block_on(async move {
             let chain_config = get_eth_chain_config("local").unwrap();
             let provider: RootProvider<Ethereum> =
-                new_eth_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
+                new_evm_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
             // Parse addresses
             let account = Address::from_str(&self.account_address)
                 .map_err(|_| format!("Invalid account address format: {}", self.account_address))?;
@@ -213,7 +213,7 @@ impl DaoContext {
             };
 
             let balance_result = provider
-                .call(&balance_tx)
+                .call(balance_tx)
                 .await
                 .map_err(|e| format!("Failed to query token balance: {}", e))?;
             let balance = U256::from_be_slice(&balance_result);
@@ -230,7 +230,7 @@ impl DaoContext {
             };
 
             let decimals_result = provider
-                .call(&decimals_tx)
+                .call(decimals_tx)
                 .await
                 .map_err(|e| format!("Failed to query token decimals: {}", e))?;
 
@@ -257,7 +257,7 @@ impl DaoContext {
             };
 
             let symbol_result = provider
-                .call(&symbol_tx)
+                .call(symbol_tx)
                 .await
                 .map_err(|e| format!("Failed to query token symbol: {}", e))?;
 
