@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "components/*",
+    "packages/*"
 ]
 resolver = "2"
 
@@ -19,6 +20,9 @@ wit-bindgen = "0.39.0"
 wstd = "0.5.1"
 wasi = "0.14.1"
 wavs-wasi-chain = "0.3.0"
+
+# WAVS
+wavs-llm = { path = "./packages/llm" }
 
 # Other
 serde = { version = "1.0.217", features = ["derive"] }
@@ -42,4 +46,5 @@ ethabi = "18.0.0"
 primitive-types = "0.13.1"
 base64 = "0.22.1"
 mockall = "0.11"
+thiserror = "1.0.47"
 tiny-keccak = { version = "2.0", features = ["keccak"] }

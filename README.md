@@ -89,32 +89,6 @@ wkg config --default-registry wa.dev
 
 </details>
 
-<details>
-<summary>Install Ollama and Stable Diffusion</summary>
-### Install Ollama (optional)
-
-This example uses an LLM configured for determinism, run locally with Ollama. The model is llama3.2, but other open source models can be used if you change the model parameter in the config.
-
-If you do not want to run a model locally, set `WAVS_ENV_OPENAI_API_KEY` with a valid OpenAI API key.
-
-For more information about AVSs and deterministic AI, see our [blog post on the subject](https://www.layer.xyz/news-and-insights/deterministic-ai).
-
-You can download Ollama here: https://ollama.com/
-
-Get the llama 3.2 model.
-
-```bash
-ollama pull llama3.2
-```
-
-In a separate terminal run Ollama in the background with:
-
-```bash
-ollama serve
-```
-
-</details>
-
 ### Solidity
 
 Install the required packages to build the Solidity contracts. This project supports both [submodules](./.gitmodules) and [npm packages](./package.json).
@@ -174,6 +148,7 @@ For the DAO agent example, the following environment variables are used:
 - `WAVS_ENV_OPENAI_API_KEY`: Your OpenAI API key for accessing LLM services
 - `WAVS_ENV_OPENAI_API_URL`: The endpoint URL for OpenAI API calls (defaults to "https://api.openai.com/v1/chat/completions")
 - `WAVS_ENV_IPFS_GATEWAY_URL`: IPFS gateway URL for loading configurations (defaults to "https://gateway.lighthouse.storage")
+- `WAVS_ENV_OLLAMA_API_URL`: Ollama Server API endpoint (default: "http://localhost:localhost:11434")
 
 Example configuration in your `.env` file:
 
@@ -181,6 +156,7 @@ Example configuration in your `.env` file:
 WAVS_ENV_OPENAI_API_KEY=sk-your-openai-key
 WAVS_ENV_OPENAI_API_URL="https://api.openai.com/v1/chat/completions"
 WAVS_ENV_IPFS_GATEWAY_URL="https://gateway.lighthouse.storage"
+WAVS_ENV_OLLAMA_API_URL="http://localhost:11434"
 ```
 
 The Key Value pairs must be listed in the `kv` array in the `SERVICE_CONFIG` when you deploy a component. The `dao-agent` component supports a `config_uri` kv pair where it fetches the agent configuration (otherwise it uses the default config, which matches [agent-config.example.json](./agent-config.example.json)):
@@ -188,7 +164,7 @@ The Key Value pairs must be listed in the `kv` array in the `SERVICE_CONFIG` whe
 Example `host_envs` and `kv` in SERVICE_CONFIG:
 
 ```
-SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[["config_uri", "ipfs://bafkreiaqticxepygpav5h52kcqtid3ls2mm55i2so7edxmrdbn3z3rnyny"]],"workflow_id":"default","component_id":"default"}'
+SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL", "WAVS_ENV_OLLAMA_API_URL"],"kv":[["config_uri", "ipfs://bafkreigflglas3bfv2qe5dik3lwag5lyuotwzbp5p6fw5cd73ibr5qczc4"]],"workflow_id":"default","component_id":"default"}'
 ```
 
 ### Start Environment
@@ -212,7 +188,7 @@ Test run the component locally to validate the business logic works (no on-chain
 Note: the `SERVICE_CONFIG` json is used for setting environment variables and the kv store. The `kv` array is a list of key value pairs, "config_uri" is a URI that contains the agent config (the IPFS URI included below corresponds to `agent-config.example.json`). To use a different model, or change the agent configuration, you'll need to upload a new JSON somewhere (or modify the default context in `dao-agent/src/context.rs`). Omitting `config_uri` will use `DaoContext` defaults defined in `context.rs`.
 
 ```bash
-COMPONENT_FILENAME="dao_agent.wasm" PROMPT='We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3.' SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[["config_uri", "ipfs://bafkreiaqticxepygpav5h52kcqtid3ls2mm55i2so7edxmrdbn3z3rnyny"]],"workflow_id":"default","component_id":"default"}' make wasi-exec
+COMPONENT_FILENAME="dao_agent.wasm" PROMPT='We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3.' SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL", "WAVS_ENV_OLLAMA_API_URL"],"kv":[["config_uri", "ipfs://bafkreigflglas3bfv2qe5dik3lwag5lyuotwzbp5p6fw5cd73ibr5qczc4"]],"workflow_id":"default","component_id":"default"}' make wasi-exec
 ```
 
 ## WAVS Safe Module + Agent Demo
@@ -235,7 +211,7 @@ TRIGGER_ADDR=$(jq -r '.triggerContract' .docker/module_deployments.json)
 MODULE_ADDR=$(jq -r '.wavsSafeModule' .docker/module_deployments.json)
 
 # Set service config
-SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[["config_uri", "ipfs://bafkreiaqticxepygpav5h52kcqtid3ls2mm55i2so7edxmrdbn3z3rnyny"]],"workflow_id":"default","component_id":"default"}'
+SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL", "WAVS_ENV_OLLAMA_API_URL"],"kv":[["config_uri", "ipfs://bafkreigflglas3bfv2qe5dik3lwag5lyuotwzbp5p6fw5cd73ibr5qczc4"]],"workflow_id":"default","component_id":"default"}'
 
 # Deploy the service
 COMPONENT_FILENAME=dao_agent.wasm SERVICE_TRIGGER_ADDR=$TRIGGER_ADDR SERVICE_SUBMISSION_ADDR=$MODULE_ADDR SERVICE_CONFIG=$SERVICE_CONFIG make deploy-service

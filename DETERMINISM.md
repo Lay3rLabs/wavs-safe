@@ -1,6 +1,8 @@
 # LLM Inferencing Determinism
 
-AVSs are run by an operator set consisting of many nodes running essentially an AI Oracle, and the LLM Inference examples here require deterministic output to work.
+NOTE: this WAVS example is not production ready and has not been thouroughly tested. It may not be garunteed to be 100% deterministic.
+
+AVSs are run by an operator set consisting of many nodes running essentially an AI Oracle, and the LLM Inference examples here require deterministic output to produce valid results.
 
 Achieving determinism with LLM inferencing is actually fairly straightforward, but there are some caveats, namely:
 

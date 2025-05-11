@@ -1,152 +1,121 @@
-use anyhow::Result;
+use crate::config::{Config, LlmOptions};
+use crate::contracts::Transaction;
+use crate::errors::AgentError;
+use crate::tools::{Tool, ToolCall, Tools};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::env;
+use wstd::runtime::block_on;
 use wstd::{
     http::{Client, HeaderValue, IntoBody, Request},
     io::AsyncRead,
 };
 
-use crate::tools::{Message, Tool};
-
-/// Configuration options for LLM API requests
+// TODO WIT record
+/// Common message structure for chat completions
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LLMConfig {
-    /// Temperature controls randomness (0.0-2.0)
-    pub temperature: f32,
-    /// Top_p controls diversity (0.0-1.0)
-    pub top_p: f32,
-    /// Seed for deterministic outputs
-    pub seed: u32,
-    /// Maximum tokens to generate
-    pub max_tokens: Option<u32>,
-    /// Context window size (mainly for Ollama)
-    pub context_window: Option<u32>,
+pub struct Message {
+    pub role: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub content: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_calls: Option<Vec<ToolCall>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_call_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
 }
 
-impl Default for LLMConfig {
-    fn default() -> Self {
+// TODO WIT interface
+/// Tool result message
+impl Message {
+    pub fn new_user(content: String) -> Self {
         Self {
-            temperature: 0.0,
-            top_p: 1.0,
-            seed: 42,
-            max_tokens: None,
-            context_window: Some(4096),
+            role: "user".to_string(),
+            content: Some(content),
+            tool_calls: None,
+            tool_call_id: None,
+            name: None,
         }
     }
-}
 
-impl LLMConfig {
-    /// Create a new config with default values
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new_system(content: String) -> Self {
+        Self {
+            role: "system".to_string(),
+            content: Some(content),
+            tool_calls: None,
+            tool_call_id: None,
+            name: None,
+        }
     }
 
-    /// Set temperature
-    pub fn temperature(mut self, temp: f32) -> Self {
-        self.temperature = temp;
-        self
-    }
-
-    /// Set top_p
-    pub fn top_p(mut self, top_p: f32) -> Self {
-        self.top_p = top_p;
-        self
-    }
-
-    /// Set seed
-    pub fn seed(mut self, seed: u32) -> Self {
-        self.seed = seed;
-        self
-    }
-
-    /// Set max tokens
-    pub fn max_tokens(mut self, max_tokens: Option<u32>) -> Self {
-        self.max_tokens = max_tokens;
-        self
-    }
-
-    /// Set context window size
-    pub fn context_window(mut self, context_window: Option<u32>) -> Self {
-        self.context_window = context_window;
-        self
+    pub fn new_tool_result(tool_call_id: String, content: String) -> Self {
+        Self {
+            role: "tool".to_string(),
+            content: Some(content),
+            tool_calls: None,
+            tool_call_id: Some(tool_call_id),
+            name: None,
+        }
     }
 }
 
 /// Client for making LLM API requests
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct LLMClient {
     model: String,
     api_url: String,
     api_key: Option<String>,
-    config: LLMConfig,
+    config: LlmOptions,
 }
 
-#[derive(Debug)]
-pub enum Error {
-    EmptyModelName,
-    EmptyMessages,
-    InvalidProvider,
-    RequestFailed(String),
-    Other(String),
+// TODO WIT record
+/// Response from an LLM interaction
+#[derive(Debug, Clone)]
+pub enum LlmResponse {
+    /// Transaction to be executed
+    Transaction(Transaction),
+    /// Text response (when no action is needed)
+    Text(String),
 }
 
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::EmptyModelName => write!(f, "Model name cannot be empty"),
-            Error::EmptyMessages => write!(f, "Messages cannot be empty"),
-            Error::InvalidProvider => write!(f, "Invalid provider configuration"),
-            Error::RequestFailed(msg) => write!(f, "Request failed: {}", msg),
-            Error::Other(msg) => write!(f, "Other error: {}", msg),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
-
-impl From<Error> for String {
-    fn from(error: Error) -> Self {
-        error.to_string()
-    }
-}
-
-impl From<String> for Error {
-    fn from(error: String) -> Self {
-        Error::Other(error)
-    }
-}
-
-fn get_required_var(name: &str) -> Result<String, String> {
-    std::env::var(name).map_err(|e| format!("Missing required variable {}: {}", name, e))
-}
-
+// TODO WIT resource
 impl LLMClient {
     /// Create a new LLM client with default configuration
-    pub fn new(model: &str) -> Result<Self, String> {
-        Self::with_config(model, LLMConfig::default())
+    pub fn new(model: &str) -> Result<Self, AgentError> {
+        Self::with_config(model, LlmOptions::default())
     }
 
     /// Create a new LLM client from a JSON configuration string
-    pub fn from_json(model: &str, json_config: &str) -> Result<Self, String> {
-        let config: LLMConfig = serde_json::from_str(json_config)
-            .map_err(|e| format!("Failed to parse config JSON: {}", e))?;
+    pub fn from_json(model: &str, json_config: &str) -> Result<Self, AgentError> {
+        let config: LlmOptions = serde_json::from_str(json_config)
+            .map_err(|e| AgentError::Config(format!("Failed to parse config JSON: {}", e)))?;
         Self::with_config(model, config)
     }
 
     /// Create a new LLM client with custom configuration
-    pub fn with_config(model: &str, config: LLMConfig) -> Result<Self, String> {
+    pub fn with_config(model: &str, config: LlmOptions) -> Result<Self, AgentError> {
         // Validate model name
         if model.trim().is_empty() {
-            return Err("Model name cannot be empty".to_string());
+            return Err(AgentError::Llm("Model name cannot be empty".to_string()));
         }
 
         eprintln!("model: {}", model);
 
+        // TODO consistent list of models
         // Get API key if using OpenAI models
         let api_key = match model {
             "gpt-3.5-turbo" | "gpt-4" | "gpt-4o" | "gpt-4o-mini" | "gpt-4.1" | "gpt-4-turbo" => {
-                Some(get_required_var("WAVS_ENV_OPENAI_API_KEY")?)
+                Some(
+                    std::env::var("WAVS_ENV_OPENAI_API_KEY")
+                        .map_err(|e| {
+                            format!(
+                                "Missing required variable {}: {}",
+                                "WAVS_ENV_OPENAI_API_KEY", e
+                            )
+                        })
+                        .map_err(|e| AgentError::Config(e))?,
+                )
             }
             _ => None, // Local models don't need an API key
         };
@@ -170,214 +139,336 @@ impl LLMClient {
     }
 
     /// Get a reference to the current configuration
-    pub fn get_config(&self) -> &LLMConfig {
+    pub fn get_config(&self) -> &LlmOptions {
         &self.config
     }
 
     /// Send a chat completion request, with optional tools
-    pub async fn chat_completion(
+    pub fn chat_completion(
         &self,
         messages: &[Message],
         tools: Option<&[Tool]>,
-    ) -> Result<Message, String> {
-        // Validate messages
-        if messages.is_empty() {
-            return Err("Messages cannot be empty".to_string());
-        }
-
-        println!("Sending chat completion request:");
-        println!("- Model: {}", self.model);
-        println!("- Number of messages: {}", messages.len());
-        println!("- Tools provided: {}", tools.is_some());
-        println!("- Temperature: {}", self.config.temperature);
-        println!("- Top_p: {}", self.config.top_p);
-
-        // Calculate max tokens based on tools presence if not explicitly set
-        let max_tokens =
-            self.config.max_tokens.unwrap_or_else(|| if tools.is_some() { 1024 } else { 100 });
-
-        // Create request body with configurable settings
-        let body = if self.api_key.is_some() {
-            // OpenAI format
-            let mut request = json!({
-                "model": self.model,
-                "messages": messages,
-                "temperature": self.config.temperature,
-                "top_p": self.config.top_p,
-                "seed": self.config.seed,
-                "stream": false,
-                "max_tokens": max_tokens
-            });
-
-            // Add tools if provided
-            if let Some(tools_list) = tools {
-                request["tools"] = json!(tools_list);
+    ) -> Result<Message, AgentError> {
+        block_on(async {
+            // Validate messages
+            if messages.is_empty() {
+                return Err(AgentError::Llm("Messages cannot be empty".to_string()));
             }
 
-            request
-        } else {
-            // Ollama chat format
-            let mut request = json!({
-                "model": self.model,
-                "messages": messages,
-                "stream": false,
-                "options": {
+            println!("Sending chat completion request:");
+            println!("- Model: {}", self.model);
+            println!("- Number of messages: {}", messages.len());
+            println!("- Tools provided: {}", tools.is_some());
+            println!("- Temperature: {}", self.config.temperature);
+            println!("- Top_p: {}", self.config.top_p);
+
+            // Calculate max tokens based on tools presence if not explicitly set
+            let max_tokens =
+                self.config.max_tokens.unwrap_or_else(|| if tools.is_some() { 1024 } else { 100 });
+
+            // Create request body with configurable settings
+            let body = if self.api_key.is_some() {
+                // OpenAI format
+                let mut request = json!({
+                    "model": self.model,
+                    "messages": messages,
                     "temperature": self.config.temperature,
                     "top_p": self.config.top_p,
                     "seed": self.config.seed,
-                    "num_predict": max_tokens,
+                    "stream": false,
+                    "max_tokens": max_tokens
+                });
+
+                // Add tools if provided
+                if let Some(tools_list) = tools {
+                    request["tools"] = json!(tools_list);
                 }
-            });
 
-            // Add context window if specified
-            if let Some(ctx) = self.config.context_window {
-                request["options"]["num_ctx"] = json!(ctx);
-            }
+                request
+            } else {
+                // Ollama chat format
+                let mut request = json!({
+                    "model": self.model,
+                    "messages": messages,
+                    "stream": false,
+                    "options": {
+                        "temperature": self.config.temperature,
+                        "top_p": self.config.top_p,
+                        "seed": self.config.seed,
+                        "num_predict": max_tokens,
+                    }
+                });
 
-            // Add tools if provided for Ollama (using the format Ollama expects)
-            if let Some(tools_list) = tools {
-                // Standard tools format - might work for some Ollama versions
-                request["tools"] = json!(tools_list);
+                // Add Config window if specified
+                if let Some(ctx) = self.config.context_window {
+                    request["options"]["num_ctx"] = json!(ctx);
+                }
 
-                // Also include functions key which some Ollama versions might need
-                // Convert tools to format compatible with Ollama
-                let functions = tools_list
-                    .iter()
-                    .map(|tool| {
-                        json!({
-                            "name": tool.function.name,
-                            "description": tool.function.description,
-                            "parameters": tool.function.parameters
+                // Add tools if provided for Ollama (using the format Ollama expects)
+                if let Some(tools_list) = tools {
+                    // Standard tools format - might work for some Ollama versions
+                    request["tools"] = json!(tools_list);
+
+                    // Also include functions key which some Ollama versions might need
+                    // Convert tools to format compatible with Ollama
+                    let functions = tools_list
+                        .iter()
+                        .map(|tool| {
+                            json!({
+                                "name": tool.function.name,
+                                "description": tool.function.description,
+                                "parameters": tool.function.parameters
+                            })
                         })
-                    })
-                    .collect::<Vec<_>>();
+                        .collect::<Vec<_>>();
 
-                request["functions"] = json!(functions);
+                    request["functions"] = json!(functions);
+                }
+
+                request
+            };
+
+            println!("Request body: {}", serde_json::to_string_pretty(&body).unwrap());
+
+            // Create request
+            let mut req = Request::post(&self.api_url)
+                .body(serde_json::to_vec(&body).unwrap().into_body())
+                .map_err(|e| format!("Failed to create request: {}", e))?;
+
+            // Add headers
+            req.headers_mut().insert("Content-Type", HeaderValue::from_static("application/json"));
+            req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
+
+            // Add authorization if needed
+            if let Some(api_key) = &self.api_key {
+                req.headers_mut().insert(
+                    "Authorization",
+                    HeaderValue::from_str(&format!("Bearer {}", api_key))
+                        .map_err(|e| format!("Invalid API key format: {}", e))?,
+                );
             }
 
-            request
-        };
+            println!("Sending request to: {}", req.uri());
 
-        println!("Request body: {}", serde_json::to_string_pretty(&body).unwrap());
+            // Send request
+            let mut res =
+                Client::new().send(req).await.map_err(|e| format!("Request failed: {}", e))?;
 
-        // Create request
-        let mut req = Request::post(&self.api_url)
-            .body(serde_json::to_vec(&body).unwrap().into_body())
-            .map_err(|e| format!("Failed to create request: {}", e))?;
+            println!("Received response with status: {}", res.status());
 
-        // Add headers
-        req.headers_mut().insert("Content-Type", HeaderValue::from_static("application/json"));
-        req.headers_mut().insert("Accept", HeaderValue::from_static("application/json"));
+            if res.status() != 200 {
+                let mut error_body = Vec::new();
+                res.body_mut()
+                    .read_to_end(&mut error_body)
+                    .await
+                    .map_err(|e| format!("Failed to read error response: {}", e))?;
+                let error_msg = format!(
+                    "API error: status {} - {}",
+                    res.status(),
+                    String::from_utf8_lossy(&error_body)
+                );
+                println!("Error: {}", error_msg);
+                return Err(AgentError::Llm(error_msg));
+            }
 
-        // Add authorization if needed
-        if let Some(api_key) = &self.api_key {
-            req.headers_mut().insert(
-                "Authorization",
-                HeaderValue::from_str(&format!("Bearer {}", api_key))
-                    .map_err(|e| format!("Invalid API key format: {}", e))?,
-            );
-        }
-
-        println!("Sending request to: {}", req.uri());
-
-        // Send request
-        let mut res =
-            Client::new().send(req).await.map_err(|e| format!("Request failed: {}", e))?;
-
-        println!("Received response with status: {}", res.status());
-
-        if res.status() != 200 {
-            let mut error_body = Vec::new();
+            // Read response body
+            let mut body_buf = Vec::new();
             res.body_mut()
-                .read_to_end(&mut error_body)
+                .read_to_end(&mut body_buf)
                 .await
-                .map_err(|e| format!("Failed to read error response: {}", e))?;
-            let error_msg = format!(
-                "API error: status {} - {}",
-                res.status(),
-                String::from_utf8_lossy(&error_body)
-            );
-            println!("Error: {}", error_msg);
-            return Err(error_msg);
-        }
+                .map_err(|e| format!("Failed to read response body: {}", e))?;
 
-        // Read response body
-        let mut body_buf = Vec::new();
-        res.body_mut()
-            .read_to_end(&mut body_buf)
-            .await
-            .map_err(|e| format!("Failed to read response body: {}", e))?;
+            let body = String::from_utf8(body_buf)
+                .map_err(|e| format!("Invalid UTF-8 in response: {}", e))?;
 
-        let body =
-            String::from_utf8(body_buf).map_err(|e| format!("Invalid UTF-8 in response: {}", e))?;
+            println!("Raw response: {}", body);
 
-        println!("Raw response: {}", body);
+            // Parse response based on provider
+            if self.api_key.is_some() {
+                // Parse OpenAI response format
+                #[derive(Deserialize)]
+                struct ChatResponse {
+                    choices: Vec<Choice>,
+                }
 
-        // Parse response based on provider
-        if self.api_key.is_some() {
-            // Parse OpenAI response format
-            #[derive(Deserialize)]
-            struct ChatResponse {
-                choices: Vec<Choice>,
+                #[derive(Deserialize)]
+                struct Choice {
+                    message: Message,
+                }
+
+                let resp: ChatResponse = serde_json::from_str(&body)
+                    .map_err(|e| format!("Failed to parse OpenAI response: {}", e))?;
+
+                resp.choices
+                    .first()
+                    .map(|choice| choice.message.clone())
+                    .ok_or_else(|| AgentError::Llm("No response choices returned".to_string()))
+            } else {
+                // Parse Ollama chat response format
+                #[allow(dead_code)]
+                #[derive(Debug, Deserialize)]
+                struct OllamaResponse {
+                    message: Message,
+                    #[serde(default)]
+                    model: String,
+                    #[serde(default)]
+                    created_at: String,
+                }
+
+                println!("Parsing Ollama response with our new format handler");
+
+                // First parse as raw Value to inspect the structure
+                let raw_value: serde_json::Value = serde_json::from_str(&body)
+                    .map_err(|e| format!("Failed to parse Ollama response as JSON: {}", e))?;
+
+                println!("Successfully parsed as raw JSON: {:?}", raw_value);
+
+                // Now try to deserialize with our custom deserializers
+                let resp: OllamaResponse = serde_json::from_str(&body).map_err(|e| {
+                    // Print more debugging info
+                    println!("Error parsing Ollama response: {}", e);
+                    println!("Response body: {}", body);
+                    format!("Failed to parse Ollama response: {}", e)
+                })?;
+
+                println!("Successfully parsed Ollama response: {:?}", resp.message);
+
+                Ok(resp.message)
             }
-
-            #[derive(Deserialize)]
-            struct Choice {
-                message: Message,
-            }
-
-            let resp: ChatResponse = serde_json::from_str(&body)
-                .map_err(|e| format!("Failed to parse OpenAI response: {}", e))?;
-
-            resp.choices
-                .first()
-                .map(|choice| choice.message.clone())
-                .ok_or_else(|| "No response choices returned".to_string())
-        } else {
-            // Parse Ollama chat response format
-            #[allow(dead_code)]
-            #[derive(Debug, Deserialize)]
-            struct OllamaResponse {
-                message: Message,
-                #[serde(default)]
-                model: String,
-                #[serde(default)]
-                created_at: String,
-            }
-
-            println!("Parsing Ollama response with our new format handler");
-
-            // First parse as raw Value to inspect the structure
-            let raw_value: serde_json::Value = serde_json::from_str(&body)
-                .map_err(|e| format!("Failed to parse Ollama response as JSON: {}", e))?;
-
-            println!("Successfully parsed as raw JSON: {:?}", raw_value);
-
-            // Now try to deserialize with our custom deserializers
-            let resp: OllamaResponse = serde_json::from_str(&body).map_err(|e| {
-                // Print more debugging info
-                println!("Error parsing Ollama response: {}", e);
-                println!("Response body: {}", body);
-                format!("Failed to parse Ollama response: {}", e)
-            })?;
-
-            println!("Successfully parsed Ollama response: {:?}", resp.message);
-
-            Ok(resp.message)
-        }
+        })
     }
 
     /// Helper method to get just the content string from a chat completion
-    pub async fn chat_completion_text(&self, messages: &[Message]) -> Result<String, String> {
-        let response = self.chat_completion(messages, None).await?;
-        Ok(response.content.unwrap_or_default())
+    pub fn chat_completion_text(&self, messages: &[Message]) -> Result<String, AgentError> {
+        block_on(async {
+            let response = self.chat_completion(messages, None)?;
+            Ok(response.content.unwrap_or_default())
+        })
+    }
+
+    /// Process a prompt with the LLM and return either a Transaction or text response
+    pub fn process_prompt(
+        &self,
+        prompt: &str,
+        config: &Config,
+        custom_tools: Option<Vec<Tool>>,
+        custom_handlers: Option<&[Box<dyn crate::tools::CustomToolHandler>]>,
+    ) -> Result<LlmResponse, AgentError> {
+        block_on(async {
+            // Create the tools for ETH transfers
+            let eth_tool = Tools::send_eth_tool();
+
+            // Generate tools from smart contract ABIs
+            let mut all_tools = vec![eth_tool];
+
+            // Add contract-specific tools
+            for contract in &config.contracts {
+                let contract_tools = Tools::tools_from_contract(contract);
+                println!(
+                    "Generated {} tools from {} contract",
+                    contract_tools.len(),
+                    contract.name
+                );
+
+                // Add debug printing for tool parameters
+                for tool in &contract_tools {
+                    println!(
+                        "Tool: {} - Parameters: {}",
+                        tool.function.name,
+                        serde_json::to_string_pretty(&tool.function.parameters)
+                            .unwrap_or("None".to_string())
+                    );
+                }
+
+                all_tools.extend(contract_tools);
+            }
+
+            // Add any custom tools provided by the caller
+            if let Some(tools) = custom_tools {
+                println!("Adding {} custom tools", tools.len());
+                for tool in &tools {
+                    println!(
+                        "Custom tool: {} - {}",
+                        tool.function.name,
+                        tool.function.description.as_ref().unwrap_or(&"No description".to_string())
+                    );
+                }
+                all_tools.extend(tools);
+            }
+
+            // Print all available tools for debugging
+            println!("Total available tools: {}", all_tools.len());
+            for tool in &all_tools {
+                println!(
+                    "Tool: {} - {}",
+                    tool.function.name,
+                    tool.function.description.as_ref().unwrap_or(&"No description".to_string())
+                );
+            }
+
+            // Create the messages for the chat completion
+            let mut messages = Vec::new();
+
+            // Use existing messages from config if available
+            if !config.messages.is_empty() {
+                messages.extend(config.messages.clone());
+            } else {
+                // If no messages in the config, add a default system message
+                messages.push(Message::new_system(
+                    "You are an agent responsible for making and executing transactions."
+                        .to_string(),
+                ));
+            }
+
+            // Add the new user message
+            messages.push(Message::new_user(prompt.to_string()));
+
+            // Call the LLM client with all tools
+            let response = self.chat_completion(&messages, Some(&all_tools))?;
+
+            println!("Response: {:?}", response);
+
+            // Check if we have tool calls
+            if let Some(tool_calls) = response.tool_calls.clone() {
+                if !tool_calls.is_empty() {
+                    // Process the tool calls
+                    let tool_result = Tools::process_tool_calls(
+                        self,
+                        messages,
+                        response,
+                        tool_calls,
+                        custom_handlers,
+                    )?;
+
+                    // Parse the tool result as a Transaction
+                    match serde_json::from_str::<Transaction>(&tool_result) {
+                        Ok(transaction) => {
+                            return Ok(LlmResponse::Transaction(transaction));
+                        }
+                        Err(e) => {
+                            println!("Failed to parse transaction, treating as text: {}", e);
+                            return Ok(LlmResponse::Text(tool_result));
+                        }
+                    }
+                }
+            }
+
+            // If we have content, return it as text response
+            if let Some(content) = response.content {
+                if !content.trim().is_empty() {
+                    return Ok(LlmResponse::Text(content));
+                }
+            }
+
+            // No tool calls or content means no action needed
+            Ok(LlmResponse::Text("".to_string()))
+        })
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tools::builders;
     use wstd::runtime::block_on;
 
     fn setup_test_env() {
@@ -431,14 +522,18 @@ mod tests {
 
         let result = LLMClient::from_json("llama3.2", invalid_json);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Failed to parse config JSON"));
+        let err = result.unwrap_err();
+        match err {
+            AgentError::Config(msg) => assert!(msg.contains("Failed to parse config JSON")),
+            _ => panic!("Expected Config error variant"),
+        }
     }
 
     #[test]
     fn test_llm_client_with_config() {
         setup_test_env();
 
-        let config = LLMConfig::new().temperature(0.7).top_p(0.95).context_window(Some(8192));
+        let config = LlmOptions::new().temperature(0.7).top_p(0.95).context_window(Some(8192));
 
         let client = LLMClient::with_config("llama3.2", config);
         assert!(client.is_ok());
@@ -450,7 +545,7 @@ mod tests {
 
     #[test]
     fn test_llm_config_builder() {
-        let config = LLMConfig::new()
+        let config = LlmOptions::new()
             .temperature(0.8)
             .top_p(0.9)
             .seed(123)
@@ -468,19 +563,31 @@ mod tests {
     fn test_new_client_empty_model() {
         let result = LLMClient::new("");
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Model name cannot be empty");
+        let err = result.unwrap_err();
+        match err {
+            AgentError::Llm(msg) => assert_eq!(msg, "Model name cannot be empty"),
+            _ => panic!("Expected Llm error variant"),
+        }
 
         let result = LLMClient::new("   ");
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Model name cannot be empty");
+        let err = result.unwrap_err();
+        match err {
+            AgentError::Llm(msg) => assert_eq!(msg, "Model name cannot be empty"),
+            _ => panic!("Expected Llm error variant"),
+        }
     }
 
     #[test]
     fn test_chat_completion_empty_messages() {
         let client = LLMClient::new("llama3.2").unwrap();
-        let result = block_on(async { client.chat_completion(&[], None).await });
+        let result = client.chat_completion(&[], None);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Messages cannot be empty"));
+        let err = result.unwrap_err();
+        match err {
+            AgentError::Llm(msg) => assert!(msg.contains("Messages cannot be empty")),
+            _ => panic!("Expected Llm error variant"),
+        }
     }
 
     // Integration tests that require HTTP - only run in WASI environment
@@ -546,7 +653,7 @@ mod tests {
                 init();
                 println!("Initializing Ollama client with custom config...");
 
-                let config = LLMConfig::new().temperature(0.5).top_p(0.9).max_tokens(Some(200));
+                let config = LlmOptions::new().temperature(0.5).top_p(0.9).max_tokens(Some(200));
 
                 let client = LLMClient::with_config("llama3.2", config).unwrap();
                 println!("Client initialized successfully with custom config");
