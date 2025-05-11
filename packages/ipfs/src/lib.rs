@@ -1,7 +1,6 @@
-#[allow(warnings)]
-mod bindings;
+mod wit;
 
-use crate::bindings::exports::wavs::ipfs::ipfs::Guest;
+use crate::wit::exports::wavs::ipfs::ipfs::Guest;
 
 use anyhow::Result as AnyhowResult;
 use serde::Deserialize;
@@ -252,3 +251,6 @@ async fn upload_to_ipfs(file_path: &str, ipfs_url: &str) -> AnyhowResult<String>
         ))
     }
 }
+
+// Export the component
+wit::export!(Component with_types_in wit);
