@@ -35,8 +35,5 @@ debug = false
 strip = true
 lto = true
 
-# [package.metadata.component]
-# package = "component:wavs-llm"
-
-# [package.metadata.component.target]
-# path = "./wit"
+[package.metadata.component]
+package = "component:wavs-llm"

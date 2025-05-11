@@ -8,8 +8,8 @@ use alloy_primitives::{Address, Bytes, U256};
 use alloy_sol_types::{SolType, SolValue};
 use bindings::{
     export,
-    wavs::worker::layer_types::{TriggerData, TriggerDataEthContractEvent},
-    Guest, TriggerAction,
+    wavs::worker::layer_types::{TriggerData, TriggerDataEvmContractEvent},
+    Guest, TriggerAction, WasmResponse,
 };
 use context::DaoContext;
 use std::str::FromStr;
@@ -24,9 +24,9 @@ use wavs_llm::{
 struct Component;
 
 impl Guest for Component {
-    fn run(trigger_action: TriggerAction) -> std::result::Result<Option<Vec<u8>>, String> {
+    fn run(trigger_action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
         let prompt = match trigger_action.data {
-            TriggerData::EthContractEvent(TriggerDataEthContractEvent { log, .. }) => {
+            TriggerData::EvmContractEvent(TriggerDataEvmContractEvent { log, .. }) => {
                 // Decode the ABI-encoded string first
                 let decoded = alloy_sol_types::sol_data::String::abi_decode(&log.data, false)
                     .map_err(|e| format!("Failed to decode ABI string: {}", e))?;
@@ -117,7 +117,10 @@ impl Guest for Component {
                     Bytes::default()
                 };
 
-                Ok(Some(TransactionPayload { to, value, data }.abi_encode()))
+                Ok(Some(WasmResponse {
+                    payload: TransactionPayload { to, value, data }.abi_encode(),
+                    ordering: None,
+                }))
             }
             LlmResponse::Text(text) => {
                 println!("LLM response: {}", text);

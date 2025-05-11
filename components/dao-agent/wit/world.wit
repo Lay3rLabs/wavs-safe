@@ -12,7 +12,7 @@ package component:dao-agent;
 //   // include wavs:agent/tools@0.0.1;
 //   // include wavs:agent/types@0.0.1;
 
-// } 
+// }
 
 world layer-trigger-world {
   import wavs:agent/client@0.0.1;
@@ -23,15 +23,15 @@ world layer-trigger-world {
   import wavs:agent/types@0.0.1;
 
   import host: interface {
-    use wavs:worker/layer-types@0.3.0.{eth-chain-config, cosmos-chain-config, log-level};
+    use wavs:worker/layer-types@0.4.0-beta.1.{evm-chain-config, cosmos-chain-config, log-level};
 
-    get-eth-chain-config: func(chain-name: string) -> option<eth-chain-config>;
+    get-eth-chain-config: func(chain-name: string) -> option<evm-chain-config>;
     get-cosmos-chain-config: func(chain-name: string) -> option<cosmos-chain-config>;
 
     log: func(level: log-level, message: string);
   }
 
-  use wavs:worker/layer-types@0.3.0.{trigger-action};
+  use wavs:worker/layer-types@0.4.0-beta.1.{trigger-action, wasm-response};
 
-  export run: func(trigger-action: trigger-action) -> result<option<list<u8>>, string>;
+  export run: func(trigger-action: trigger-action) -> result<option<wasm-response>, string>;
 }

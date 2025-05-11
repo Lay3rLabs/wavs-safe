@@ -1,11 +1,11 @@
+use crate::wit::exports::wavs::agent::client::GuestLlmClientManager;
 use crate::wit::exports::wavs::agent::client::LlmClient;
-use crate::wit::exports::wavs::agent::client::{self, GuestLlmClientManager};
 use crate::wit::exports::wavs::agent::config::GuestConfigManager;
 use crate::wit::exports::wavs::agent::tools::{self};
 use crate::wit::exports::wavs::agent::types::{
     Contract, CustomToolHandler, Function, Message, Tool, ToolCall,
 };
-use serde_json::{json, Value};
+use serde_json::json;
 
 // Implementation for ToolsBuilder
 pub struct ToolsBuilderImpl;
@@ -224,6 +224,7 @@ impl tools::GuestToolsBuilder for ToolsBuilderImpl {
 
         // Check if we're using Ollama based on the model name
         let model = client.get_model();
+
         // Similar logic to the old implementation for detecting model type
         let is_ollama =
             model.starts_with("llama") || model.starts_with("mistral") || !model.contains("gpt");
@@ -307,19 +308,7 @@ fn parse_contract_function_call(tool_call: &ToolCall) -> Result<String, String> 
             contract
         }
         None => {
-            println!("DEBUG: Contract not found: {}", contract_name);
-            // For USDC, use a fallback contract
-            if contract_name.to_lowercase() == "usdc" {
-                println!("DEBUG: Using fallback for USDC contract");
-                Contract {
-                    name: "USDC".to_string(),
-                    address: "0xb7278a61aa25c888815afc32ad3cc52ff24fe575".to_string(),
-                    abi: r#"[{"type":"function","name":"transfer","inputs":[{"name":"to","type":"address","internalType":"address"},{"name":"value","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"nonpayable"}]"#.to_string(),
-                    description: Some("USDC is a stablecoin pegged to the US Dollar".to_string()),
-                }
-            } else {
-                return Err(format!("Unknown contract: {}", contract_name));
-            }
+            return Err(format!("Unknown contract: {}", contract_name));
         }
     };
 
@@ -378,31 +367,6 @@ fn parse_contract_function_call(tool_call: &ToolCall) -> Result<String, String> 
     }
 
     println!("DEBUG: Final function_args: {:?}", function_args);
-
-    // SPECIAL HANDLING FOR USDC TRANSFER
-    // Ensure 'to' and 'value' are both in args for ERC20 transfers
-    if contract_name.to_lowercase() == "usdc" && function_name == "transfer" {
-        println!("DEBUG: Special handling for USDC transfer");
-
-        // Verify we have the correct number of arguments (should be 2)
-        if function_args.len() < 2 && args.as_object().is_some() {
-            println!("DEBUG: USDC transfer missing arguments, trying to fix...");
-
-            // Extract 'to' and 'value' directly from args
-            let obj = args.as_object().unwrap();
-            let to = obj.get("to").and_then(|v| v.as_str()).unwrap_or("");
-            let value = obj.get("value").and_then(|v| v.as_str()).unwrap_or("0");
-
-            println!("DEBUG: Reconstructing USDC transfer args with to={}, value={}", to, value);
-
-            // Clear and rebuild function_args
-            function_args.clear();
-            function_args.push(json!(to));
-            function_args.push(json!(value));
-
-            println!("DEBUG: Reconstructed function_args: {:?}", function_args);
-        }
-    }
 
     // Convert function_args to proper string format for the contract encoder
     // The encoder expects raw JSON strings, not JSON values

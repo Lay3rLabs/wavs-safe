@@ -267,7 +267,7 @@ impl client::GuestLlmClientManager for LlmClient {
                             let mut tools_desc = String::new();
                             tools_desc.push_str("\n\nYou have the following tools available:\n");
 
-                            for tool in tools_list {
+                            for tool in tools_list.clone() {
                                 tools_desc.push_str(&format!(
                                     "- {}: {}\n",
                                     tool.function.name,

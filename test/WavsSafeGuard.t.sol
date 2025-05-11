@@ -8,14 +8,33 @@ import {IWavsServiceManager} from "@wavs/interfaces/IWavsServiceManager.sol";
 
 contract MockServiceManager is IWavsServiceManager {
     function validate(
-        bytes calldata data,
-        bytes calldata signature
-    ) external pure override {
+        IWavsServiceHandler.Envelope calldata envelope,
+        IWavsServiceHandler.SignatureData calldata signatureData
+    ) external view override {
         // Simple mock implementation that just validates the function can be called
         // In a real scenario, this would validate signatures
-        require(data.length > 0, "Empty data");
-        require(signature.length > 0, "Empty signature");
+        require(envelope.payload.length > 0, "Empty data");
+        require(signatureData.signatures.length > 0, "Empty signature");
     }
+    
+    // Implement required interface methods
+    function getOperatorWeight(address) external pure override returns (uint256) {
+        return 100;
+    }
+    
+    function getLastCheckpointTotalWeight() external pure override returns (uint256) {
+        return 1000;
+    }
+    
+    function getLastCheckpointThresholdWeight() external pure override returns (uint256) {
+        return 500;
+    }
+    
+    function getServiceURI() external pure override returns (string memory) {
+        return "https://example.com";
+    }
+    
+    function setServiceURI(string calldata) external override {}
 }
 
 // Mock Safe contract for testing
@@ -364,12 +383,28 @@ contract WavsSafeGuardTest is Test {
             approved: approved
         });
 
-        bytes memory data = abi.encode(payload);
+        bytes memory payloadData = abi.encode(payload);
+        
+        // Create envelope and signature data structures
+        IWavsServiceHandler.Envelope memory envelope = IWavsServiceHandler.Envelope({
+            eventId: bytes20(keccak256("test-event-id")),
+            ordering: bytes12(0),
+            payload: payloadData
+        });
+        
+        bytes[] memory signatures = new bytes[](1);
+        signatures[0] = abi.encode("mock_signature");
+        
+        address[] memory operators = new address[](1);
+        operators[0] = owner;
+        
+        IWavsServiceHandler.SignatureData memory signatureData = IWavsServiceHandler.SignatureData({
+            operators: operators,
+            signatures: signatures,
+            referenceBlock: uint32(block.number)
+        });
 
-        // Create a mock signature
-        bytes memory signature = abi.encode("mock_signature");
-
-        // Call handleSignedData to update the validation status
-        guard.handleSignedData(data, signature);
+        // Call handleSignedEnvelope to update the validation status
+        guard.handleSignedEnvelope(envelope, signatureData);
     }
 }

@@ -976,7 +976,7 @@ dependencies = [
 
 [[package]]
 name = "dao-agent"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "alloy-dyn-abi",
  "alloy-json-abi",
@@ -2769,7 +2769,7 @@ checksum = "28d3b2b1366ec20994f1fd18c3c594f05c5dd4bc44d8bb0c1c632c8d6829481f"
 
 [[package]]
 name = "safe-guard"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -3664,7 +3664,7 @@ dependencies = [
 
 [[package]]
 name = "wavs-ipfs"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "alloy-dyn-abi",
  "alloy-json-abi",
@@ -3688,7 +3688,7 @@ dependencies = [
 
 [[package]]
 name = "wavs-llm"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "alloy-dyn-abi",
  "alloy-json-abi",

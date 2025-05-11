@@ -1,4 +1,5 @@
 pub type TriggerAction = wavs::worker::layer_types::TriggerAction;
+pub type WasmResponse = wavs::worker::layer_types::WasmResponse;
 #[doc(hidden)]
 #[allow(non_snake_case)]
 pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
@@ -13,43 +14,43 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
     let len5 = l4;
     let bytes5 = _rt::Vec::from_raw_parts(l3.cast(), len5, len5);
     let l6 = i32::from(*arg0.add(16).cast::<u8>());
-    use wavs::worker::layer_types::TriggerSource as V26;
-    let v26 = match l6 {
+    use wavs::worker::layer_types::TriggerSource as V37;
+    let v37 = match l6 {
         0 => {
-            let e26 = {
-                let l7 = *arg0.add(20).cast::<*mut u8>();
-                let l8 = *arg0.add(24).cast::<usize>();
+            let e37 = {
+                let l7 = *arg0.add(24).cast::<*mut u8>();
+                let l8 = *arg0.add(28).cast::<usize>();
                 let len9 = l8;
-                let l10 = *arg0.add(28).cast::<*mut u8>();
-                let l11 = *arg0.add(32).cast::<usize>();
+                let l10 = *arg0.add(32).cast::<*mut u8>();
+                let l11 = *arg0.add(36).cast::<usize>();
                 let len12 = l11;
                 let bytes12 = _rt::Vec::from_raw_parts(l10.cast(), len12, len12);
-                let l13 = *arg0.add(36).cast::<*mut u8>();
-                let l14 = *arg0.add(40).cast::<usize>();
+                let l13 = *arg0.add(40).cast::<*mut u8>();
+                let l14 = *arg0.add(44).cast::<usize>();
                 let len15 = l14;
-                wavs::worker::layer_types::TriggerSourceEthContractEvent {
-                    address: wavs::worker::layer_types::EthAddress {
+                wavs::worker::layer_types::TriggerSourceEvmContractEvent {
+                    address: wavs::worker::layer_types::EvmAddress {
                         raw_bytes: _rt::Vec::from_raw_parts(l7.cast(), len9, len9),
                     },
                     chain_name: _rt::string_lift(bytes12),
                     event_hash: _rt::Vec::from_raw_parts(l13.cast(), len15, len15),
                 }
             };
-            V26::EthContractEvent(e26)
+            V37::EvmContractEvent(e37)
         }
         1 => {
-            let e26 = {
-                let l16 = *arg0.add(20).cast::<*mut u8>();
-                let l17 = *arg0.add(24).cast::<usize>();
+            let e37 = {
+                let l16 = *arg0.add(24).cast::<*mut u8>();
+                let l17 = *arg0.add(28).cast::<usize>();
                 let len18 = l17;
                 let bytes18 = _rt::Vec::from_raw_parts(l16.cast(), len18, len18);
-                let l19 = *arg0.add(28).cast::<i32>();
-                let l20 = *arg0.add(32).cast::<*mut u8>();
-                let l21 = *arg0.add(36).cast::<usize>();
+                let l19 = *arg0.add(32).cast::<i32>();
+                let l20 = *arg0.add(36).cast::<*mut u8>();
+                let l21 = *arg0.add(40).cast::<usize>();
                 let len22 = l21;
                 let bytes22 = _rt::Vec::from_raw_parts(l20.cast(), len22, len22);
-                let l23 = *arg0.add(40).cast::<*mut u8>();
-                let l24 = *arg0.add(44).cast::<usize>();
+                let l23 = *arg0.add(44).cast::<*mut u8>();
+                let l24 = *arg0.add(48).cast::<usize>();
                 let len25 = l24;
                 let bytes25 = _rt::Vec::from_raw_parts(l23.cast(), len25, len25);
                 wavs::worker::layer_types::TriggerSourceCosmosContractEvent {
@@ -61,161 +62,247 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
                     event_type: _rt::string_lift(bytes25),
                 }
             };
-            V26::CosmosContractEvent(e26)
+            V37::CosmosContractEvent(e37)
         }
-        n => {
-            debug_assert_eq!(n, 2, "invalid enum discriminant");
-            V26::Manual
-        }
-    };
-    let l27 = i32::from(*arg0.add(48).cast::<u8>());
-    use wavs::worker::layer_types::TriggerData as V67;
-    let v67 = match l27 {
-        0 => {
-            let e67 = {
-                let l28 = *arg0.add(56).cast::<*mut u8>();
-                let l29 = *arg0.add(60).cast::<usize>();
-                let len30 = l29;
-                let l31 = *arg0.add(64).cast::<*mut u8>();
-                let l32 = *arg0.add(68).cast::<usize>();
-                let len33 = l32;
-                let bytes33 = _rt::Vec::from_raw_parts(l31.cast(), len33, len33);
-                let l34 = *arg0.add(72).cast::<*mut u8>();
-                let l35 = *arg0.add(76).cast::<usize>();
-                let base39 = l34;
-                let len39 = l35;
-                let mut result39 = _rt::Vec::with_capacity(len39);
-                for i in 0..len39 {
-                    let base = base39.add(i * 8);
-                    let e39 = {
-                        let l36 = *base.add(0).cast::<*mut u8>();
-                        let l37 = *base.add(4).cast::<usize>();
-                        let len38 = l37;
-                        _rt::Vec::from_raw_parts(l36.cast(), len38, len38)
-                    };
-                    result39.push(e39);
-                }
-                _rt::cabi_dealloc(base39, len39 * 8, 4);
-                let l40 = *arg0.add(80).cast::<*mut u8>();
-                let l41 = *arg0.add(84).cast::<usize>();
-                let len42 = l41;
-                let l43 = *arg0.add(88).cast::<i64>();
-                wavs::worker::layer_types::TriggerDataEthContractEvent {
-                    contract_address: wavs::worker::layer_types::EthAddress {
-                        raw_bytes: _rt::Vec::from_raw_parts(l28.cast(), len30, len30),
-                    },
-                    chain_name: _rt::string_lift(bytes33),
-                    log: wavs::worker::layer_types::EthEventLogData {
-                        topics: result39,
-                        data: _rt::Vec::from_raw_parts(l40.cast(), len42, len42),
-                    },
-                    block_height: l43 as u64,
+        2 => {
+            let e37 = {
+                let l26 = *arg0.add(24).cast::<*mut u8>();
+                let l27 = *arg0.add(28).cast::<usize>();
+                let len28 = l27;
+                let bytes28 = _rt::Vec::from_raw_parts(l26.cast(), len28, len28);
+                let l29 = *arg0.add(32).cast::<i32>();
+                wavs::worker::layer_types::BlockIntervalSource {
+                    chain_name: _rt::string_lift(bytes28),
+                    n_blocks: l29 as u32,
                 }
             };
-            V67::EthContractEvent(e67)
+            V37::BlockInterval(e37)
+        }
+        3 => {
+            let e37 = {
+                let l30 = *arg0.add(24).cast::<*mut u8>();
+                let l31 = *arg0.add(28).cast::<usize>();
+                let len32 = l31;
+                let bytes32 = _rt::Vec::from_raw_parts(l30.cast(), len32, len32);
+                let l33 = i32::from(*arg0.add(32).cast::<u8>());
+                let l35 = i32::from(*arg0.add(48).cast::<u8>());
+                wavs::worker::layer_types::TriggerSourceCron {
+                    schedule: _rt::string_lift(bytes32),
+                    start_time: match l33 {
+                        0 => None,
+                        1 => {
+                            let e = {
+                                let l34 = *arg0.add(40).cast::<i64>();
+                                wavs::worker::layer_types::Timestamp { nanos: l34 as u64 }
+                            };
+                            Some(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
+                    },
+                    end_time: match l35 {
+                        0 => None,
+                        1 => {
+                            let e = {
+                                let l36 = *arg0.add(56).cast::<i64>();
+                                wavs::worker::layer_types::Timestamp { nanos: l36 as u64 }
+                            };
+                            Some(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
+                    },
+                }
+            };
+            V37::Cron(e37)
+        }
+        n => {
+            debug_assert_eq!(n, 4, "invalid enum discriminant");
+            V37::Manual
+        }
+    };
+    let l38 = i32::from(*arg0.add(64).cast::<u8>());
+    use wavs::worker::layer_types::TriggerData as V83;
+    let v83 = match l38 {
+        0 => {
+            let e83 = {
+                let l39 = *arg0.add(72).cast::<*mut u8>();
+                let l40 = *arg0.add(76).cast::<usize>();
+                let len41 = l40;
+                let l42 = *arg0.add(80).cast::<*mut u8>();
+                let l43 = *arg0.add(84).cast::<usize>();
+                let len44 = l43;
+                let bytes44 = _rt::Vec::from_raw_parts(l42.cast(), len44, len44);
+                let l45 = *arg0.add(88).cast::<*mut u8>();
+                let l46 = *arg0.add(92).cast::<usize>();
+                let base50 = l45;
+                let len50 = l46;
+                let mut result50 = _rt::Vec::with_capacity(len50);
+                for i in 0..len50 {
+                    let base = base50.add(i * 8);
+                    let e50 = {
+                        let l47 = *base.add(0).cast::<*mut u8>();
+                        let l48 = *base.add(4).cast::<usize>();
+                        let len49 = l48;
+                        _rt::Vec::from_raw_parts(l47.cast(), len49, len49)
+                    };
+                    result50.push(e50);
+                }
+                _rt::cabi_dealloc(base50, len50 * 8, 4);
+                let l51 = *arg0.add(96).cast::<*mut u8>();
+                let l52 = *arg0.add(100).cast::<usize>();
+                let len53 = l52;
+                let l54 = *arg0.add(104).cast::<i64>();
+                wavs::worker::layer_types::TriggerDataEvmContractEvent {
+                    contract_address: wavs::worker::layer_types::EvmAddress {
+                        raw_bytes: _rt::Vec::from_raw_parts(l39.cast(), len41, len41),
+                    },
+                    chain_name: _rt::string_lift(bytes44),
+                    log: wavs::worker::layer_types::EvmEventLogData {
+                        topics: result50,
+                        data: _rt::Vec::from_raw_parts(l51.cast(), len53, len53),
+                    },
+                    block_height: l54 as u64,
+                }
+            };
+            V83::EvmContractEvent(e83)
         }
         1 => {
-            let e67 = {
-                let l44 = *arg0.add(56).cast::<*mut u8>();
-                let l45 = *arg0.add(60).cast::<usize>();
-                let len46 = l45;
-                let bytes46 = _rt::Vec::from_raw_parts(l44.cast(), len46, len46);
-                let l47 = *arg0.add(64).cast::<i32>();
-                let l48 = *arg0.add(68).cast::<*mut u8>();
-                let l49 = *arg0.add(72).cast::<usize>();
-                let len50 = l49;
-                let bytes50 = _rt::Vec::from_raw_parts(l48.cast(), len50, len50);
-                let l51 = *arg0.add(76).cast::<*mut u8>();
-                let l52 = *arg0.add(80).cast::<usize>();
-                let len53 = l52;
-                let bytes53 = _rt::Vec::from_raw_parts(l51.cast(), len53, len53);
-                let l54 = *arg0.add(84).cast::<*mut u8>();
-                let l55 = *arg0.add(88).cast::<usize>();
-                let base62 = l54;
-                let len62 = l55;
-                let mut result62 = _rt::Vec::with_capacity(len62);
-                for i in 0..len62 {
-                    let base = base62.add(i * 16);
-                    let e62 = {
-                        let l56 = *base.add(0).cast::<*mut u8>();
-                        let l57 = *base.add(4).cast::<usize>();
-                        let len58 = l57;
-                        let bytes58 = _rt::Vec::from_raw_parts(l56.cast(), len58, len58);
-                        let l59 = *base.add(8).cast::<*mut u8>();
-                        let l60 = *base.add(12).cast::<usize>();
-                        let len61 = l60;
-                        let bytes61 = _rt::Vec::from_raw_parts(l59.cast(), len61, len61);
-                        (_rt::string_lift(bytes58), _rt::string_lift(bytes61))
+            let e83 = {
+                let l55 = *arg0.add(72).cast::<*mut u8>();
+                let l56 = *arg0.add(76).cast::<usize>();
+                let len57 = l56;
+                let bytes57 = _rt::Vec::from_raw_parts(l55.cast(), len57, len57);
+                let l58 = *arg0.add(80).cast::<i32>();
+                let l59 = *arg0.add(84).cast::<*mut u8>();
+                let l60 = *arg0.add(88).cast::<usize>();
+                let len61 = l60;
+                let bytes61 = _rt::Vec::from_raw_parts(l59.cast(), len61, len61);
+                let l62 = *arg0.add(92).cast::<*mut u8>();
+                let l63 = *arg0.add(96).cast::<usize>();
+                let len64 = l63;
+                let bytes64 = _rt::Vec::from_raw_parts(l62.cast(), len64, len64);
+                let l65 = *arg0.add(100).cast::<*mut u8>();
+                let l66 = *arg0.add(104).cast::<usize>();
+                let base73 = l65;
+                let len73 = l66;
+                let mut result73 = _rt::Vec::with_capacity(len73);
+                for i in 0..len73 {
+                    let base = base73.add(i * 16);
+                    let e73 = {
+                        let l67 = *base.add(0).cast::<*mut u8>();
+                        let l68 = *base.add(4).cast::<usize>();
+                        let len69 = l68;
+                        let bytes69 = _rt::Vec::from_raw_parts(l67.cast(), len69, len69);
+                        let l70 = *base.add(8).cast::<*mut u8>();
+                        let l71 = *base.add(12).cast::<usize>();
+                        let len72 = l71;
+                        let bytes72 = _rt::Vec::from_raw_parts(l70.cast(), len72, len72);
+                        (_rt::string_lift(bytes69), _rt::string_lift(bytes72))
                     };
-                    result62.push(e62);
+                    result73.push(e73);
                 }
-                _rt::cabi_dealloc(base62, len62 * 16, 4);
-                let l63 = *arg0.add(96).cast::<i64>();
+                _rt::cabi_dealloc(base73, len73 * 16, 4);
+                let l74 = *arg0.add(112).cast::<i64>();
                 wavs::worker::layer_types::TriggerDataCosmosContractEvent {
                     contract_address: wavs::worker::layer_types::CosmosAddress {
-                        bech32_addr: _rt::string_lift(bytes46),
-                        prefix_len: l47 as u32,
+                        bech32_addr: _rt::string_lift(bytes57),
+                        prefix_len: l58 as u32,
                     },
-                    chain_name: _rt::string_lift(bytes50),
+                    chain_name: _rt::string_lift(bytes61),
                     event: wavs::worker::layer_types::CosmosEvent {
-                        ty: _rt::string_lift(bytes53),
-                        attributes: result62,
+                        ty: _rt::string_lift(bytes64),
+                        attributes: result73,
                     },
-                    block_height: l63 as u64,
+                    block_height: l74 as u64,
                 }
             };
-            V67::CosmosContractEvent(e67)
+            V83::CosmosContractEvent(e83)
+        }
+        2 => {
+            let e83 = {
+                let l75 = *arg0.add(72).cast::<*mut u8>();
+                let l76 = *arg0.add(76).cast::<usize>();
+                let len77 = l76;
+                let bytes77 = _rt::Vec::from_raw_parts(l75.cast(), len77, len77);
+                let l78 = *arg0.add(80).cast::<i64>();
+                wavs::worker::layer_types::BlockIntervalData {
+                    chain_name: _rt::string_lift(bytes77),
+                    block_height: l78 as u64,
+                }
+            };
+            V83::BlockInterval(e83)
+        }
+        3 => {
+            let e83 = {
+                let l79 = *arg0.add(72).cast::<i64>();
+                wavs::worker::layer_types::TriggerDataCron {
+                    trigger_time: wavs::worker::layer_types::Timestamp { nanos: l79 as u64 },
+                }
+            };
+            V83::Cron(e83)
         }
         n => {
-            debug_assert_eq!(n, 2, "invalid enum discriminant");
-            let e67 = {
-                let l64 = *arg0.add(56).cast::<*mut u8>();
-                let l65 = *arg0.add(60).cast::<usize>();
-                let len66 = l65;
-                _rt::Vec::from_raw_parts(l64.cast(), len66, len66)
+            debug_assert_eq!(n, 4, "invalid enum discriminant");
+            let e83 = {
+                let l80 = *arg0.add(72).cast::<*mut u8>();
+                let l81 = *arg0.add(76).cast::<usize>();
+                let len82 = l81;
+                _rt::Vec::from_raw_parts(l80.cast(), len82, len82)
             };
-            V67::Raw(e67)
+            V83::Raw(e83)
         }
     };
-    let result68 = T::run(wavs::worker::layer_types::TriggerAction {
+    let result84 = T::run(wavs::worker::layer_types::TriggerAction {
         config: wavs::worker::layer_types::TriggerConfig {
             service_id: _rt::string_lift(bytes2),
             workflow_id: _rt::string_lift(bytes5),
-            trigger_source: v26,
+            trigger_source: v37,
         },
-        data: v67,
+        data: v83,
     });
-    _rt::cabi_dealloc(arg0, 104, 8);
-    let ptr69 = _RET_AREA.0.as_mut_ptr().cast::<u8>();
-    match result68 {
+    _rt::cabi_dealloc(arg0, 120, 8);
+    let ptr85 = _RET_AREA.0.as_mut_ptr().cast::<u8>();
+    match result84 {
         Ok(e) => {
-            *ptr69.add(0).cast::<u8>() = (0i32) as u8;
+            *ptr85.add(0).cast::<u8>() = (0i32) as u8;
             match e {
                 Some(e) => {
-                    *ptr69.add(4).cast::<u8>() = (1i32) as u8;
-                    let vec70 = (e).into_boxed_slice();
-                    let ptr70 = vec70.as_ptr().cast::<u8>();
-                    let len70 = vec70.len();
-                    ::core::mem::forget(vec70);
-                    *ptr69.add(12).cast::<usize>() = len70;
-                    *ptr69.add(8).cast::<*mut u8>() = ptr70.cast_mut();
+                    *ptr85.add(8).cast::<u8>() = (1i32) as u8;
+                    let wavs::worker::layer_types::WasmResponse {
+                        payload: payload86,
+                        ordering: ordering86,
+                    } = e;
+                    let vec87 = (payload86).into_boxed_slice();
+                    let ptr87 = vec87.as_ptr().cast::<u8>();
+                    let len87 = vec87.len();
+                    ::core::mem::forget(vec87);
+                    *ptr85.add(20).cast::<usize>() = len87;
+                    *ptr85.add(16).cast::<*mut u8>() = ptr87.cast_mut();
+                    match ordering86 {
+                        Some(e) => {
+                            *ptr85.add(24).cast::<u8>() = (1i32) as u8;
+                            *ptr85.add(32).cast::<i64>() = _rt::as_i64(e);
+                        }
+                        None => {
+                            *ptr85.add(24).cast::<u8>() = (0i32) as u8;
+                        }
+                    };
                 }
                 None => {
-                    *ptr69.add(4).cast::<u8>() = (0i32) as u8;
+                    *ptr85.add(8).cast::<u8>() = (0i32) as u8;
                 }
             };
         }
         Err(e) => {
-            *ptr69.add(0).cast::<u8>() = (1i32) as u8;
-            let vec71 = (e.into_bytes()).into_boxed_slice();
-            let ptr71 = vec71.as_ptr().cast::<u8>();
-            let len71 = vec71.len();
-            ::core::mem::forget(vec71);
-            *ptr69.add(8).cast::<usize>() = len71;
-            *ptr69.add(4).cast::<*mut u8>() = ptr71.cast_mut();
+            *ptr85.add(0).cast::<u8>() = (1i32) as u8;
+            let vec88 = (e.into_bytes()).into_boxed_slice();
+            let ptr88 = vec88.as_ptr().cast::<u8>();
+            let len88 = vec88.len();
+            ::core::mem::forget(vec88);
+            *ptr85.add(12).cast::<usize>() = len88;
+            *ptr85.add(8).cast::<*mut u8>() = ptr88.cast_mut();
         }
     };
-    ptr69
+    ptr85
 }
 #[doc(hidden)]
 #[allow(non_snake_case)]
@@ -223,12 +310,12 @@ pub unsafe fn __post_return_run<T: Guest>(arg0: *mut u8) {
     let l0 = i32::from(*arg0.add(0).cast::<u8>());
     match l0 {
         0 => {
-            let l1 = i32::from(*arg0.add(4).cast::<u8>());
+            let l1 = i32::from(*arg0.add(8).cast::<u8>());
             match l1 {
                 0 => {}
                 _ => {
-                    let l2 = *arg0.add(8).cast::<*mut u8>();
-                    let l3 = *arg0.add(12).cast::<usize>();
+                    let l2 = *arg0.add(16).cast::<*mut u8>();
+                    let l3 = *arg0.add(20).cast::<usize>();
                     let base4 = l2;
                     let len4 = l3;
                     _rt::cabi_dealloc(base4, len4 * 1, 1);
@@ -236,14 +323,14 @@ pub unsafe fn __post_return_run<T: Guest>(arg0: *mut u8) {
             }
         }
         _ => {
-            let l5 = *arg0.add(4).cast::<*mut u8>();
-            let l6 = *arg0.add(8).cast::<usize>();
+            let l5 = *arg0.add(8).cast::<*mut u8>();
+            let l6 = *arg0.add(12).cast::<usize>();
             _rt::cabi_dealloc(l5, l6, 1);
         }
     }
 }
 pub trait Guest {
-    fn run(trigger_action: TriggerAction) -> Result<Option<_rt::Vec<u8>>, _rt::String>;
+    fn run(trigger_action: TriggerAction) -> Result<Option<WasmResponse>, _rt::String>;
 }
 #[doc(hidden)]
 macro_rules! __export_world_layer_trigger_world_cabi {
@@ -256,9 +343,9 @@ macro_rules! __export_world_layer_trigger_world_cabi {
 }
 #[doc(hidden)]
 pub(crate) use __export_world_layer_trigger_world_cabi;
-#[repr(align(4))]
-struct _RetArea([::core::mem::MaybeUninit<u8>; 16]);
-static mut _RET_AREA: _RetArea = _RetArea([::core::mem::MaybeUninit::uninit(); 16]);
+#[repr(align(8))]
+struct _RetArea([::core::mem::MaybeUninit<u8>; 40]);
+static mut _RET_AREA: _RetArea = _RetArea([::core::mem::MaybeUninit::uninit(); 40]);
 #[allow(dead_code)]
 pub mod wavs {
     #[allow(dead_code)]
@@ -8739,6 +8826,16 @@ pub mod wavs {
             static __FORCE_SECTION_REF: fn() =
                 super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
+            #[repr(C)]
+            #[derive(Clone, Copy)]
+            pub struct Timestamp {
+                pub nanos: u64,
+            }
+            impl ::core::fmt::Debug for Timestamp {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    f.debug_struct("Timestamp").field("nanos", &self.nanos).finish()
+                }
+            }
             #[derive(Clone)]
             pub struct CosmosAddress {
                 pub bech32_addr: _rt::String,
@@ -8790,38 +8887,38 @@ pub mod wavs {
                 }
             }
             #[derive(Clone)]
-            pub struct EthAddress {
+            pub struct EvmAddress {
                 pub raw_bytes: _rt::Vec<u8>,
             }
-            impl ::core::fmt::Debug for EthAddress {
+            impl ::core::fmt::Debug for EvmAddress {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    f.debug_struct("EthAddress").field("raw-bytes", &self.raw_bytes).finish()
+                    f.debug_struct("EvmAddress").field("raw-bytes", &self.raw_bytes).finish()
                 }
             }
             #[derive(Clone)]
-            pub struct EthEventLogData {
+            pub struct EvmEventLogData {
                 /// the raw log topics that can be decoded into an event
                 pub topics: _rt::Vec<_rt::Vec<u8>>,
                 /// the raw log data that can be decoded into an event
                 pub data: _rt::Vec<u8>,
             }
-            impl ::core::fmt::Debug for EthEventLogData {
+            impl ::core::fmt::Debug for EvmEventLogData {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    f.debug_struct("EthEventLogData")
+                    f.debug_struct("EvmEventLogData")
                         .field("topics", &self.topics)
                         .field("data", &self.data)
                         .finish()
                 }
             }
             #[derive(Clone)]
-            pub struct EthChainConfig {
+            pub struct EvmChainConfig {
                 pub chain_id: _rt::String,
                 pub ws_endpoint: Option<_rt::String>,
                 pub http_endpoint: Option<_rt::String>,
             }
-            impl ::core::fmt::Debug for EthChainConfig {
+            impl ::core::fmt::Debug for EvmChainConfig {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    f.debug_struct("EthChainConfig")
+                    f.debug_struct("EvmChainConfig")
                         .field("chain-id", &self.chain_id)
                         .field("ws-endpoint", &self.ws_endpoint)
                         .field("http-endpoint", &self.http_endpoint)
@@ -8829,14 +8926,14 @@ pub mod wavs {
                 }
             }
             #[derive(Clone)]
-            pub struct TriggerSourceEthContractEvent {
-                pub address: EthAddress,
+            pub struct TriggerSourceEvmContractEvent {
+                pub address: EvmAddress,
                 pub chain_name: _rt::String,
                 pub event_hash: _rt::Vec<u8>,
             }
-            impl ::core::fmt::Debug for TriggerSourceEthContractEvent {
+            impl ::core::fmt::Debug for TriggerSourceEvmContractEvent {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    f.debug_struct("TriggerSourceEthContractEvent")
+                    f.debug_struct("TriggerSourceEvmContractEvent")
                         .field("address", &self.address)
                         .field("chain-name", &self.chain_name)
                         .field("event-hash", &self.event_hash)
@@ -8859,19 +8956,55 @@ pub mod wavs {
                 }
             }
             #[derive(Clone)]
+            pub struct BlockIntervalSource {
+                pub chain_name: _rt::String,
+                pub n_blocks: u32,
+            }
+            impl ::core::fmt::Debug for BlockIntervalSource {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    f.debug_struct("BlockIntervalSource")
+                        .field("chain-name", &self.chain_name)
+                        .field("n-blocks", &self.n_blocks)
+                        .finish()
+                }
+            }
+            #[derive(Clone)]
+            pub struct TriggerSourceCron {
+                pub schedule: _rt::String,
+                pub start_time: Option<Timestamp>,
+                pub end_time: Option<Timestamp>,
+            }
+            impl ::core::fmt::Debug for TriggerSourceCron {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    f.debug_struct("TriggerSourceCron")
+                        .field("schedule", &self.schedule)
+                        .field("start-time", &self.start_time)
+                        .field("end-time", &self.end_time)
+                        .finish()
+                }
+            }
+            #[derive(Clone)]
             pub enum TriggerSource {
-                EthContractEvent(TriggerSourceEthContractEvent),
+                EvmContractEvent(TriggerSourceEvmContractEvent),
                 CosmosContractEvent(TriggerSourceCosmosContractEvent),
+                BlockInterval(BlockIntervalSource),
+                Cron(TriggerSourceCron),
                 Manual,
             }
             impl ::core::fmt::Debug for TriggerSource {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     match self {
-                        TriggerSource::EthContractEvent(e) => {
-                            f.debug_tuple("TriggerSource::EthContractEvent").field(e).finish()
+                        TriggerSource::EvmContractEvent(e) => {
+                            f.debug_tuple("TriggerSource::EvmContractEvent").field(e).finish()
                         }
                         TriggerSource::CosmosContractEvent(e) => {
                             f.debug_tuple("TriggerSource::CosmosContractEvent").field(e).finish()
+                        }
+                        TriggerSource::BlockInterval(e) => {
+                            f.debug_tuple("TriggerSource::BlockInterval").field(e).finish()
+                        }
+                        TriggerSource::Cron(e) => {
+                            f.debug_tuple("TriggerSource::Cron").field(e).finish()
                         }
                         TriggerSource::Manual => f.debug_tuple("TriggerSource::Manual").finish(),
                     }
@@ -8893,15 +9026,15 @@ pub mod wavs {
                 }
             }
             #[derive(Clone)]
-            pub struct TriggerDataEthContractEvent {
-                pub contract_address: EthAddress,
+            pub struct TriggerDataEvmContractEvent {
+                pub contract_address: EvmAddress,
                 pub chain_name: _rt::String,
-                pub log: EthEventLogData,
+                pub log: EvmEventLogData,
                 pub block_height: u64,
             }
-            impl ::core::fmt::Debug for TriggerDataEthContractEvent {
+            impl ::core::fmt::Debug for TriggerDataEvmContractEvent {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    f.debug_struct("TriggerDataEthContractEvent")
+                    f.debug_struct("TriggerDataEvmContractEvent")
                         .field("contract-address", &self.contract_address)
                         .field("chain-name", &self.chain_name)
                         .field("log", &self.log)
@@ -8927,19 +9060,52 @@ pub mod wavs {
                 }
             }
             #[derive(Clone)]
+            pub struct BlockIntervalData {
+                pub chain_name: _rt::String,
+                pub block_height: u64,
+            }
+            impl ::core::fmt::Debug for BlockIntervalData {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    f.debug_struct("BlockIntervalData")
+                        .field("chain-name", &self.chain_name)
+                        .field("block-height", &self.block_height)
+                        .finish()
+                }
+            }
+            #[repr(C)]
+            #[derive(Clone, Copy)]
+            pub struct TriggerDataCron {
+                pub trigger_time: Timestamp,
+            }
+            impl ::core::fmt::Debug for TriggerDataCron {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    f.debug_struct("TriggerDataCron")
+                        .field("trigger-time", &self.trigger_time)
+                        .finish()
+                }
+            }
+            #[derive(Clone)]
             pub enum TriggerData {
-                EthContractEvent(TriggerDataEthContractEvent),
+                EvmContractEvent(TriggerDataEvmContractEvent),
                 CosmosContractEvent(TriggerDataCosmosContractEvent),
+                BlockInterval(BlockIntervalData),
+                Cron(TriggerDataCron),
                 Raw(_rt::Vec<u8>),
             }
             impl ::core::fmt::Debug for TriggerData {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     match self {
-                        TriggerData::EthContractEvent(e) => {
-                            f.debug_tuple("TriggerData::EthContractEvent").field(e).finish()
+                        TriggerData::EvmContractEvent(e) => {
+                            f.debug_tuple("TriggerData::EvmContractEvent").field(e).finish()
                         }
                         TriggerData::CosmosContractEvent(e) => {
                             f.debug_tuple("TriggerData::CosmosContractEvent").field(e).finish()
+                        }
+                        TriggerData::BlockInterval(e) => {
+                            f.debug_tuple("TriggerData::BlockInterval").field(e).finish()
+                        }
+                        TriggerData::Cron(e) => {
+                            f.debug_tuple("TriggerData::Cron").field(e).finish()
                         }
                         TriggerData::Raw(e) => f.debug_tuple("TriggerData::Raw").field(e).finish(),
                     }
@@ -8955,6 +9121,19 @@ pub mod wavs {
                     f.debug_struct("TriggerAction")
                         .field("config", &self.config)
                         .field("data", &self.data)
+                        .finish()
+                }
+            }
+            #[derive(Clone)]
+            pub struct WasmResponse {
+                pub payload: _rt::Vec<u8>,
+                pub ordering: Option<u64>,
+            }
+            impl ::core::fmt::Debug for WasmResponse {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    f.debug_struct("WasmResponse")
+                        .field("payload", &self.payload)
+                        .field("ordering", &self.ordering)
                         .finish()
                 }
             }
@@ -8986,11 +9165,11 @@ pub mod host {
     #[doc(hidden)]
     static __FORCE_SECTION_REF: fn() = super::__link_custom_section_describing_imports;
     use super::_rt;
-    pub type EthChainConfig = super::wavs::worker::layer_types::EthChainConfig;
+    pub type EvmChainConfig = super::wavs::worker::layer_types::EvmChainConfig;
     pub type CosmosChainConfig = super::wavs::worker::layer_types::CosmosChainConfig;
     pub type LogLevel = super::wavs::worker::layer_types::LogLevel;
     #[allow(unused_unsafe, clippy::all)]
-    pub fn get_eth_chain_config(chain_name: &str) -> Option<EthChainConfig> {
+    pub fn get_eth_chain_config(chain_name: &str) -> Option<EvmChainConfig> {
         unsafe {
             #[repr(align(4))]
             struct RetArea([::core::mem::MaybeUninit<u8>; 36]);
@@ -9021,7 +9200,7 @@ pub mod host {
                         let bytes5 = _rt::Vec::from_raw_parts(l3.cast(), len5, len5);
                         let l6 = i32::from(*ptr1.add(12).cast::<u8>());
                         let l10 = i32::from(*ptr1.add(24).cast::<u8>());
-                        super::wavs::worker::layer_types::EthChainConfig {
+                        super::wavs::worker::layer_types::EvmChainConfig {
                             chain_id: _rt::string_lift(bytes5),
                             ws_endpoint: match l6 {
                                 0 => None,
@@ -9376,6 +9555,29 @@ mod _rt {
     pub fn run_ctors_once() {
         wit_bindgen_rt::run_ctors_once();
     }
+    pub fn as_i64<T: AsI64>(t: T) -> i64 {
+        t.as_i64()
+    }
+    pub trait AsI64 {
+        fn as_i64(self) -> i64;
+    }
+    impl<'a, T: Copy + AsI64> AsI64 for &'a T {
+        fn as_i64(self) -> i64 {
+            (*self).as_i64()
+        }
+    }
+    impl AsI64 for i64 {
+        #[inline]
+        fn as_i64(self) -> i64 {
+            self as i64
+        }
+    }
+    impl AsI64 for u64 {
+        #[inline]
+        fn as_i64(self) -> i64 {
+            self as i64
+        }
+    }
     extern crate alloc as alloc_crate;
 }
 /// Generates `#[no_mangle]` functions to export the specified type as the
@@ -9410,135 +9612,143 @@ pub(crate) use __export_layer_trigger_world_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[link_section = "component-type:wit-bindgen:0.35.0:component:dao-agent:layer-trigger-world:encoded world"]
 #[doc(hidden)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 6156] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\x82/\x01A\x02\x01A(\x01\
-B#\x01r\x02\x0bbech32-addrs\x0aprefix-leny\x04\0\x0ecosmos-address\x03\0\0\x01o\x02\
-ss\x01p\x02\x01r\x02\x02tys\x0aattributes\x03\x04\0\x0ccosmos-event\x03\0\x04\x01\
-ks\x01r\x07\x08chain-ids\x0crpc-endpoint\x06\x0dgrpc-endpoint\x06\x11grpc-web-en\
-dpoint\x06\x09gas-pricev\x09gas-denoms\x0dbech32-prefixs\x04\0\x13cosmos-chain-c\
-onfig\x03\0\x07\x01p}\x01r\x01\x09raw-bytes\x09\x04\0\x0beth-address\x03\0\x0a\x01\
-p\x09\x01r\x02\x06topics\x0c\x04data\x09\x04\0\x12eth-event-log-data\x03\0\x0d\x01\
-r\x03\x08chain-ids\x0bws-endpoint\x06\x0dhttp-endpoint\x06\x04\0\x10eth-chain-co\
-nfig\x03\0\x0f\x01r\x03\x07address\x0b\x0achain-names\x0aevent-hash\x09\x04\0!tr\
-igger-source-eth-contract-event\x03\0\x11\x01r\x03\x07address\x01\x0achain-names\
-\x0aevent-types\x04\0$trigger-source-cosmos-contract-event\x03\0\x13\x01q\x03\x12\
-eth-contract-event\x01\x12\0\x15cosmos-contract-event\x01\x14\0\x06manual\0\0\x04\
-\0\x0etrigger-source\x03\0\x15\x01r\x03\x0aservice-ids\x0bworkflow-ids\x0etrigge\
-r-source\x16\x04\0\x0etrigger-config\x03\0\x17\x01r\x04\x10contract-address\x0b\x0a\
-chain-names\x03log\x0e\x0cblock-heightw\x04\0\x1ftrigger-data-eth-contract-event\
-\x03\0\x19\x01r\x04\x10contract-address\x01\x0achain-names\x05event\x05\x0cblock\
--heightw\x04\0\"trigger-data-cosmos-contract-event\x03\0\x1b\x01q\x03\x12eth-con\
-tract-event\x01\x1a\0\x15cosmos-contract-event\x01\x1c\0\x03raw\x01\x09\0\x04\0\x0c\
-trigger-data\x03\0\x1d\x01r\x02\x06config\x18\x04data\x1e\x04\0\x0etrigger-actio\
-n\x03\0\x1f\x01q\x05\x05error\0\0\x04warn\0\0\x04info\0\0\x05debug\0\0\x05trace\0\
-\0\x04\0\x09log-level\x03\0!\x03\0\x1dwavs:worker/layer-types@0.3.0\x05\0\x02\x03\
-\0\0\x0etrigger-action\x03\0\x0etrigger-action\x03\0\x01\x01B\x02\x01q\x0d\x03ap\
-i\x01s\0\x04http\x01s\0\x10external-service\x01s\0\x06config\x01s\0\x08contract\x01\
-s\0\x0dconfiguration\x01s\0\x0fcontext-loading\x01s\0\x12context-validation\x01s\
-\0\x03llm\x01s\0\x02io\x01s\0\x0btransaction\x01s\0\x04utf8\x01s\0\x05other\x01s\
-\0\x04\0\x0bagent-error\x03\0\0\x03\0\x17wavs:agent/errors@0.0.1\x05\x03\x01B+\x01\
-ks\x01r\x03\x04name\0\x0bdescription\0\x0eparameter-type\0\x04\0\x12function-par\
-ameter\x03\0\x01\x01r\x03\x04names\x0bdescription\0\x0aparameters\0\x04\0\x08fun\
-ction\x03\0\x03\x01r\x02\x09tool-types\x08function\x04\x04\0\x04tool\x03\0\x05\x01\
-r\x02\x04names\x09argumentss\x04\0\x12tool-call-function\x03\0\x07\x01r\x03\x02i\
-ds\x09tool-types\x08function\x08\x04\0\x09tool-call\x03\0\x09\x01p\x0a\x01k\x0b\x01\
-r\x05\x04roles\x07content\0\x0atool-calls\x0c\x0ctool-call-id\0\x04name\0\x04\0\x07\
-message\x03\0\x0d\x04\0\x13custom-tool-handler\x03\x01\x01ky\x01r\x05\x0btempera\
-turev\x05top-pv\x04seedy\x0amax-tokens\x10\x0econtext-window\x10\x04\0\x0bllm-op\
-tions\x03\0\x11\x01r\x04\x05models\x06config\x12\x07api-urls\x07api-key\0\x04\0\x0a\
-llm-client\x03\0\x13\x01r\x04\x04names\x07addresss\x03abis\x0bdescription\0\x04\0\
-\x08contract\x03\0\x15\x01p\x16\x01p\x0e\x01o\x02ss\x01p\x19\x01r\x05\x09contrac\
-ts\x17\x0allm-config\x12\x05models\x08messages\x18\x06config\x1a\x04\0\x06config\
-\x03\0\x1b\x01ps\x01r\x02\x08functions\x04args\x1d\x04\0\x0dcontract-call\x03\0\x1e\
-\x01k\x1f\x01r\x05\x02tos\x05values\x0dcontract-call\x20\x04datas\x0bdescription\
-s\x04\0\x0btransaction\x03\0!\x01q\x02\x0btransaction\x01\"\0\x04text\x01s\0\x04\
-\0\x0cllm-response\x03\0#\x01h\x0f\x01@\x02\x04self%\x09tool-names\0\x7f\x04\0&[\
-method]custom-tool-handler.can-handle\x01&\x01j\x01s\x01s\x01@\x02\x04self%\x09t\
-ool-call\x0a\0'\x04\0#[method]custom-tool-handler.execute\x01(\x03\0\x16wavs:age\
-nt/types@0.0.1\x05\x04\x02\x03\0\x01\x0bagent-error\x02\x03\0\x02\x07message\x02\
-\x03\0\x02\x04tool\x02\x03\0\x02\x09tool-call\x02\x03\0\x02\x13custom-tool-handl\
-er\x02\x03\0\x02\x0cllm-response\x02\x03\0\x02\x0btransaction\x02\x03\0\x02\x06c\
-onfig\x02\x03\0\x02\x0bllm-options\x02\x03\0\x02\x0allm-client\x01B0\x02\x03\x02\
-\x01\x05\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x06\x04\0\x07message\x03\0\
-\x02\x02\x03\x02\x01\x07\x04\0\x04tool\x03\0\x04\x02\x03\x02\x01\x08\x04\0\x09to\
-ol-call\x03\0\x06\x02\x03\x02\x01\x09\x04\0\x13custom-tool-handler\x03\0\x08\x02\
-\x03\x02\x01\x0a\x04\0\x0cllm-response\x03\0\x0a\x02\x03\x02\x01\x0b\x04\0\x0btr\
-ansaction\x03\0\x0c\x02\x03\x02\x01\x0c\x04\0\x06config\x03\0\x0e\x02\x03\x02\x01\
-\x0d\x04\0\x0bllm-options\x03\0\x10\x02\x03\x02\x01\x0e\x04\0\x0allm-client\x03\0\
-\x12\x04\0\x12llm-client-manager\x03\x01\x01h\x14\x01@\x01\x04self\x15\0s\x04\0$\
-[method]llm-client-manager.get-model\x01\x16\x01@\x01\x04self\x15\0\x11\x04\0%[m\
-ethod]llm-client-manager.get-config\x01\x17\x01p\x03\x01p\x05\x01k\x19\x01j\x01\x03\
-\x01\x01\x01@\x03\x04self\x15\x08messages\x18\x05tools\x1a\0\x1b\x04\0*[method]l\
-lm-client-manager.chat-completion\x01\x1c\x01j\x01s\x01\x01\x01@\x02\x04self\x15\
-\x08messages\x18\0\x1d\x04\0/[method]llm-client-manager.chat-completion-text\x01\
-\x1e\x01i\x09\x01p\x1f\x01k\x20\x01j\x01\x0b\x01\x01\x01@\x05\x04self\x15\x06pro\
-mpts\x06config\x0f\x0ccustom-tools\x1a\x0fcustom-handlers!\0\"\x04\0)[method]llm\
--client-manager.process-prompt\x01#\x01j\x01\x13\x01\x01\x01@\x01\x05models\0$\x04\
-\0\x0anew-client\x01%\x01@\x02\x05models\x0bjson-configs\0$\x04\0\x09from-json\x01\
-&\x01@\x02\x05models\x06config\x11\0$\x04\0\x0bwith-config\x01'\x03\0\x17wavs:ag\
-ent/client@0.0.1\x05\x0f\x02\x03\0\x02\x08contract\x01B.\x02\x03\x02\x01\x05\x04\
-\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x06\x04\0\x07message\x03\0\x02\x02\x03\
-\x02\x01\x0c\x04\0\x06config\x03\0\x04\x02\x03\x02\x01\x0d\x04\0\x0bllm-options\x03\
-\0\x06\x02\x03\x02\x01\x10\x04\0\x08contract\x03\0\x08\x04\0\x11llm-options-func\
-s\x03\x01\x04\0\x0econfig-manager\x03\x01\x01h\x0a\x01@\x01\x04self\x0c\0\x07\x04\
-\0\x1d[method]llm-options-funcs.new\x01\x0d\x01@\x02\x04self\x0c\x04tempv\0\x07\x04\
-\0%[method]llm-options-funcs.temperature\x01\x0e\x01@\x02\x04self\x0c\x05top-pv\0\
-\x07\x04\0\x1f[method]llm-options-funcs.top-p\x01\x0f\x01@\x02\x04self\x0c\x04se\
-edy\0\x07\x04\0\x1e[method]llm-options-funcs.seed\x01\x10\x01ky\x01@\x02\x04self\
-\x0c\x0amax-tokens\x11\0\x07\x04\0$[method]llm-options-funcs.max-tokens\x01\x12\x01\
-@\x02\x04self\x0c\x0econtext-window\x11\0\x07\x04\0([method]llm-options-funcs.co\
-ntext-window\x01\x13\x01h\x0b\x01j\x01\x05\x01s\x01@\x01\x04self\x14\0\x15\x04\0\
-\x1b[method]config-manager.load\x01\x16\x01@\x02\x04self\x14\x03uris\0\x15\x04\0\
-$[method]config-manager.load-from-uri\x01\x17\x01j\x01\x05\x01\x01\x01@\x02\x04s\
-elf\x14\x04jsons\0\x18\x04\0\x20[method]config-manager.from-json\x01\x19\x01j\x01\
-s\x01s\x01@\x01\x04self\x14\0\x1a\x04\0\x1e[method]config-manager.to-json\x01\x1b\
-\x01@\x01\x04self\x14\0s\x04\03[method]config-manager.format-contract-descriptio\
-ns\x01\x1c\x01k\x09\x01@\x02\x04self\x14\x04names\0\x1d\x04\0+[method]config-man\
-ager.get-contract-by-name\x01\x1e\x01j\0\x01\x01\x01@\x01\x04self\x14\0\x1f\x04\0\
-\x1f[method]config-manager.validate\x01\x20\x03\0\x17wavs:agent/config@0.0.1\x05\
-\x11\x02\x03\0\x02\x0dcontract-call\x01B#\x02\x03\x02\x01\x05\x04\0\x0bagent-err\
-or\x03\0\0\x02\x03\x02\x01\x10\x04\0\x08contract\x03\0\x02\x02\x03\x02\x01\x12\x04\
-\0\x0dcontract-call\x03\0\x04\x02\x03\x02\x01\x0b\x04\0\x0btransaction\x03\0\x06\
-\x04\0\x10contract-manager\x03\x01\x04\0\x13transaction-manager\x03\x01\x01h\x08\
-\x01@\x04\x04self\x0a\x04names\x07addresss\x03abis\0\x03\x04\0\x1c[method]contra\
-ct-manager.new\x01\x0b\x01@\x05\x04self\x0a\x04names\x07addresss\x03abis\x0bdesc\
-riptions\0\x03\x04\0-[method]contract-manager.new-with-description\x01\x0c\x01j\x01\
-s\x01\x01\x01@\x02\x04self\x0a\x08contract\x03\0\x0d\x04\0\"[method]contract-man\
-ager.parse-abi\x01\x0e\x01ps\x01p}\x01j\x01\x10\x01\x01\x01@\x04\x04self\x0a\x08\
-contract\x03\x0dfunction-names\x04args\x0f\0\x11\x04\0-[method]contract-manager.\
-encode-function-call\x01\x12\x01@\x03\x04self\x0a\x08contract\x03\x0dfunction-na\
-mes\0\x0d\x04\0&[method]contract-manager.find-function\x01\x13\x01j\0\x01\x01\x01\
-@\x04\x04self\x0a\x08contract\x03\x0dfunction-names\x04args\x0f\0\x14\x04\0/[met\
-hod]contract-manager.validate-function-call\x01\x15\x01h\x09\x01@\x02\x04self\x16\
-\x0btransaction\x07\0\x7f\x04\0$[method]transaction-manager.is-valid\x01\x17\x01\
-@\x02\x04self\x16\x0btransaction\x07\0\x14\x04\00[method]transaction-manager.val\
-idate-transaction\x01\x18\x01@\x01\x0btransaction\x07\0\x0d\x04\0\x16create-payl\
-oad-from-tx\x01\x19\x03\0\x1awavs:agent/contracts@0.0.1\x05\x13\x02\x03\0\x03\x0a\
-llm-client\x02\x03\0\x02\x08function\x01B#\x02\x03\x02\x01\x14\x04\0\x0allm-clie\
-nt\x03\0\0\x02\x03\x02\x01\x06\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\x07\x04\
-\0\x04tool\x03\0\x04\x02\x03\x02\x01\x08\x04\0\x09tool-call\x03\0\x06\x02\x03\x02\
-\x01\x15\x04\0\x08function\x03\0\x08\x02\x03\x02\x01\x09\x04\0\x13custom-tool-ha\
-ndler\x03\0\x0a\x02\x03\x02\x01\x10\x04\0\x08contract\x03\0\x0c\x04\0\x0dtools-b\
-uilder\x03\x01\x01h\x0e\x01@\x01\x04self\x0f\0\x05\x04\0#[method]tools-builder.s\
-end-eth-tool\x01\x10\x01p\x05\x01@\x02\x04self\x0f\x08contract\x0d\0\x11\x04\0)[\
-method]tools-builder.tools-from-contract\x01\x12\x01@\x04\x04self\x0f\x04names\x0b\
-descriptions\x0aparameterss\0\x05\x04\0![method]tools-builder.custom-tool\x01\x13\
-\x01i\x0b\x01p\x14\x01k\x15\x01j\x01s\x01s\x01@\x03\x04self\x0f\x09tool-call\x07\
-\x0fcustom-handlers\x16\0\x17\x04\0'[method]tools-builder.execute-tool-call\x01\x18\
-\x01@\x02\x04self\x0f\x09tool-call\x07\0\x17\x04\0+[method]tools-builder.parse-e\
-th-transaction\x01\x19\x01p\x03\x01p\x07\x01@\x06\x04self\x0f\x06client\x01\x10i\
-nitial-messages\x1a\x08response\x03\x0atool-calls\x1b\x0fcustom-handlers\x16\0\x17\
-\x04\0([method]tools-builder.process-tool-calls\x01\x1c\x03\0\x16wavs:agent/tool\
-s@0.0.1\x05\x16\x02\x03\0\0\x10eth-chain-config\x02\x03\0\0\x13cosmos-chain-conf\
-ig\x02\x03\0\0\x09log-level\x01B\x0e\x02\x03\x02\x01\x17\x04\0\x10eth-chain-conf\
-ig\x03\0\0\x02\x03\x02\x01\x18\x04\0\x13cosmos-chain-config\x03\0\x02\x02\x03\x02\
-\x01\x19\x04\0\x09log-level\x03\0\x04\x01k\x01\x01@\x01\x0achain-names\0\x06\x04\
-\0\x14get-eth-chain-config\x01\x07\x01k\x03\x01@\x01\x0achain-names\0\x08\x04\0\x17\
-get-cosmos-chain-config\x01\x09\x01@\x02\x05level\x05\x07messages\x01\0\x04\0\x03\
-log\x01\x0a\x03\0\x04host\x05\x1a\x01p}\x01k\x1b\x01j\x01\x1c\x01s\x01@\x01\x0et\
-rigger-action\x02\0\x1d\x04\0\x03run\x01\x1e\x04\0'component:dao-agent/layer-tri\
-gger-world\x04\0\x0b\x19\x01\0\x13layer-trigger-world\x03\0\0\0G\x09producers\x01\
-\x0cprocessed-by\x02\x0dwit-component\x070.220.0\x10wit-bindgen-rust\x060.35.0";
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 6527] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xf51\x01A\x02\x01A)\x01\
+B1\x01r\x01\x05nanosw\x04\0\x09timestamp\x03\0\0\x01r\x02\x0bbech32-addrs\x0apre\
+fix-leny\x04\0\x0ecosmos-address\x03\0\x02\x01o\x02ss\x01p\x04\x01r\x02\x02tys\x0a\
+attributes\x05\x04\0\x0ccosmos-event\x03\0\x06\x01ks\x01r\x07\x08chain-ids\x0crp\
+c-endpoint\x08\x0dgrpc-endpoint\x08\x11grpc-web-endpoint\x08\x09gas-pricev\x09ga\
+s-denoms\x0dbech32-prefixs\x04\0\x13cosmos-chain-config\x03\0\x09\x01p}\x01r\x01\
+\x09raw-bytes\x0b\x04\0\x0bevm-address\x03\0\x0c\x01p\x0b\x01r\x02\x06topics\x0e\
+\x04data\x0b\x04\0\x12evm-event-log-data\x03\0\x0f\x01r\x03\x08chain-ids\x0bws-e\
+ndpoint\x08\x0dhttp-endpoint\x08\x04\0\x10evm-chain-config\x03\0\x11\x01r\x03\x07\
+address\x0d\x0achain-names\x0aevent-hash\x0b\x04\0!trigger-source-evm-contract-e\
+vent\x03\0\x13\x01r\x03\x07address\x03\x0achain-names\x0aevent-types\x04\0$trigg\
+er-source-cosmos-contract-event\x03\0\x15\x01r\x02\x0achain-names\x08n-blocksy\x04\
+\0\x15block-interval-source\x03\0\x17\x01k\x01\x01r\x03\x08schedules\x0astart-ti\
+me\x19\x08end-time\x19\x04\0\x13trigger-source-cron\x03\0\x1a\x01q\x05\x12evm-co\
+ntract-event\x01\x14\0\x15cosmos-contract-event\x01\x16\0\x0eblock-interval\x01\x18\
+\0\x04cron\x01\x1b\0\x06manual\0\0\x04\0\x0etrigger-source\x03\0\x1c\x01r\x03\x0a\
+service-ids\x0bworkflow-ids\x0etrigger-source\x1d\x04\0\x0etrigger-config\x03\0\x1e\
+\x01r\x04\x10contract-address\x0d\x0achain-names\x03log\x10\x0cblock-heightw\x04\
+\0\x1ftrigger-data-evm-contract-event\x03\0\x20\x01r\x04\x10contract-address\x03\
+\x0achain-names\x05event\x07\x0cblock-heightw\x04\0\"trigger-data-cosmos-contrac\
+t-event\x03\0\"\x01r\x02\x0achain-names\x0cblock-heightw\x04\0\x13block-interval\
+-data\x03\0$\x01r\x01\x0ctrigger-time\x01\x04\0\x11trigger-data-cron\x03\0&\x01q\
+\x05\x12evm-contract-event\x01!\0\x15cosmos-contract-event\x01#\0\x0eblock-inter\
+val\x01%\0\x04cron\x01'\0\x03raw\x01\x0b\0\x04\0\x0ctrigger-data\x03\0(\x01r\x02\
+\x06config\x1f\x04data)\x04\0\x0etrigger-action\x03\0*\x01kw\x01r\x02\x07payload\
+\x0b\x08ordering,\x04\0\x0dwasm-response\x03\0-\x01q\x05\x05error\0\0\x04warn\0\0\
+\x04info\0\0\x05debug\0\0\x05trace\0\0\x04\0\x09log-level\x03\0/\x03\0$wavs:work\
+er/layer-types@0.4.0-beta.1\x05\0\x02\x03\0\0\x0etrigger-action\x03\0\x0etrigger\
+-action\x03\0\x01\x02\x03\0\0\x0dwasm-response\x03\0\x0dwasm-response\x03\0\x03\x01\
+B\x02\x01q\x0d\x03api\x01s\0\x04http\x01s\0\x10external-service\x01s\0\x06config\
+\x01s\0\x08contract\x01s\0\x0dconfiguration\x01s\0\x0fcontext-loading\x01s\0\x12\
+context-validation\x01s\0\x03llm\x01s\0\x02io\x01s\0\x0btransaction\x01s\0\x04ut\
+f8\x01s\0\x05other\x01s\0\x04\0\x0bagent-error\x03\0\0\x03\0\x17wavs:agent/error\
+s@0.0.1\x05\x05\x01B+\x01ks\x01r\x03\x04name\0\x0bdescription\0\x0eparameter-typ\
+e\0\x04\0\x12function-parameter\x03\0\x01\x01r\x03\x04names\x0bdescription\0\x0a\
+parameters\0\x04\0\x08function\x03\0\x03\x01r\x02\x09tool-types\x08function\x04\x04\
+\0\x04tool\x03\0\x05\x01r\x02\x04names\x09argumentss\x04\0\x12tool-call-function\
+\x03\0\x07\x01r\x03\x02ids\x09tool-types\x08function\x08\x04\0\x09tool-call\x03\0\
+\x09\x01p\x0a\x01k\x0b\x01r\x05\x04roles\x07content\0\x0atool-calls\x0c\x0ctool-\
+call-id\0\x04name\0\x04\0\x07message\x03\0\x0d\x04\0\x13custom-tool-handler\x03\x01\
+\x01ky\x01r\x05\x0btemperaturev\x05top-pv\x04seedy\x0amax-tokens\x10\x0econtext-\
+window\x10\x04\0\x0bllm-options\x03\0\x11\x01r\x04\x05models\x06config\x12\x07ap\
+i-urls\x07api-key\0\x04\0\x0allm-client\x03\0\x13\x01r\x04\x04names\x07addresss\x03\
+abis\x0bdescription\0\x04\0\x08contract\x03\0\x15\x01p\x16\x01p\x0e\x01o\x02ss\x01\
+p\x19\x01r\x05\x09contracts\x17\x0allm-config\x12\x05models\x08messages\x18\x06c\
+onfig\x1a\x04\0\x06config\x03\0\x1b\x01ps\x01r\x02\x08functions\x04args\x1d\x04\0\
+\x0dcontract-call\x03\0\x1e\x01k\x1f\x01r\x05\x02tos\x05values\x0dcontract-call\x20\
+\x04datas\x0bdescriptions\x04\0\x0btransaction\x03\0!\x01q\x02\x0btransaction\x01\
+\"\0\x04text\x01s\0\x04\0\x0cllm-response\x03\0#\x01h\x0f\x01@\x02\x04self%\x09t\
+ool-names\0\x7f\x04\0&[method]custom-tool-handler.can-handle\x01&\x01j\x01s\x01s\
+\x01@\x02\x04self%\x09tool-call\x0a\0'\x04\0#[method]custom-tool-handler.execute\
+\x01(\x03\0\x16wavs:agent/types@0.0.1\x05\x06\x02\x03\0\x01\x0bagent-error\x02\x03\
+\0\x02\x07message\x02\x03\0\x02\x04tool\x02\x03\0\x02\x09tool-call\x02\x03\0\x02\
+\x13custom-tool-handler\x02\x03\0\x02\x0cllm-response\x02\x03\0\x02\x0btransacti\
+on\x02\x03\0\x02\x06config\x02\x03\0\x02\x0bllm-options\x02\x03\0\x02\x0allm-cli\
+ent\x01B0\x02\x03\x02\x01\x07\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x08\x04\
+\0\x07message\x03\0\x02\x02\x03\x02\x01\x09\x04\0\x04tool\x03\0\x04\x02\x03\x02\x01\
+\x0a\x04\0\x09tool-call\x03\0\x06\x02\x03\x02\x01\x0b\x04\0\x13custom-tool-handl\
+er\x03\0\x08\x02\x03\x02\x01\x0c\x04\0\x0cllm-response\x03\0\x0a\x02\x03\x02\x01\
+\x0d\x04\0\x0btransaction\x03\0\x0c\x02\x03\x02\x01\x0e\x04\0\x06config\x03\0\x0e\
+\x02\x03\x02\x01\x0f\x04\0\x0bllm-options\x03\0\x10\x02\x03\x02\x01\x10\x04\0\x0a\
+llm-client\x03\0\x12\x04\0\x12llm-client-manager\x03\x01\x01h\x14\x01@\x01\x04se\
+lf\x15\0s\x04\0$[method]llm-client-manager.get-model\x01\x16\x01@\x01\x04self\x15\
+\0\x11\x04\0%[method]llm-client-manager.get-config\x01\x17\x01p\x03\x01p\x05\x01\
+k\x19\x01j\x01\x03\x01\x01\x01@\x03\x04self\x15\x08messages\x18\x05tools\x1a\0\x1b\
+\x04\0*[method]llm-client-manager.chat-completion\x01\x1c\x01j\x01s\x01\x01\x01@\
+\x02\x04self\x15\x08messages\x18\0\x1d\x04\0/[method]llm-client-manager.chat-com\
+pletion-text\x01\x1e\x01i\x09\x01p\x1f\x01k\x20\x01j\x01\x0b\x01\x01\x01@\x05\x04\
+self\x15\x06prompts\x06config\x0f\x0ccustom-tools\x1a\x0fcustom-handlers!\0\"\x04\
+\0)[method]llm-client-manager.process-prompt\x01#\x01j\x01\x13\x01\x01\x01@\x01\x05\
+models\0$\x04\0\x0anew-client\x01%\x01@\x02\x05models\x0bjson-configs\0$\x04\0\x09\
+from-json\x01&\x01@\x02\x05models\x06config\x11\0$\x04\0\x0bwith-config\x01'\x03\
+\0\x17wavs:agent/client@0.0.1\x05\x11\x02\x03\0\x02\x08contract\x01B.\x02\x03\x02\
+\x01\x07\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x08\x04\0\x07message\x03\0\
+\x02\x02\x03\x02\x01\x0e\x04\0\x06config\x03\0\x04\x02\x03\x02\x01\x0f\x04\0\x0b\
+llm-options\x03\0\x06\x02\x03\x02\x01\x12\x04\0\x08contract\x03\0\x08\x04\0\x11l\
+lm-options-funcs\x03\x01\x04\0\x0econfig-manager\x03\x01\x01h\x0a\x01@\x01\x04se\
+lf\x0c\0\x07\x04\0\x1d[method]llm-options-funcs.new\x01\x0d\x01@\x02\x04self\x0c\
+\x04tempv\0\x07\x04\0%[method]llm-options-funcs.temperature\x01\x0e\x01@\x02\x04\
+self\x0c\x05top-pv\0\x07\x04\0\x1f[method]llm-options-funcs.top-p\x01\x0f\x01@\x02\
+\x04self\x0c\x04seedy\0\x07\x04\0\x1e[method]llm-options-funcs.seed\x01\x10\x01k\
+y\x01@\x02\x04self\x0c\x0amax-tokens\x11\0\x07\x04\0$[method]llm-options-funcs.m\
+ax-tokens\x01\x12\x01@\x02\x04self\x0c\x0econtext-window\x11\0\x07\x04\0([method\
+]llm-options-funcs.context-window\x01\x13\x01h\x0b\x01j\x01\x05\x01s\x01@\x01\x04\
+self\x14\0\x15\x04\0\x1b[method]config-manager.load\x01\x16\x01@\x02\x04self\x14\
+\x03uris\0\x15\x04\0$[method]config-manager.load-from-uri\x01\x17\x01j\x01\x05\x01\
+\x01\x01@\x02\x04self\x14\x04jsons\0\x18\x04\0\x20[method]config-manager.from-js\
+on\x01\x19\x01j\x01s\x01s\x01@\x01\x04self\x14\0\x1a\x04\0\x1e[method]config-man\
+ager.to-json\x01\x1b\x01@\x01\x04self\x14\0s\x04\03[method]config-manager.format\
+-contract-descriptions\x01\x1c\x01k\x09\x01@\x02\x04self\x14\x04names\0\x1d\x04\0\
++[method]config-manager.get-contract-by-name\x01\x1e\x01j\0\x01\x01\x01@\x01\x04\
+self\x14\0\x1f\x04\0\x1f[method]config-manager.validate\x01\x20\x03\0\x17wavs:ag\
+ent/config@0.0.1\x05\x13\x02\x03\0\x02\x0dcontract-call\x01B#\x02\x03\x02\x01\x07\
+\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x12\x04\0\x08contract\x03\0\x02\x02\
+\x03\x02\x01\x14\x04\0\x0dcontract-call\x03\0\x04\x02\x03\x02\x01\x0d\x04\0\x0bt\
+ransaction\x03\0\x06\x04\0\x10contract-manager\x03\x01\x04\0\x13transaction-mana\
+ger\x03\x01\x01h\x08\x01@\x04\x04self\x0a\x04names\x07addresss\x03abis\0\x03\x04\
+\0\x1c[method]contract-manager.new\x01\x0b\x01@\x05\x04self\x0a\x04names\x07addr\
+esss\x03abis\x0bdescriptions\0\x03\x04\0-[method]contract-manager.new-with-descr\
+iption\x01\x0c\x01j\x01s\x01\x01\x01@\x02\x04self\x0a\x08contract\x03\0\x0d\x04\0\
+\"[method]contract-manager.parse-abi\x01\x0e\x01ps\x01p}\x01j\x01\x10\x01\x01\x01\
+@\x04\x04self\x0a\x08contract\x03\x0dfunction-names\x04args\x0f\0\x11\x04\0-[met\
+hod]contract-manager.encode-function-call\x01\x12\x01@\x03\x04self\x0a\x08contra\
+ct\x03\x0dfunction-names\0\x0d\x04\0&[method]contract-manager.find-function\x01\x13\
+\x01j\0\x01\x01\x01@\x04\x04self\x0a\x08contract\x03\x0dfunction-names\x04args\x0f\
+\0\x14\x04\0/[method]contract-manager.validate-function-call\x01\x15\x01h\x09\x01\
+@\x02\x04self\x16\x0btransaction\x07\0\x7f\x04\0$[method]transaction-manager.is-\
+valid\x01\x17\x01@\x02\x04self\x16\x0btransaction\x07\0\x14\x04\00[method]transa\
+ction-manager.validate-transaction\x01\x18\x01@\x01\x0btransaction\x07\0\x0d\x04\
+\0\x16create-payload-from-tx\x01\x19\x03\0\x1awavs:agent/contracts@0.0.1\x05\x15\
+\x02\x03\0\x03\x0allm-client\x02\x03\0\x02\x08function\x01B#\x02\x03\x02\x01\x16\
+\x04\0\x0allm-client\x03\0\0\x02\x03\x02\x01\x08\x04\0\x07message\x03\0\x02\x02\x03\
+\x02\x01\x09\x04\0\x04tool\x03\0\x04\x02\x03\x02\x01\x0a\x04\0\x09tool-call\x03\0\
+\x06\x02\x03\x02\x01\x17\x04\0\x08function\x03\0\x08\x02\x03\x02\x01\x0b\x04\0\x13\
+custom-tool-handler\x03\0\x0a\x02\x03\x02\x01\x12\x04\0\x08contract\x03\0\x0c\x04\
+\0\x0dtools-builder\x03\x01\x01h\x0e\x01@\x01\x04self\x0f\0\x05\x04\0#[method]to\
+ols-builder.send-eth-tool\x01\x10\x01p\x05\x01@\x02\x04self\x0f\x08contract\x0d\0\
+\x11\x04\0)[method]tools-builder.tools-from-contract\x01\x12\x01@\x04\x04self\x0f\
+\x04names\x0bdescriptions\x0aparameterss\0\x05\x04\0![method]tools-builder.custo\
+m-tool\x01\x13\x01i\x0b\x01p\x14\x01k\x15\x01j\x01s\x01s\x01@\x03\x04self\x0f\x09\
+tool-call\x07\x0fcustom-handlers\x16\0\x17\x04\0'[method]tools-builder.execute-t\
+ool-call\x01\x18\x01@\x02\x04self\x0f\x09tool-call\x07\0\x17\x04\0+[method]tools\
+-builder.parse-eth-transaction\x01\x19\x01p\x03\x01p\x07\x01@\x06\x04self\x0f\x06\
+client\x01\x10initial-messages\x1a\x08response\x03\x0atool-calls\x1b\x0fcustom-h\
+andlers\x16\0\x17\x04\0([method]tools-builder.process-tool-calls\x01\x1c\x03\0\x16\
+wavs:agent/tools@0.0.1\x05\x18\x02\x03\0\0\x10evm-chain-config\x02\x03\0\0\x13co\
+smos-chain-config\x02\x03\0\0\x09log-level\x01B\x0e\x02\x03\x02\x01\x19\x04\0\x10\
+evm-chain-config\x03\0\0\x02\x03\x02\x01\x1a\x04\0\x13cosmos-chain-config\x03\0\x02\
+\x02\x03\x02\x01\x1b\x04\0\x09log-level\x03\0\x04\x01k\x01\x01@\x01\x0achain-nam\
+es\0\x06\x04\0\x14get-eth-chain-config\x01\x07\x01k\x03\x01@\x01\x0achain-names\0\
+\x08\x04\0\x17get-cosmos-chain-config\x01\x09\x01@\x02\x05level\x05\x07messages\x01\
+\0\x04\0\x03log\x01\x0a\x03\0\x04host\x05\x1c\x01k\x04\x01j\x01\x1d\x01s\x01@\x01\
+\x0etrigger-action\x02\0\x1e\x04\0\x03run\x01\x1f\x04\0'component:dao-agent/laye\
+r-trigger-world\x04\0\x0b\x19\x01\0\x13layer-trigger-world\x03\0\0\0G\x09produce\
+rs\x01\x0cprocessed-by\x02\x0dwit-component\x070.220.0\x10wit-bindgen-rust\x060.\
+35.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {
