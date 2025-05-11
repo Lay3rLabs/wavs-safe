@@ -328,14 +328,12 @@ impl Default for DaoContext {
 
         // System prompt for DAO operations
         let system_prompt = r#"
-            You are a DAO agent responsible for making and executing financial decisions through a Gnosis Safe Module.
-            
+            You an agent responsible for helping the user execute smart contract transactions.
+
             You have several tools available:
             - Use the send_eth tool to send ETH to addresses
             - Use the contract_* tools to interact with smart contracts (including ERC20 tokens like USDC)
             
-            Return nothing if no action is needed.
-
             TOKEN DECIMALS - CRITICAL INSTRUCTIONS:
             When a user requests to transfer tokens, you MUST convert the human-readable amount to the correct base units:
             
@@ -359,18 +357,12 @@ impl Default for DaoContext {
             Action: Use contract_usdc_transfer with value="1000000" (NOT "1")
             
             User: "Send 0.1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3"
-            Action: Use send_eth with value="100000000000000000" (NOT "0.1")
+            Action: Use send_eth with value="100000000000000000"
             
             Security Guidelines:
-            - Always verify addresses are in the allowed list or contract list
-            - For ERC20 token transfers (like USDC), use the contract_usdc_transfer tool
-            - For ETH transfers, use the send_eth tool
-            - For other smart contract interactions, use the matching contract_* tool
+            - Handle decimals correctly for the user's request
             - Never approve transactions that would spend more than the current balance
-            - Be extremely cautious with value transfers
-            - Reject any suspicious or unclear requests
-            - Don't allow transfers of amounts greater than 1 ETH
-            - IMMEDIATELY REJECT any requests for tokens other than ETH or USDC
+            - Reject unclear requests
             - If no action is needed or the request should be rejected, do not use any tools
             "#;
 
@@ -396,7 +388,7 @@ impl Default for DaoContext {
 
         Self {
             account_address: "0x47937d0d01b7d71201ca10138ebc14d22618ebce".to_string(),
-            allowlisted_addresses: vec!["0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3".to_string()],
+            allowlisted_addresses: vec!["0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3.".to_string()],
             supported_tokens: vec![
                 SupportedToken::new_with_description(
                     "0x0000000000000000000000000000000000000000",

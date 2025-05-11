@@ -212,7 +212,28 @@ impl client::GuestLlmClientManager for LlmClient {
 
                 // Add tools if provided
                 if let Some(tools_list) = tools {
-                    request["tools"] = serde_json::to_value(tools_list)?;
+                    // OpenAI requires tools to have "type": "function" - ensure this is set
+                    let formatted_tools: Vec<serde_json::Value> = tools_list.iter().map(|tool| {
+                        serde_json::json!({
+                            "type": "function", // OpenAI expects "type", not "tool_type"
+                            "function": {
+                                "name": tool.function.name,
+                                "description": tool.function.description,
+                                // Parse parameters from string to JSON object if it's a string
+                                "parameters": if let Some(params) = &tool.function.parameters {
+                                    if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(params) {
+                                        parsed
+                                    } else {
+                                        serde_json::Value::String(params.clone())
+                                    }
+                                } else {
+                                    serde_json::json!({})
+                                }
+                            }
+                        })
+                    }).collect();
+
+                    request["tools"] = serde_json::json!(formatted_tools);
                 }
 
                 request
@@ -220,7 +241,6 @@ impl client::GuestLlmClientManager for LlmClient {
                 // Ollama chat format
                 let mut request = serde_json::json!({
                     "model": self.model,
-                    "messages": messages,
                     "stream": false,
                     "options": {
                         "temperature": self.config.temperature,
@@ -235,25 +255,99 @@ impl client::GuestLlmClientManager for LlmClient {
                     request["options"]["num_ctx"] = serde_json::json!(ctx);
                 }
 
-                // Add tools if provided for Ollama (using the format Ollama expects)
-                if let Some(tools_list) = tools.clone() {
-                    // Standard tools format
-                    request["tools"] = serde_json::to_value(tools_list.clone())?;
+                // For Ollama, let's create new messages with tools embedded in the system message
+                if let Some(tools_list) = tools {
+                    let mut modified_messages = Vec::new();
 
-                    // Also include functions key which some Ollama versions might need
-                    // Convert tools to format compatible with Ollama
-                    let functions = tools_list
-                        .iter()
-                        .map(|tool| {
-                            serde_json::json!({
-                                "name": tool.function.name,
-                                "description": tool.function.description,
-                                "parameters": tool.function.parameters
-                            })
-                        })
-                        .collect::<Vec<_>>();
+                    // Look for a system message to augment
+                    let mut has_system_message = false;
+                    for msg in messages {
+                        if msg.role == "system" {
+                            // Modify the system message to include tools description
+                            let mut tools_desc = String::new();
+                            tools_desc.push_str("\n\nYou have the following tools available:\n");
 
-                    request["functions"] = serde_json::json!(functions);
+                            for tool in tools_list {
+                                tools_desc.push_str(&format!(
+                                    "- {}: {}\n",
+                                    tool.function.name,
+                                    tool.function.description.clone().unwrap_or_default()
+                                ));
+                            }
+
+                            // Add instructions to use tools
+                            tools_desc
+                                .push_str("\nTo use a tool, respond with JSON in this format:\n");
+                            tools_desc.push_str(r#"{"tool": "tool_name", "args": {"arg1": "value1", "arg2": "value2"}}"#);
+                            tools_desc.push_str("\n\n");
+
+                            // Append to existing content or create new content
+                            let new_content = if let Some(content) = &msg.content {
+                                format!("{}\n{}", content, tools_desc)
+                            } else {
+                                tools_desc
+                            };
+
+                            // Add the modified message
+                            modified_messages.push(Message {
+                                role: "system".to_string(),
+                                content: Some(new_content),
+                                tool_calls: None,
+                                tool_call_id: None,
+                                name: None,
+                            });
+
+                            has_system_message = true;
+                        } else {
+                            // Keep other messages unchanged
+                            modified_messages.push(msg.clone());
+                        }
+                    }
+
+                    // If no system message was found, add a new one with the tools
+                    if !has_system_message {
+                        let mut tools_desc = String::new();
+                        tools_desc
+                            .push_str("You are a helpful assistant with access to tools.\n\n");
+                        tools_desc.push_str("You have the following tools available:\n");
+
+                        for tool in tools_list {
+                            tools_desc.push_str(&format!(
+                                "- {}: {}\n",
+                                tool.function.name,
+                                tool.function.description.clone().unwrap_or_default()
+                            ));
+                        }
+
+                        // Add instructions to use tools
+                        tools_desc.push_str("\nTo use a tool, respond with JSON in this format:\n");
+                        tools_desc.push_str(r#"{"tool": "tool_name", "args": {"arg1": "value1", "arg2": "value2"}}"#);
+                        tools_desc.push_str("\n\n");
+
+                        // Add the new system message at the beginning
+                        modified_messages.insert(
+                            0,
+                            Message {
+                                role: "system".to_string(),
+                                content: Some(tools_desc),
+                                tool_calls: None,
+                                tool_call_id: None,
+                                name: None,
+                            },
+                        );
+                    }
+
+                    // Use the modified messages for Ollama
+                    request["messages"] = serde_json::json!(modified_messages);
+                } else {
+                    // Use original messages if no tools
+                    request["messages"] = serde_json::json!(messages);
+                }
+
+                // Log the final Ollama request format in a pretty-printed way
+                if let Ok(pretty_json) = serde_json::to_string_pretty(&request) {
+                    println!("Final Ollama request format (with tools in system message):");
+                    println!("{}", pretty_json);
                 }
 
                 request
@@ -326,16 +420,75 @@ impl client::GuestLlmClientManager for LlmClient {
 
                 #[derive(Deserialize)]
                 struct Choice {
-                    message: Message,
+                    message: OpenAIMessage,
                 }
 
+                // Create a specialized structure for OpenAI's message format
+                #[derive(Deserialize)]
+                struct OpenAIMessage {
+                    role: String,
+                    #[serde(default)]
+                    content: Option<String>,
+                    #[serde(default)]
+                    tool_calls: Option<Vec<OpenAIToolCall>>,
+                    #[serde(default)]
+                    tool_call_id: Option<String>,
+                    #[serde(default)]
+                    name: Option<String>,
+                }
+
+                // OpenAI's tool call format uses "type" instead of "tool_type"
+                #[derive(Deserialize)]
+                struct OpenAIToolCall {
+                    id: String,
+                    #[serde(rename = "type")] // This maps OpenAI's "type" to our "tool_type"
+                    tool_type: String,
+                    function: OpenAIToolCallFunction,
+                }
+
+                #[derive(Deserialize)]
+                struct OpenAIToolCallFunction {
+                    name: String,
+                    arguments: String,
+                }
+
+                // Parse the response with our custom types
                 let resp: ChatResponse = serde_json::from_str(&body_str).map_err(|e| {
+                    println!("Error parsing OpenAI response: {}", e);
+                    println!("Response body: {}", body_str);
                     AgentError::Llm(format!("Failed to parse OpenAI response: {}", e))
                 })?;
 
+                // Convert from OpenAI's message format to our internal message format
                 resp.choices
                     .first()
-                    .map(|choice| choice.message.clone())
+                    .map(|choice| {
+                        let oai_msg = &choice.message;
+
+                        // Convert tool calls from OpenAI format to our format
+                        let tool_calls = oai_msg.tool_calls.as_ref().map(|tc| {
+                            tc.iter()
+                                .map(|call| crate::wit::exports::wavs::agent::types::ToolCall {
+                                    id: call.id.clone(),
+                                    tool_type: call.tool_type.clone(),
+                                    function:
+                                        crate::wit::exports::wavs::agent::types::ToolCallFunction {
+                                            name: call.function.name.clone(),
+                                            arguments: call.function.arguments.clone(),
+                                        },
+                                })
+                                .collect()
+                        });
+
+                        // Create our internal Message type
+                        Message {
+                            role: oai_msg.role.clone(),
+                            content: oai_msg.content.clone(),
+                            tool_calls,
+                            tool_call_id: oai_msg.tool_call_id.clone(),
+                            name: oai_msg.name.clone(),
+                        }
+                    })
                     .ok_or_else(|| AgentError::Llm("No response choices returned".into()))
             } else {
                 // Parse Ollama chat response format
@@ -399,6 +552,130 @@ impl client::GuestLlmClientManager for LlmClient {
                         message.tool_calls = Some(processed_tool_calls);
                     }
                 }
+                // Also check for tool_calls in the root of the response (some Ollama versions)
+                else if let Some(tool_calls_array) = parsed_json["tool_calls"].as_array() {
+                    println!(
+                        "Found tool calls in Ollama response root: {}",
+                        tool_calls_array.len()
+                    );
+
+                    let mut processed_tool_calls = Vec::new();
+
+                    for (idx, tool_call) in tool_calls_array.iter().enumerate() {
+                        if let Some(name) = tool_call["function"]["name"].as_str() {
+                            println!("Processing tool call: {}", name);
+
+                            // Get arguments value (could be object or string)
+                            let args = &tool_call["function"]["arguments"];
+
+                            // Convert arguments to string if they're an object
+                            let arguments = if args.is_object() {
+                                serde_json::to_string(args).unwrap_or_default()
+                            } else if args.is_string() {
+                                args.as_str().unwrap_or_default().to_string()
+                            } else {
+                                serde_json::to_string(args).unwrap_or_default()
+                            };
+
+                            println!("Arguments converted to string: {}", arguments);
+
+                            processed_tool_calls.push(
+                                crate::wit::exports::wavs::agent::types::ToolCall {
+                                    id: format!("call_{}", idx),
+                                    tool_type: "function".to_string(),
+                                    function:
+                                        crate::wit::exports::wavs::agent::types::ToolCallFunction {
+                                            name: name.to_string(),
+                                            arguments,
+                                        },
+                                },
+                            );
+                        }
+                    }
+
+                    if !processed_tool_calls.is_empty() {
+                        message.tool_calls = Some(processed_tool_calls);
+                    }
+                }
+                // Also check for function_call in the message (another Ollama format)
+                else if parsed_json["message"]["function_call"].is_object() {
+                    println!("Found function_call in Ollama response");
+
+                    let function_call = &parsed_json["message"]["function_call"];
+
+                    if let (Some(name), Some(args)) =
+                        (function_call["name"].as_str(), function_call["arguments"].as_str())
+                    {
+                        println!("Processing function call: {}", name);
+                        println!("Arguments: {}", args);
+
+                        let tool_call = crate::wit::exports::wavs::agent::types::ToolCall {
+                            id: "call_function".to_string(),
+                            tool_type: "function".to_string(),
+                            function: crate::wit::exports::wavs::agent::types::ToolCallFunction {
+                                name: name.to_string(),
+                                arguments: args.to_string(),
+                            },
+                        };
+
+                        message.tool_calls = Some(vec![tool_call]);
+                    }
+                }
+
+                // For Ollama, check for tool calls in the text content
+                // since we embedded them in the system message
+                if self.model.starts_with("llama")
+                    || self.model.starts_with("mistral")
+                    || !self.model.contains("gpt")
+                {
+                    if let Some(content) = &message.content {
+                        // Try to find JSON object in the content that might be a tool call
+                        if let Some(start_idx) = content.find('{') {
+                            if let Some(end_idx) = content.rfind('}') {
+                                if end_idx > start_idx {
+                                    // Extract the JSON part
+                                    let json_str = &content[start_idx..=end_idx];
+                                    println!("Found potential JSON tool call: {}", json_str);
+
+                                    // Try to parse as JSON
+                                    if let Ok(json_value) =
+                                        serde_json::from_str::<serde_json::Value>(json_str)
+                                    {
+                                        // Check if it's a tool call format (has "tool" and "args" fields)
+                                        if let (Some(tool_name), Some(args)) =
+                                            (json_value.get("tool"), json_value.get("args"))
+                                        {
+                                            if let Some(tool_name_str) = tool_name.as_str() {
+                                                println!("Detected tool call: {}", tool_name_str);
+
+                                                // Convert args to a string
+                                                let args_str = if args.is_object() {
+                                                    serde_json::to_string(args).unwrap_or_default()
+                                                } else {
+                                                    args.to_string()
+                                                };
+
+                                                println!("Tool args: {}", args_str);
+
+                                                // Create a synthetic tool call
+                                                let tool_call = crate::wit::exports::wavs::agent::types::ToolCall {
+                                                    id: "call_from_text".to_string(),
+                                                    tool_type: "function".to_string(),
+                                                    function: crate::wit::exports::wavs::agent::types::ToolCallFunction {
+                                                        name: tool_name_str.to_string(),
+                                                        arguments: args_str,
+                                                    },
+                                                };
+
+                                                message.tool_calls = Some(vec![tool_call]);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 Ok(message)
             }
@@ -418,20 +695,50 @@ impl client::GuestLlmClientManager for LlmClient {
         custom_handlers: Option<Vec<CustomToolHandler>>,
     ) -> Result<LlmResponse, AgentError> {
         // Create the tools for ETH transfers
-        let eth_tool = create_send_eth_tool();
+        let tools_builder = crate::tools::ToolsBuilderImpl;
+        let eth_tool = tools_builder.send_eth_tool();
 
         // Generate tools from smart contract ABIs
         let mut all_tools = vec![eth_tool];
 
         // Add contract-specific tools
         for contract in &config.contracts {
-            let contract_tools = create_contract_tools(&contract);
+            let contract_tools = tools_builder.tools_from_contract(contract.clone());
+            println!("Generated {} tools from {} contract", contract_tools.len(), contract.name);
+
+            // Add debug printing for tool parameters
+            for tool in &contract_tools {
+                println!(
+                    "Tool: {} - Parameters: {}",
+                    tool.function.name,
+                    tool.function.parameters.clone().unwrap_or_default()
+                );
+            }
+
             all_tools.extend(contract_tools);
         }
 
         // Add any custom tools provided by the caller
         if let Some(tools) = custom_tools {
+            println!("Adding {} custom tools", tools.len());
+            for tool in &tools {
+                println!(
+                    "Custom tool: {} - {}",
+                    tool.function.name,
+                    tool.function.description.as_ref().unwrap_or(&"No description".to_string())
+                );
+            }
             all_tools.extend(tools);
+        }
+
+        // Print all available tools for debugging
+        println!("Total available tools: {}", all_tools.len());
+        for tool in &all_tools {
+            println!(
+                "Tool: {} - {}",
+                tool.function.name,
+                tool.function.description.as_ref().unwrap_or(&"No description".to_string())
+            );
         }
 
         // Create the messages for the chat completion
@@ -463,42 +770,48 @@ impl client::GuestLlmClientManager for LlmClient {
         });
 
         // Call the LLM client with all tools
-        let response = self.chat_completion(messages, Some(all_tools))?;
+        println!("Calling LLM with {} tools", all_tools.len());
+        let response = self.chat_completion(messages.clone(), Some(all_tools))?;
+
+        println!("Response: {:?}", response);
 
         // Check if we have tool calls
         if let Some(tool_calls) = response.tool_calls.clone() {
             if !tool_calls.is_empty() {
-                // Use the tools module to process tool calls
-                let tool_builder = crate::tools::ToolsBuilderImpl;
+                println!("Found {} tool calls", tool_calls.len());
 
-                // Call the tools builder to process tool calls
-                // Here we need to adapt our types to the function signatures
-                let result = tool_builder.process_tool_calls(
-                    self.clone(),
-                    Vec::new(), // Initial messages not used in our implementation
-                    response.clone(),
-                    tool_calls,
-                    custom_handlers,
-                );
-
-                // Parse the tool result
-                match result {
-                    Ok(tool_result) => {
-                        // Try to parse as a transaction
-                        if let Ok(transaction) = serde_json::from_str::<
-                            crate::wit::exports::wavs::agent::types::Transaction,
-                        >(&tool_result)
-                        {
-                            return Ok(LlmResponse::Transaction(transaction));
-                        } else {
-                            return Ok(LlmResponse::Text(tool_result));
+                // Handle each tool call directly without making another API call
+                let mut tool_results = Vec::new();
+                for tool_call in &tool_calls {
+                    // Execute the tool call
+                    match tools_builder.execute_tool_call(tool_call.clone(), None) {
+                        Ok(result) => {
+                            println!("Tool result: {}", result);
+                            tool_results.push(result);
+                        }
+                        Err(e) => {
+                            return Err(AgentError::Llm(format!(
+                                "Tool call execution failed: {}",
+                                e
+                            )));
                         }
                     }
-                    Err(e) => {
-                        return Ok(LlmResponse::Text(format!(
-                            "Error processing tool calls: {}",
-                            e
-                        )));
+                }
+
+                // Return the first tool result if any
+                if !tool_results.is_empty() {
+                    // Parse the tool result as a Transaction
+                    match serde_json::from_str::<crate::wit::exports::wavs::agent::types::Transaction>(
+                        &tool_results[0],
+                    ) {
+                        Ok(transaction) => {
+                            println!("Successfully parsed transaction");
+                            return Ok(LlmResponse::Transaction(transaction));
+                        }
+                        Err(e) => {
+                            println!("Failed to parse transaction, treating as text: {}", e);
+                            return Ok(LlmResponse::Text(tool_results[0].clone()));
+                        }
                     }
                 }
             }
@@ -514,42 +827,6 @@ impl client::GuestLlmClientManager for LlmClient {
         // No tool calls or content means no action needed
         Ok(LlmResponse::Text("".into()))
     }
-}
-
-// Helper function to create send ETH tool
-fn create_send_eth_tool() -> Tool {
-    Tool {
-        tool_type: "function".into(),
-        function: crate::wit::exports::wavs::agent::types::Function {
-            name: "send_eth".into(),
-            description: Some("Send ETH to an address".into()),
-            parameters: Some(
-                r#"{
-                "type": "object",
-                "properties": {
-                    "to": {
-                        "type": "string",
-                        "description": "Ethereum address to send ETH to"
-                    },
-                    "value": {
-                        "type": "string",
-                        "description": "Amount of ETH to send in wei"
-                    }
-                },
-                "required": ["to", "value"]
-            }"#
-                .into(),
-            ),
-        },
-    }
-}
-
-// Helper function to create tools for a contract
-fn create_contract_tools(
-    contract: &crate::wit::exports::wavs::agent::types::Contract,
-) -> Vec<Tool> {
-    // Use the tools module to create tools from contract
-    crate::tools::ToolsBuilderImpl.tools_from_contract(contract.clone())
 }
 
 // Add a conversion from serde_json::Error to AgentError
@@ -636,10 +913,5 @@ mod tests {
         // This test just verifies request formation logic by checking client properties
         assert_eq!(client_impl.get_model(), "gpt-4");
         assert_eq!(client_impl.get_config().temperature, 0.5);
-
-        // Verify tool creation
-        let eth_tool = create_send_eth_tool();
-        assert_eq!(eth_tool.tool_type, "function");
-        assert_eq!(eth_tool.function.name, "send_eth");
     }
 }
