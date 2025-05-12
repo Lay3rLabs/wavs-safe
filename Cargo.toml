@@ -1,13 +1,10 @@
 [workspace]
-members = [
-    "components/*",
-    "packages/*"
-]
+members = ["components/*", "packages/*"]
 resolver = "2"
 
 [workspace.package]
 edition = "2021"
-version = "0.4.0-beta.1"
+version = "0.4.0-beta.2"
 license = "MIT"
 authors = ["Lay3r Labs Team"]
 repository = "https://github.com/Lay3rLabs/wavs"
@@ -15,11 +12,11 @@ rust-version = "1.80.0"
 
 [workspace.dependencies]
 # WASI
-wit-bindgen-rt = {version = "0.39.0", features = ["bitflags"]}
+wit-bindgen-rt = { version = "0.39.0", features = ["bitflags"] }
 wit-bindgen = "0.39.0"
 wstd = "0.5.1"
 wasi = "0.14.1"
-wavs-wasi-utils = "=0.4.0-beta.1"
+wavs-wasi-utils = "=0.4.0-beta.2"
 
 # WAVS
 wavs-llm = { path = "./packages/llm" }
@@ -33,12 +30,14 @@ anyhow = "1.0.95"
 alloy-dyn-abi = "1.1.0"
 alloy-json-abi = "1.1.0"
 alloy-primitives = "1.1.0"
-alloy-sol-macro = { version = "1.1.0", features = ["json"]}
+alloy-sol-macro = { version = "1.1.0", features = ["json"] }
 alloy-sol-types = "1.1.0"
-alloy-network = "0.14.0"
-alloy-provider = { version = "0.14.0", default-features = false, features = ["rpc-api"] }
-alloy-rpc-types = "0.14.0"
-alloy-transport-http = { version = "0.14.0", default-features = false }
+alloy-network = "0.15.10"
+alloy-provider = { version = "0.15.10", default-features = false, features = [
+    "rpc-api",
+] }
+alloy-rpc-types = "0.15.10"
+alloy-transport-http = { version = "0.15.10", default-features = false }
 
 ## Common dependencies
 hex = "0.4.3"
