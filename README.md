@@ -12,9 +12,15 @@ Related Safe Resources:
 ## System Requirements
 
 <details>
-<summary>Core (Docker, Compose, Make, JQ, Node v21+)</summary>
+<summary>Core (Docker, Compose, Make, JQ, Node v21+, Foundry)</summary>
+
+## Ubuntu Base
+
+- **Linux**: `sudo apt update && sudo apt install build-essential`
 
 ### Docker
+
+If prompted, remove containerd with `sudo apt remove containerd.io`.
 
 - **MacOS**: `brew install --cask docker`
 - **Linux**: `sudo apt -y install docker.io`
@@ -24,6 +30,7 @@ Related Safe Resources:
 ### Docker Compose
 
 - **MacOS**: Already installed with Docker installer
+  > `sudo apt remove docker-compose-plugin` may be required if you get a `dpkg` error
 - **Linux + Windows WSL**: `sudo apt-get install docker-compose-v2`
 - [Compose Documentation](https://docs.docker.com/compose/)
 
@@ -43,15 +50,27 @@ Related Safe Resources:
 
 - **Required Version**: v21+
 - [Installation via NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating)
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+nvm install --lts
+```
+
+### Foundry
+
+```bash docci-ignore
+curl -L https://foundry.paradigm.xyz | bash && $HOME/.foundry/bin/foundryup
+```
+
 </details>
 
 <details>
 
-<summary>Rust v1.84+</summary>
+<summary>Rust v1.85+</summary>
 
 ### Rust Installation
 
-```bash
+```bash docci-ignore
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 rustup toolchain install stable
@@ -60,7 +79,7 @@ rustup target add wasm32-wasip2
 
 ### Upgrade Rust
 
-```bash
+```bash docci-ignore
 # Remove old targets if present
 rustup target remove wasm32-wasi || true
 rustup target remove wasm32-wasip1 || true
@@ -77,21 +96,37 @@ rustup target add wasm32-wasip2
 
 ### Install Cargo Components
 
+On Ubuntu LTS, if you later encounter errors like:
+
 ```bash
+wkg: /lib/x86_64-linux-gnu/libm.so.6: version `GLIBC_2.38' not found (required by wkg)
+wkg: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.39' not found (required by wkg)
+```
+
+If GLIB is out of date. Consider updating your system using:
+
+```bash
+sudo do-release-upgrade
+```
+
+```bash docci-ignore
 # Install required cargo components
 # https://github.com/bytecodealliance/cargo-component#installation
 cargo install cargo-binstall
-cargo binstall cargo-component warg-cli wkg --locked --no-confirm --force
+cargo binstall cargo-component wasm-tools warg-cli wkg --locked --no-confirm --force
 
 # Configure default registry
+# Found at: $HOME/.config/wasm-pkg/config.toml
 wkg config --default-registry wa.dev
+
+# Allow publishing to a registry
+warg key new
 ```
 
 </details>
 
 <details>
-<summary>Install Ollama and Stable Diffusion</summary>
-### Install Ollama (optional)
+<summary>Install Ollama (optional)</summary>
 
 This example uses an LLM configured for determinism, run locally with Ollama. The model is llama3.2, but other open source models can be used if you change the model parameter in the config.
 
@@ -130,27 +165,28 @@ forge build
 forge test
 ```
 
-### Build WASI components
+## Build WASI components
 
-Now build the WASI Rust components into the `compiled` output directory.
+Now build the WASI components into the `compiled` output directory.
 
-> [!WARNING]
+> \[!WARNING]
 > If you get: `error: no registry configured for namespace "wavs"`
 >
 > run, `wkg config --default-registry wa.dev`
 
-> [!WARNING]
+> \[!WARNING]
 > If you get: `failed to find the 'wasm32-wasip1' target and 'rustup' is not available`
 >
 > `brew uninstall rust` & install it from <https://rustup.rs>
 
 ```bash
-make wasi-build # or `make build` to include solidity compilation.
+# Remove `WASI_BUILD_DIR` to build all components.
+make wasi-build
 ```
 
 ## WAVS
 
-> [!NOTE]
+> \[!NOTE]
 > If you are running on a Mac with an ARM chip, you will need to do the following:
 >
 > - Set up Rosetta: `softwareupdate --install-rosetta`
@@ -161,15 +197,142 @@ make wasi-build # or `make build` to include solidity compilation.
 > - Docker Desktop: Settings -> Resources -> Network -> 'Enable Host Networking'
 > - `brew install chipmk/tap/docker-mac-net-connect && sudo brew services start chipmk/tap/docker-mac-net-connect`
 
-### Environment Variables and Key Values
+## Start Environment
 
-WAVS components can access specific environment variables with the `WAVS_ENV_` prefix. These variables need to be:
+Start an ethereum node (anvil), the WAVS service, and deploy [eigenlayer](https://www.eigenlayer.xyz/) contracts to the local network.
 
-1. Added to your local `.env` file
-2. Listed in the `host_envs` array in the `SERVICE_CONFIG` when deploying the service
-3. Used in your component code
+### Enable Telemetry (optional)
 
-For the DAO agent example, the following environment variables are used:
+Set Log Level:
+
+- Open the `.env` file.
+- Set the `log_level` variable for wavs to debug to ensure detailed logs are captured.
+
+> \[!NOTE]
+> To see details on how to access both traces and metrics, please check out [Telemetry Documentation](telemetry/telemetry.md).
+
+### Start the backend
+
+```bash docci-background docci-delay-after=5
+# This must remain running in your terminal. Use another terminal to run other commands.
+# You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
+cp .env.example .env
+
+# update the .env for either LOCAL or TESTNET
+
+# Starts anvil + IPFS, WARG, Jaeger, and prometheus.
+make start-all-local
+```
+
+## Create Deployer, upload Eigenlayer
+
+These sections can be run on the **same** machine, or separate for testnet environments. Run the following steps on the deployer/aggregator machine.
+
+```bash
+# local: create deployer & auto fund. testnet: create & iterate check balance
+bash ./script/create-deployer.sh
+
+## Deploy Eigenlayer from Deployer
+COMMAND=deploy make wavs-middleware
+```
+
+## Deploy Contracts and Service
+
+**Key Concepts:**
+
+- **Trigger Contract:** Any contract that emits events, then WAVS monitors. When a relevant event occurs, WAVS triggers the execution of your WebAssembly component.
+- **Submission Contract:** This contract is used by the AVS service operator to submit the results generated by the WAVS component on-chain.
+
+`WAVS_SERVICE_MANAGER_ADDRESS` is the address of the Eigenlayer service manager contract. It was deployed in the previous step. Then you deploy the trigger and submission contracts which depends on the service manager. The service manager will verify that a submission is valid (from an authorized operator) before saving it to the blockchain. The trigger contract is any arbitrary contract that emits some event that WAVS will watch for. Yes, this can be on another chain (e.g. an L2) and then the submission contract on the L1 _(Ethereum for now because that is where Eigenlayer is deployed)_.
+
+### WAVS Safe Module + Agent Demo
+
+A custom Safe module that integrates with WAVS.
+
+```bash docci-delay-per-cmd=2
+make deploy-safe-module-contracts
+```
+
+This will deploy both the WavsSafeModule, Trigger, and MockUSDC contracts, and write their addresses to a JSON file in the `.docker/module_deployments.json` path. The Trigger contract is meant to serve as an example; this agent could be triggered by other smart contract events.
+
+Deploy the compiled component with the contract information from the previous steps.
+
+```bash docci-delay-per-cmd=3
+# ** Testnet Setup: https://wa.dev/account/credentials
+
+export PKG_VERSION="0.4.0-rc.1"
+COMPONENT_FILENAME=dao_agent.wasm PKG_NAME="dao-agent" source script/upload-to-wasi-registry.sh || true
+
+# Testnet: set values (default: local if not set)
+# export TRIGGER_CHAIN=holesky
+# export SUBMIT_CHAIN=holesky
+
+# Package not found with wa.dev? -- make sure it is public
+export AGGREGATOR_URL=http://127.0.0.1:8001
+REGISTRY=${REGISTRY} DEMO="module" bash ./script/build_service.sh
+```
+
+### WAVS Safe Guard Demo
+
+A custom Safe Guard that leverages WAVS to check whether transactions are authorized.
+
+```bash docci-delay-per-cmd=2
+make deploy-safe-guard-contracts
+```
+
+This will deploy the Safe and Guard contracts, and write their addresses to a JSON file in the `.docker/guard_deployments.json` path.
+
+> **IMPORTANT**: The guard needs to be explicitly enabled on the Safe to work. The Deploy script will attempt to enable it automatically, but this may not succeed if your Safe has a threshold > 1. The script will log information about what's happening.
+
+Deploy the compiled component with the contract information from the previous steps.
+
+```bash docci-delay-per-cmd=3
+# ** Testnet Setup: https://wa.dev/account/credentials
+
+export PKG_VERSION="0.4.0-rc.1"
+COMPONENT_FILENAME=safe_guard.wasm PKG_NAME="safe-guard" source script/upload-to-wasi-registry.sh || true
+
+# Testnet: set values (default: local if not set)
+# export TRIGGER_CHAIN=holesky
+# export SUBMIT_CHAIN=holesky
+
+# Package not found with wa.dev? -- make sure it is public
+export AGGREGATOR_URL=http://127.0.0.1:8001
+REGISTRY=${REGISTRY} DEMO="guard" bash ./script/build_service.sh
+```
+
+## Upload to IPFS
+
+```bash
+# local
+export DEPLOYER_PK=$(cat .nodes/deployer)
+export WAVS_SERVICE_MANAGER_ADDRESS=$(jq -r .addresses.WavsServiceManager ./.nodes/avs_deploy.json)
+
+# Upload service.json to IPFS
+SERVICE_FILE=.docker/service.json source ./script/ipfs-upload.sh
+```
+
+## Start Aggregator
+
+**TESTNET** You can move the aggregator it to its own machine for testnet deployments, it's easiest to run this on the deployer machine first. If moved, ensure you set the env variables correctly (copy pasted from the previous steps on the other machine).
+
+```bash
+bash ./script/create-aggregator.sh 1
+
+IPFS_GATEWAY=${IPFS_GATEWAY} bash ./infra/aggregator-1/start.sh
+
+wget -q --header="Content-Type: application/json" --post-data="{\"uri\": \"${IPFS_URI}\"}" ${AGGREGATOR_URL}/register-service -O -
+```
+
+## Start WAVS
+
+**TESTNET** The WAVS service should be run in its own machine (creation, start, and opt-in). If moved, make sure you set the env variables correctly (copy pasted from the previous steps on the other machine).
+
+```bash
+bash ./script/create-operator.sh 1
+```
+
+Set the following environment variables in the `./infra/wavs-1/.env` file:
 
 - `WAVS_ENV_OPENAI_API_KEY`: Your OpenAI API key for accessing LLM services
 - `WAVS_ENV_OPENAI_API_URL`: The endpoint URL for OpenAI API calls (defaults to "https://api.openai.com/v1/chat/completions")
@@ -183,65 +346,35 @@ WAVS_ENV_OPENAI_API_URL="https://api.openai.com/v1/chat/completions"
 WAVS_ENV_IPFS_GATEWAY_URL="https://gateway.lighthouse.storage"
 ```
 
-The Key Value pairs must be listed in the `kv` array in the `SERVICE_CONFIG` when you deploy a component. The `dao-agent` component supports a `config_uri` kv pair where it fetches the agent configuration (otherwise it uses the default config, which matches [agent-config.example.json](./agent-config.example.json)):
+```bash
+IPFS_GATEWAY=${IPFS_GATEWAY} bash ./infra/wavs-1/start.sh
 
-Example `host_envs` and `kv` in SERVICE_CONFIG:
-
+# Deploy the service JSON to WAVS so it now watches and submits.
+# 'opt in' for WAVS to watch (this is before we register to Eigenlayer)
+WAVS_ENDPOINT=http://127.0.0.1:8000 SERVICE_URL=${IPFS_URI} IPFS_GATEWAY=${IPFS_GATEWAY} make deploy-service
 ```
-SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[["config_uri", "ipfs://bafkreiaqticxepygpav5h52kcqtid3ls2mm55i2so7edxmrdbn3z3rnyny"]],"workflow_id":"default","component_id":"default"}'
-```
 
-### Start Environment
+## Register service specific operator
 
-Start an Ethereum node (anvil), the WAVS service, and deploy [EigenLayer](https://www.eigenlayer.xyz/) contracts to the local network.
+Making test mnemonic: `cast wallet new-mnemonic --json | jq -r .mnemonic`
+
+Each service gets their own key path (hd_path). The first service starts at 1 and increments from there. Get the service ID
 
 ```bash
-cp .env.example .env
+source ./script/avs-signing-key.sh
 
-# Start the backend
-#
-# This must remain running in your terminal. Use another terminal to run other commands.
-# You can stop the services with `ctrl+c`. Some MacOS terminals require pressing it twice.
-make start-all
+# TESTNET: set WAVS_SERVICE_MANAGER_ADDRESS
+COMMAND="register ${OPERATOR_PRIVATE_KEY} ${AVS_SIGNING_ADDRESS} 0.001ether" make wavs-middleware
+
+# Verify registration
+COMMAND="list_operator" PAST_BLOCKS=500 make wavs-middleware
 ```
 
-### Execute WASI component directly
+## Trigger the Service
 
-Test run the component locally to validate the business logic works (no on-chain interactions). Be sure to run `make wasi-build` if you make changes.
+### WAVS Safe Module
 
-Note: the `SERVICE_CONFIG` json is used for setting environment variables and the kv store. The `kv` array is a list of key value pairs, "config_uri" is a URI that contains the agent config (the IPFS URI included below corresponds to `agent-config.example.json`). To use a different model, or change the agent configuration, you'll need to upload a new JSON somewhere (or modify the default context in `dao-agent/src/context.rs`). Omitting `config_uri` will use `DaoContext` defaults defined in `context.rs`.
-
-```bash
-COMPONENT_FILENAME="dao_agent.wasm" PROMPT='We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3.' SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[["config_uri", "ipfs://bafkreiaqticxepygpav5h52kcqtid3ls2mm55i2so7edxmrdbn3z3rnyny"]],"workflow_id":"default","component_id":"default"}' make wasi-exec
-```
-
-## WAVS Safe Module + Agent Demo
-
-A custom Safe module that integrates with WAVS.
-
-### Deploy contracts
-
-```bash
-forge script script/WavsSafeModule.s.sol:Deploy --rpc-url http://localhost:8545 --broadcast
-```
-
-This will deploy both the WavsSafeModule, Trigger, and MockUSDC contracts, and write their addresses to a JSON file in the `.docker/module_deployments.json` path. The Trigger contract is meant to serve as an example; this agent could be triggered by other smart contract events.
-
-### Deploy service component
-
-```bash
-# Load the addresses from the JSON file
-TRIGGER_ADDR=$(jq -r '.triggerContract' .docker/module_deployments.json)
-MODULE_ADDR=$(jq -r '.wavsSafeModule' .docker/module_deployments.json)
-
-# Set service config
-SERVICE_CONFIG='{"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[["config_uri", "ipfs://bafkreiaqticxepygpav5h52kcqtid3ls2mm55i2so7edxmrdbn3z3rnyny"]],"workflow_id":"default","component_id":"default"}'
-
-# Deploy the service
-COMPONENT_FILENAME=dao_agent.wasm SERVICE_TRIGGER_ADDR=$TRIGGER_ADDR SERVICE_SUBMISSION_ADDR=$MODULE_ADDR SERVICE_CONFIG=$SERVICE_CONFIG make deploy-service
-```
-
-### Trigger the AVS to execute a transaction
+#### Trigger the AVS to execute a transaction
 
 Test sending ETH:
 
@@ -257,7 +390,7 @@ forge script script/WavsSafeModule.s.sol:AddTrigger --sig "run(string)" "We shou
 
 The script will automatically read the Trigger and MockUSDC contract addresses from the JSON file.
 
-### Check the balance
+#### Check the balance
 
 ```bash
 forge script script/WavsSafeModule.s.sol:ViewBalance --rpc-url http://localhost:8545
@@ -265,32 +398,9 @@ forge script script/WavsSafeModule.s.sol:ViewBalance --rpc-url http://localhost:
 
 > Notice that the balance now contains both the 1 ETH and 1 USDC donations. If you don't see anything, watch the Anvil and WAVS logs during the trigger creation above to make sure the transaction is succeeding.
 
-## WAVS Safe Guard Demo
+### WAVS Safe Guard
 
-A custom Safe Guard that leverages WAVS to check whether transactions are authorized.
-
-### Deploy contracts
-
-```bash
-forge script script/WavsSafeGuard.s.sol:Deploy --rpc-url http://localhost:8545 --broadcast
-```
-
-This will deploy the Safe and Guard contracts, and write their addresses to a JSON file in the `.docker/guard_deployments.json` path.
-
-> **IMPORTANT**: The guard needs to be explicitly enabled on the Safe to work. The Deploy script will attempt to enable it automatically, but this may not succeed if your Safe has a threshold > 1. The script will log information about what's happening.
-
-### Deploy service component
-
-```bash
-# Load the addresses from the JSON file
-SAFE_ADDR=$(jq -r '.safeAddress' .docker/guard_deployments.json)
-GUARD_ADDR=$(jq -r '.guardAddress' .docker/guard_deployments.json)
-
-# Deploy the service
-COMPONENT_FILENAME=safe_guard.wasm SERVICE_TRIGGER_ADDR=$SAFE_ADDR SERVICE_SUBMISSION_ADDR=$GUARD_ADDR TRIGGER_EVENT="ApproveHash(bytes32,address)" make deploy-service
-```
-
-### Try Executing a Transaction
+#### Try Executing a Transaction
 
 Executing a Safe Transaction will fail as the AVS has not approved the transaction.
 
@@ -298,7 +408,7 @@ Executing a Safe Transaction will fail as the AVS has not approved the transacti
 forge script script/WavsSafeGuard.s.sol:ExecuteSafeTransaction --rpc-url http://localhost:8545 --broadcast
 ```
 
-### Trigger the validation process
+#### Trigger the validation process
 
 Approve a Safe transaction for 0.1 ETH to `0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3`. The script will automatically read the Safe address from the JSON file.
 
@@ -308,7 +418,7 @@ forge script script/WavsSafeGuard.s.sol:ApproveSafeTransaction --rpc-url http://
 
 WAVS operators will pick up this event and run the `safe-gaurd` component, which currently always returns `true`. Note, this is meant as an example, you can extend it with custom application logic. After the AVS runs, the transaction will now be executable.
 
-### Execute the transaction
+#### Execute the transaction
 
 Now the Safe transaction is able to be executed.
 
@@ -318,7 +428,7 @@ forge script script/WavsSafeGuard.s.sol:ExecuteSafeTransaction --rpc-url http://
 
 If the Guard is properly enabled, this should only succeed if the transaction was previously approved by the WAVS service.
 
-### Testing the Guard Protection
+#### Testing the Guard Protection
 
 To verify your guard is working properly:
 
@@ -334,4 +444,14 @@ Check balance, should be 0.1 ETH higher if transaction succeeded:
 
 ```bash
 cast balance 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3 --rpc-url http://localhost:8545
+```
+
+# Claude Code
+
+To spin up a sandboxed instance of [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) in a Docker container that only has access to this project's files, run the following command:
+
+```bash docci-ignore
+npm run claude-code
+# or with no restrictions (--dangerously-skip-permissions)
+npm run claude-code:unrestricted
 ```

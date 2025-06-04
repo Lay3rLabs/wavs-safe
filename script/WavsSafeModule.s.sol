@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "forge-std/Script.sol";
+import {Common} from "./Common.s.sol";
 import "forge-std/console.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 import "../src/contracts/WavsSafeModule.sol";
@@ -10,11 +10,10 @@ import "../src/contracts/MockUSDC.sol";
 import "@gnosis.pm/safe-contracts/contracts/Safe.sol";
 import "@gnosis.pm/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
 import "@gnosis.pm/safe-contracts/contracts/base/ModuleManager.sol";
-import {Utils} from "./Utils.sol";
 import {Strings} from "@openzeppelin-contracts/utils/Strings.sol";
 import {Create2} from "@openzeppelin-contracts/utils/Create2.sol";
 
-contract Deploy is Script {
+contract Deploy is Common {
     using stdJson for string;
     using Strings for address;
     using Strings for uint256;
@@ -33,17 +32,16 @@ contract Deploy is Script {
     string public root;
     string public deploymentsPath;
 
-    function run() public {
+    function run(string calldata serviceManager_) public {
         root = vm.projectRoot();
         deploymentsPath = string.concat(
             root,
             "/.docker/module_deployments.json"
         );
 
-        (uint256 deployerPrivateKey, address deployer) = Utils.getPrivateKey(
-            vm
-        );
-        vm.startBroadcast(deployerPrivateKey);
+        address serviceManager = vm.parseAddress(serviceManager_);
+
+        vm.startBroadcast(_privateKey);
 
         // Deploy Safe singleton and factory
         safeSingleton = new Safe();
@@ -104,8 +102,6 @@ contract Deploy is Script {
             }
         }
 
-        address serviceManager = Utils.getServiceManager(vm);
-
         // Deploy WavsSafeModule
         WavsSafeModule module = new WavsSafeModule(
             deployedSafeAddress,
@@ -141,18 +137,6 @@ contract Deploy is Script {
         vm.stopBroadcast();
     }
 
-    function _getOwners() internal view returns (address[] memory) {
-        string memory ownersRaw = vm.envString("SAFE_OWNERS");
-        // Split the comma-separated string of addresses
-        string[] memory ownerStrings = _split(ownersRaw, ",");
-
-        address[] memory owners = new address[](ownerStrings.length);
-        for (uint i = 0; i < ownerStrings.length; i++) {
-            owners[i] = vm.parseAddress(ownerStrings[i]);
-        }
-        return owners;
-    }
-
     function _deploySafe(
         address[] memory owners,
         uint256 threshold,
@@ -183,7 +167,7 @@ contract Deploy is Script {
      */
     function _deployMockUSDC() internal returns (address) {
         // Specific address to check first
-        address specificAddress = 0xb7278A61aa25c888815aFC32Ad3cC52fF24fE575;
+        address specificAddress = 0xb83251884fe23e61e863a44296f8743c63b291eb;
 
         // Check if there's already code at this address
         uint256 codeSize;
@@ -265,44 +249,6 @@ contract Deploy is Script {
             );
     }
 
-    function _split(
-        string memory _str,
-        string memory _delimiter
-    ) internal pure returns (string[] memory) {
-        uint count = 1;
-        for (uint i = 0; i < bytes(_str).length; i++) {
-            if (bytes(_str)[i] == bytes(_delimiter)[0]) count++;
-        }
-
-        string[] memory parts = new string[](count);
-        count = 0;
-
-        uint lastIndex = 0;
-        for (uint i = 0; i < bytes(_str).length; i++) {
-            if (bytes(_str)[i] == bytes(_delimiter)[0]) {
-                parts[count] = _substring(_str, lastIndex, i);
-                lastIndex = i + 1;
-                count++;
-            }
-        }
-        parts[count] = _substring(_str, lastIndex, bytes(_str).length);
-
-        return parts;
-    }
-
-    function _substring(
-        string memory _str,
-        uint _start,
-        uint _end
-    ) internal pure returns (string memory) {
-        bytes memory strBytes = bytes(_str);
-        bytes memory result = new bytes(_end - _start);
-        for (uint i = _start; i < _end; i++) {
-            result[i - _start] = strBytes[i];
-        }
-        return string(result);
-    }
-
     function _enableModule(Safe safe, address moduleAddress) internal {
         // First check if the Safe exists and has code
         require(address(safe).code.length > 0, "No code at Safe address");
@@ -345,7 +291,7 @@ contract Deploy is Script {
     }
 }
 
-contract AddTrigger is Script {
+contract AddTrigger is Common {
     using stdJson for string;
 
     // JSON output path
@@ -362,8 +308,6 @@ contract AddTrigger is Script {
         string memory json = vm.readFile(deploymentsPath);
         address triggerAddress = json.readAddress(".triggerContract");
 
-        (uint256 deployerPrivateKey, ) = Utils.getPrivateKey(vm);
-
         uint256 balanceBefore = address(
             0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3
         ).balance;
@@ -375,7 +319,7 @@ contract AddTrigger is Script {
         Trigger trigger = Trigger(triggerAddress);
         require(address(trigger).code.length > 0, "No code at trigger address");
 
-        vm.startBroadcast(deployerPrivateKey);
+        vm.startBroadcast(_privateKey);
 
         // Convert string to bytes
         bytes memory triggerBytes = bytes(triggerData);
@@ -391,7 +335,7 @@ contract AddTrigger is Script {
     }
 }
 
-contract ViewBalance is Script {
+contract ViewBalance is Common {
     using stdJson for string;
 
     function run() public view {

@@ -3,50 +3,51 @@
 # Check if user is in docker group to determine if sudo is needed
 SUDO := $(shell if groups | grep -q docker; then echo ''; else echo 'sudo'; fi)
 
+# Define common variables
+CARGO=cargo
+CREDENTIAL?=""
+DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:0.4.0-rc
+MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:5ebc489
+IPFS_ENDPOINT?=http://127.0.0.1:5001
+RPC_URL?=`bash ./script/get-rpc.sh`
+DEPLOYER_PK=`cat .nodes/deployer`
+SERVICE_FILE?=.docker/service.json
+SERVICE_SUBMISSION_ADDR?=`jq -r .deployedTo .docker/submit.json`
+SERVICE_TRIGGER_ADDR?=`jq -r .deployedTo .docker/trigger.json`
+WASI_BUILD_DIR ?= ""
+ENV_FILE?=.env
+WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f ${ENV_FILE} && echo "--env-file ./${ENV_FILE}") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
+WAVS_ENDPOINT?="http://127.0.0.1:8000"
+-include ${ENV_FILE}
+
+# wavs-safe custom
+PROMPT?="We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3"
+INPUT?=`cast from-utf8 "$(PROMPT)"`
+WAVS_SERVICE_MANAGER_ADDRESS?=`jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json`
+
+## deploy-safe-module-contracts: deploying the contracts | WAVS_SERVICE_MANAGER_ADDRESS, RPC_URL
+deploy-safe-module-contracts:
+	@forge script ./script/WavsSafeModule.s.sol:Deploy ${WAVS_SERVICE_MANAGER_ADDRESS} --sig "run(string)" --rpc-url $(RPC_URL) --private-key "${DEPLOYER_PK}" --broadcast
+
+## deploy-safe-guard-contracts: deploying the contracts | WAVS_SERVICE_MANAGER_ADDRESS, RPC_URL
+deploy-safe-guard-contracts:
+	@forge script ./script/WavsSafeGuard.s.sol:Deploy ${WAVS_SERVICE_MANAGER_ADDRESS} --sig "run(string)" --rpc-url $(RPC_URL) --private-key "${DEPLOYER_PK}" --broadcast
+
 # Default target is build
 default: build
-
-# Customize these variables
-COMPONENT_FILENAME ?= dao_agent.wasm
-TRIGGER_EVENT ?= NewTrigger(bytes)
-SERVICE_CONFIG ?= {"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[],"workflow_id":"default","component_id":"default"}
-
-# Define common variables
-CARGO?=cargo
-WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ghcr.io/lay3rlabs/wavs:0.3.0 wavs-cli
-ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-RPC_URL?=http://localhost:8545
-SERVICE_MANAGER_ADDR?=`jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json`
-SERVICE_TRIGGER_ADDR?=`jq -r '.trigger' "./.docker/script_deploy.json"`
-SERVICE_SUBMISSION_ADDR?=`jq -r '.service_handler' "./.docker/script_deploy.json"`
-PROMPT?="We should donate 1 ETH to 0xDf3679681B87fAE75CE185e4f01d98b64Ddb64a3."
-INPUT?=`cast from-utf8 "$(PROMPT)"`
-
-## check-requirements: verify system requirements are installed
-check-requirements: check-node check-jq check-cargo
 
 ## build: building the project
 build: _build_forge wasi-build
 
-## wasi-build: building the WAVS wasi component(s)
+## wasi-build: building WAVS wasi components | WASI_BUILD_DIR
 wasi-build:
-	@for component in $(shell ls ./components); do \
-		echo "Building component: $$component"; \
-		(cd components/$$component; cargo component build --release; cargo fmt); \
-	done
-	@mkdir -p ./compiled
-	@cp ./target/wasm32-wasip1/release/*.wasm ./compiled/
+	@./script/build_components.sh $(WASI_BUILD_DIR)
 
 ## wasi-exec: executing the WAVS wasi component(s) | COMPONENT_FILENAME, COIN_MARKET_CAP_ID
-wasi-exec:
+wasi-exec: pull-image
 	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
-	--component "/data/compiled/${COMPONENT_FILENAME}" \
-	--service-config '$(SERVICE_CONFIG)' \
-	--input $(INPUT)
-
-## update-submodules: update the git submodules
-update-submodules:
-	@git submodule update --init --recursive
+	--component "/data/compiled/$(COMPONENT_FILENAME)" \
+	--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)`
 
 ## clean: cleaning the project files
 clean: clean-docker
@@ -58,7 +59,7 @@ clean: clean-docker
 
 ## clean-docker: remove unused docker containers
 clean-docker:
-	@$(SUDO) docker rm -v $(shell $(SUDO) docker ps --filter status=exited -q) || true
+	@$(SUDO) docker rm -v $(shell $(SUDO) docker ps -a --filter status=exited -q) > /dev/null 2>&1 || true
 
 ## fmt: formatting solidity and rust code
 fmt:
@@ -74,42 +75,80 @@ setup: check-requirements
 	@forge install
 	@npm install
 
-## start-all: starting anvil and WAVS with docker compose
-# running anvil out of compose is a temp work around for MacOS
-start-all: clean-docker setup-env
-	@rm --interactive=never .docker/*.json || true
-	@bash -ec 'anvil & anvil_pid=$$!; trap "kill -9 $$anvil_pid 2>/dev/null" EXIT; $(SUDO) docker compose up; wait'
+## start-all-local: starting anvil and core services (like IPFS for example)
+start-all-local: clean-docker setup-env
+	@sh ./script/start_all.sh
 
-## get-service-handler: getting the service handler address from the script deploy
-get-service-handler-from-deploy:
-	@jq -r '.service_handler' "./.docker/script_deploy.json"
-
-get-eigen-service-manager-from-deploy:
-	@jq -r '.eigen_service_managers.local | .[-1]' .docker/deployments.json
-
-## get-trigger: getting the trigger address from the script deploy
+## get-trigger-from-deploy: getting the trigger address from the script deploy
 get-trigger-from-deploy:
-	@jq -r '.trigger' "./.docker/script_deploy.json"
+	@jq -r '.deployedTo' "./.docker/trigger.json"
+
+## get-submit-from-deploy: getting the submit address from the script deploy
+get-submit-from-deploy:
+	@jq -r '.deployedTo' "./.docker/submit.json"
 
 ## wavs-cli: running wavs-cli in docker
 wavs-cli:
 	@$(WAVS_CMD) $(filter-out $@,$(MAKECMDGOALS))
 
-## deploy-service: deploying the WAVS component service | COMPONENT_FILENAME, TRIGGER_EVENT, SERVICE_TRIGGER_ADDR, SERVICE_SUBMISSION_ADDR, SERVICE_CONFIG
+## upload-component: uploading the WAVS component | COMPONENT_FILENAME, WAVS_ENDPOINT
+upload-component:
+	@if [ -z "${COMPONENT_FILENAME}" ]; then \
+		echo "Error: COMPONENT_FILENAME is not set. Please set it to your WAVS component filename."; \
+		exit 1; \
+	fi
+	@wget --post-file=./compiled/${COMPONENT_FILENAME} --header="Content-Type: application/wasm" -O - ${WAVS_ENDPOINT}/upload | jq -r .digest
+
+IPFS_GATEWAY?="https://ipfs.io/ipfs"
+## deploy-service: deploying the WAVS component service json | SERVICE_URL, CREDENTIAL, WAVS_ENDPOINT
 deploy-service:
-	@$(WAVS_CMD) deploy-service --log-level=info --data /data/.docker --home /data \
-	--component "/data/compiled/${COMPONENT_FILENAME}" \
-	--trigger-event-name "${TRIGGER_EVENT}" \
-	--trigger-address "${SERVICE_TRIGGER_ADDR}" \
-	--submit-address "${SERVICE_SUBMISSION_ADDR}" \
-	--service-config '${SERVICE_CONFIG}'
+# this wait is required to ensure the WAVS service has time to service check
+	@if [ -z "${SERVICE_URL}" ]; then \
+		echo "Error: SERVICE_URL is not set. Set SERVICE_URL to a link / ipfs url."; \
+		exit 1; \
+	fi
+	@if [ -n "${WAVS_ENDPOINT}" ]; then \
+		if [ "$$(curl -s -o /dev/null -w "%{http_code}" ${WAVS_ENDPOINT}/app)" != "200" ]; then \
+			echo "Error: WAVS_ENDPOINT is not reachable. Please check WAVS is online, or run this again in a few seconds."; \
+			exit 1; \
+		fi; \
+	fi
+	@$(WAVS_CMD) deploy-service --service-url ${SERVICE_URL} --log-level=debug --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),) $(if $(IPFS_GATEWAY),--ipfs-gateway $(IPFS_GATEWAY),)
 
-## show-result: showing the result | SERVICE_TRIGGER_ADDR, SERVICE_SUBMISSION_ADDR, RPC_URL
+## get-trigger: get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
+get-trigger:
+	@forge script ./script/ShowResult.s.sol ${SERVICE_TRIGGER_ADDR} --sig 'trigger(string)' --rpc-url $(RPC_URL) --broadcast
+
+TRIGGER_ID?=1
+## show-result: showing the result | SERVICE_SUBMISSION_ADDR, TRIGGER_ID, RPC_URL
 show-result:
-	@forge script ./script/ShowResult.s.sol ${SERVICE_TRIGGER_ADDR} ${SERVICE_SUBMISSION_ADDR} --sig "run(string,string)" --rpc-url $(RPC_URL) --broadcast -v 4
+	@forge script ./script/ShowResult.s.sol ${SERVICE_SUBMISSION_ADDR} ${TRIGGER_ID} --sig 'data(string,uint64)' --rpc-url $(RPC_URL) --broadcast
 
-_build_forge:
-	@forge build
+
+PINATA_API_KEY?=""
+## upload-to-ipfs: uploading the a service config to IPFS | SERVICE_FILE, [PINATA_API_KEY]
+upload-to-ipfs:
+	@if [ `sh script/get-deploy-status.sh` = "LOCAL" ]; then \
+		curl -X POST "http://127.0.0.1:5001/api/v0/add?pin=true" -H "Content-Type: multipart/form-data" -F file=@${SERVICE_FILE} | jq -r .Hash; \
+	else \
+		if [ -z "${PINATA_API_KEY}" ]; then \
+			echo "Error: PINATA_API_KEY is not set. Please set it to your Pinata API key -- https://app.pinata.cloud/developers/api-keys."; \
+			exit 1; \
+		fi; \
+		curl -X POST --url https://uploads.pinata.cloud/v3/files --header "Authorization: Bearer ${PINATA_API_KEY}" --header 'Content-Type: multipart/form-data' --form file=@${SERVICE_FILE} --form network=public --form name=service-`date +"%b-%d-%Y"`.json | jq -r .data.cid; \
+	fi
+
+COMMAND?=""
+PAST_BLOCKS?=500
+wavs-middleware:
+	@docker run --rm --network host --env-file ${ENV_FILE} \
+		$(if ${WAVS_SERVICE_MANAGER_ADDRESS},-e WAVS_SERVICE_MANAGER_ADDRESS=${WAVS_SERVICE_MANAGER_ADDRESS}) \
+		$(if ${PAST_BLOCKS},-e PAST_BLOCKS=${PAST_BLOCKS}) \
+		-v ./.nodes:/root/.nodes ${MIDDLEWARE_DOCKER_IMAGE} ${COMMAND}
+
+## update-submodules: update the git submodules
+update-submodules:
+	@git submodule update --init --recursive
 
 # Declare phony targets
 .PHONY: build clean fmt bindings test
@@ -123,18 +162,29 @@ help: Makefile
 	@echo
 
 # helpers
+_build_forge:
+	@forge build
 
 .PHONY: setup-env
 setup-env:
-	@if [ ! -f .env ]; then \
+	@if [ ! -f ${ENV_FILE} ]; then \
 		if [ -f .env.example ]; then \
-			echo "Creating .env file from .env.example..."; \
-			cp .env.example .env; \
-			echo ".env file created successfully!"; \
+			echo "Creating ${ENV_FILE} file from .env.example..."; \
+			cp .env.example ${ENV_FILE}; \
+			echo "${ENV_FILE} file created successfully!"; \
 		fi; \
 	fi
 
+pull-image:
+	@if ! docker image inspect ${DOCKER_IMAGE} &>/dev/null; then \
+		echo "Image ${DOCKER_IMAGE} not found. Pulling..."; \
+		$(SUDO) docker pull ${DOCKER_IMAGE}; \
+	fi
+
 # check versions
+
+## check-requirements: verify system requirements are installed
+check-requirements: check-node check-jq check-cargo
 
 check-command:
 	@command -v $(1) > /dev/null 2>&1 || (echo "Command $(1) not found. Please install $(1), reference the System Requirements section"; exit 1)

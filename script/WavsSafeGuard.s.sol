@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "forge-std/Script.sol";
+import {Common} from "./Common.s.sol";
 import "forge-std/console.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 import "../src/contracts/WavsSafeGuard.sol";
 import "@gnosis.pm/safe-contracts/contracts/Safe.sol";
 import "@gnosis.pm/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
-import {Utils} from "./Utils.sol";
 import {Strings} from "@openzeppelin-contracts/utils/Strings.sol";
 
 // Base contract with shared functionality
-contract WavsSafeGuardBase is Script {
+contract WavsSafeGuardBase is Common {
     using stdJson for string;
     using Strings for address;
     using Strings for uint256;
@@ -50,17 +49,6 @@ contract WavsSafeGuardBase is Script {
         );
 
         return safeAddress;
-    }
-
-    function _getOwners() internal view returns (address[] memory) {
-        string memory ownersRaw = vm.envString("SAFE_OWNERS");
-        string[] memory ownerStrings = _split(ownersRaw, ",");
-
-        address[] memory owners = new address[](ownerStrings.length);
-        for (uint i = 0; i < ownerStrings.length; i++) {
-            owners[i] = vm.parseAddress(ownerStrings[i]);
-        }
-        return owners;
     }
 
     function _loadDeployments()
@@ -104,45 +92,6 @@ contract WavsSafeGuardBase is Script {
             );
     }
 
-    // Helper functions for string manipulation
-    function _split(
-        string memory _str,
-        string memory _delimiter
-    ) internal pure returns (string[] memory) {
-        uint count = 1;
-        for (uint i = 0; i < bytes(_str).length; i++) {
-            if (bytes(_str)[i] == bytes(_delimiter)[0]) count++;
-        }
-
-        string[] memory parts = new string[](count);
-        count = 0;
-
-        uint lastIndex = 0;
-        for (uint i = 0; i < bytes(_str).length; i++) {
-            if (bytes(_str)[i] == bytes(_delimiter)[0]) {
-                parts[count] = _substring(_str, lastIndex, i);
-                lastIndex = i + 1;
-                count++;
-            }
-        }
-        parts[count] = _substring(_str, lastIndex, bytes(_str).length);
-
-        return parts;
-    }
-
-    function _substring(
-        string memory _str,
-        uint _start,
-        uint _end
-    ) internal pure returns (string memory) {
-        bytes memory strBytes = bytes(_str);
-        bytes memory result = new bytes(_end - _start);
-        for (uint i = _start; i < _end; i++) {
-            result[i - _start] = strBytes[i];
-        }
-        return string(result);
-    }
-
     function _writeDeploymentsToJson(
         address safeAddress,
         address guardAddress,
@@ -183,9 +132,7 @@ contract WavsSafeGuardBase is Script {
 
 // Deploy contracts script
 contract Deploy is WavsSafeGuardBase {
-    function run() public {
-        (uint256 deployerPrivateKey, ) = Utils.getPrivateKey(vm);
-
+    function run(string calldata serviceManager_) public {
         // Initialize deployment paths
         root = vm.projectRoot();
         deploymentsPath = string.concat(
@@ -193,7 +140,9 @@ contract Deploy is WavsSafeGuardBase {
             "/.docker/guard_deployments.json"
         );
 
-        vm.startBroadcast(deployerPrivateKey);
+        address serviceManager = vm.parseAddress(serviceManager_);
+
+        vm.startBroadcast(_privateKey);
 
         // Deploy Safe singleton and factory first if needed
         safeSingleton = new Safe();
@@ -216,8 +165,6 @@ contract Deploy is WavsSafeGuardBase {
             console.log("Using existing Safe at:", safeAddress);
         }
 
-        address serviceManager = Utils.getServiceManager(vm);
-
         // Deploy WavsSafeGuard with just the Safe address
         WavsSafeGuard guard = new WavsSafeGuard(
             payable(safeAddress),
@@ -235,7 +182,7 @@ contract Deploy is WavsSafeGuardBase {
         );
 
         // Now try to enable the guard
-        _enableGuard(safeAddress, address(guard), deployerPrivateKey);
+        _enableGuard(safeAddress, address(guard), _privateKey);
 
         vm.stopBroadcast();
     }
@@ -353,8 +300,6 @@ contract ApproveSafeTransaction is WavsSafeGuardBase {
     }
 
     function run() public {
-        (uint256 ownerPrivateKey, ) = Utils.getPrivateKey(vm);
-
         // Load deployments from JSON
         (address safeAddress, ) = _loadDeployments();
         require(
@@ -362,7 +307,7 @@ contract ApproveSafeTransaction is WavsSafeGuardBase {
             "Safe address not found in deployments"
         );
 
-        vm.startBroadcast(ownerPrivateKey);
+        vm.startBroadcast(_privateKey);
 
         Safe safe = Safe(payable(safeAddress));
 
@@ -395,8 +340,6 @@ contract ExecuteSafeTransaction is WavsSafeGuardBase {
     }
 
     function run() public {
-        (uint256 ownerPrivateKey, ) = Utils.getPrivateKey(vm);
-
         // Load deployments from JSON
         (address safeAddress, ) = _loadDeployments();
         require(
@@ -404,7 +347,7 @@ contract ExecuteSafeTransaction is WavsSafeGuardBase {
             "Safe address not found in deployments"
         );
 
-        vm.startBroadcast(ownerPrivateKey);
+        vm.startBroadcast(_privateKey);
 
         Safe safe = Safe(payable(safeAddress));
 
@@ -415,7 +358,7 @@ contract ExecuteSafeTransaction is WavsSafeGuardBase {
 
         // Sign and execute in one step
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            ownerPrivateKey,
+            _privateKey,
             _getTxHash(safe)
         );
         safe.execTransaction(
@@ -443,8 +386,6 @@ contract ExecuteSafeTransaction is WavsSafeGuardBase {
 // Enable Guard on an existing Safe
 contract EnableGuard is WavsSafeGuardBase {
     function run() public {
-        (uint256 ownerPrivateKey, ) = Utils.getPrivateKey(vm);
-
         // Load deployments from JSON
         (address safeAddress, address guardAddress) = _loadDeployments();
         require(
@@ -459,7 +400,7 @@ contract EnableGuard is WavsSafeGuardBase {
         console.log("Safe address:", safeAddress);
         console.log("Guard address:", guardAddress);
 
-        vm.startBroadcast(ownerPrivateKey);
+        vm.startBroadcast(_privateKey);
 
         Safe safe = Safe(payable(safeAddress));
         uint256 threshold = safe.getThreshold();
@@ -486,7 +427,7 @@ contract EnableGuard is WavsSafeGuardBase {
         );
 
         // Sign the transaction
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, txHash);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, txHash);
         bytes memory signature = abi.encodePacked(r, s, v);
 
         // If threshold > 1, approve the transaction hash

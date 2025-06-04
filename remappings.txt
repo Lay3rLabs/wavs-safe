@@ -1,7 +1,8 @@
 @openzeppelin-contracts=node_modules/@openzeppelin/contracts/
-@wavs/=node_modules/@wavs/solidity
+@wavs=node_modules/@wavs/solidity/contracts
 forge-std=node_modules/forge-std/src
 @gnosis.pm/safe-contracts=node_modules/@gnosis.pm/safe-contracts
 
 contracts/=src/contracts
+common/=src/common
 interfaces/=src/interfaces

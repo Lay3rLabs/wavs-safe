@@ -64,20 +64,16 @@ contract WavsSafeModule is IWavsServiceHandler {
         emit Funded(msg.sender, msg.value);
     }
 
-    /**
-     * @dev Handle the AVS output.
-     * @param data The data returned from the oracle AVS.
-     * @param signature The signature of the data.
-     */
-    function handleSignedData(
-        bytes calldata data,
-        bytes calldata signature
-    ) external override {
-        serviceManager.validate(data, signature);
+    /// @inheritdoc IWavsServiceHandler
+    function handleSignedEnvelope(
+        Envelope calldata envelope,
+        SignatureData calldata signatureData
+    ) external {
+        serviceManager.validate(envelope, signatureData);
 
         // Decode the transaction from the payload data
         TransactionPayload memory payload = abi.decode(
-            data,
+            envelope.payload,
             (TransactionPayload)
         );
 

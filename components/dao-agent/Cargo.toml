@@ -7,7 +7,8 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
-wavs-wasi-chain = { workspace = true }
+wavs-llm = { workspace = true }
+wavs-wasi-utils = { workspace = true }
 wstd = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
@@ -38,4 +39,13 @@ lto = true
 
 [package.metadata.component]
 package = "component:dao-agent"
-target = "wavs:worker/layer-trigger-world@0.3.0"
+
+# target = "wavs:worker/layer-trigger-world@0.4.0-beta.4"
+
+[package.metadata.component.target]
+path = "./wit"
+
+# Add dependencies on the wavs-llm component interfaces and layer-trigger-world
+[package.metadata.component.target.dependencies]
+"wavs:agent" = { path = "../../packages/llm/wit" }
+"wavs:worker" = "0.4.0-beta.4"
