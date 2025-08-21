@@ -6,7 +6,7 @@ SUDO := $(shell if groups | grep -q docker; then echo ''; else echo 'sudo'; fi)
 # Default target is build
 default: build
 
-# Customize these variables
+# Customize these variable
 COMPONENT_FILENAME ?= dao_agent.wasm
 TRIGGER_EVENT ?= NewTrigger(bytes)
 SERVICE_CONFIG ?= {"fuel_limit":100000000,"max_gas":5000000,"host_envs":["WAVS_ENV_OPENAI_API_KEY", "WAVS_ENV_OPENAI_API_URL", "WAVS_ENV_IPFS_GATEWAY_URL"],"kv":[],"workflow_id":"default","component_id":"default"}

@@ -3,8 +3,7 @@ pub type WasmResponse = wavs::worker::layer_types::WasmResponse;
 #[doc(hidden)]
 #[allow(non_snake_case)]
 pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
-    #[cfg(target_arch = "wasm32")]
-    _rt::run_ctors_once();
+    #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
     let l0 = *arg0.add(0).cast::<*mut u8>();
     let l1 = *arg0.add(4).cast::<usize>();
     let len2 = l1;
@@ -14,10 +13,10 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
     let len5 = l4;
     let bytes5 = _rt::Vec::from_raw_parts(l3.cast(), len5, len5);
     let l6 = i32::from(*arg0.add(16).cast::<u8>());
-    use wavs::worker::layer_types::TriggerSource as V37;
-    let v37 = match l6 {
+    use wavs::worker::layer_types::TriggerSource as V41;
+    let v41 = match l6 {
         0 => {
-            let e37 = {
+            let e41 = {
                 let l7 = *arg0.add(24).cast::<*mut u8>();
                 let l8 = *arg0.add(28).cast::<usize>();
                 let len9 = l8;
@@ -36,10 +35,10 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
                     event_hash: _rt::Vec::from_raw_parts(l13.cast(), len15, len15),
                 }
             };
-            V37::EvmContractEvent(e37)
+            V41::EvmContractEvent(e41)
         }
         1 => {
-            let e37 = {
+            let e41 = {
                 let l16 = *arg0.add(24).cast::<*mut u8>();
                 let l17 = *arg0.add(28).cast::<usize>();
                 let len18 = l17;
@@ -62,49 +61,77 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
                     event_type: _rt::string_lift(bytes25),
                 }
             };
-            V37::CosmosContractEvent(e37)
+            V41::CosmosContractEvent(e41)
         }
         2 => {
-            let e37 = {
+            let e41 = {
                 let l26 = *arg0.add(24).cast::<*mut u8>();
                 let l27 = *arg0.add(28).cast::<usize>();
                 let len28 = l27;
                 let bytes28 = _rt::Vec::from_raw_parts(l26.cast(), len28, len28);
                 let l29 = *arg0.add(32).cast::<i32>();
+                let l30 = i32::from(*arg0.add(40).cast::<u8>());
+                let l32 = i32::from(*arg0.add(56).cast::<u8>());
                 wavs::worker::layer_types::BlockIntervalSource {
                     chain_name: _rt::string_lift(bytes28),
                     n_blocks: l29 as u32,
+                    start_block: match l30 {
+                        0 => None,
+                        1 => {
+                            let e = {
+                                let l31 = *arg0.add(48).cast::<i64>();
+                                l31 as u64
+                            };
+                            Some(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
+                    },
+                    end_block: match l32 {
+                        0 => None,
+                        1 => {
+                            let e = {
+                                let l33 = *arg0.add(64).cast::<i64>();
+                                l33 as u64
+                            };
+                            Some(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
+                    },
                 }
             };
-            V37::BlockInterval(e37)
+            V41::BlockInterval(e41)
         }
         3 => {
-            let e37 = {
-                let l30 = *arg0.add(24).cast::<*mut u8>();
-                let l31 = *arg0.add(28).cast::<usize>();
-                let len32 = l31;
-                let bytes32 = _rt::Vec::from_raw_parts(l30.cast(), len32, len32);
-                let l33 = i32::from(*arg0.add(32).cast::<u8>());
-                let l35 = i32::from(*arg0.add(48).cast::<u8>());
+            let e41 = {
+                let l34 = *arg0.add(24).cast::<*mut u8>();
+                let l35 = *arg0.add(28).cast::<usize>();
+                let len36 = l35;
+                let bytes36 = _rt::Vec::from_raw_parts(l34.cast(), len36, len36);
+                let l37 = i32::from(*arg0.add(32).cast::<u8>());
+                let l39 = i32::from(*arg0.add(48).cast::<u8>());
                 wavs::worker::layer_types::TriggerSourceCron {
-                    schedule: _rt::string_lift(bytes32),
-                    start_time: match l33 {
+                    schedule: _rt::string_lift(bytes36),
+                    start_time: match l37 {
                         0 => None,
                         1 => {
                             let e = {
-                                let l34 = *arg0.add(40).cast::<i64>();
-                                wavs::worker::layer_types::Timestamp { nanos: l34 as u64 }
+                                let l38 = *arg0.add(40).cast::<i64>();
+                                wavs::worker::layer_types::Timestamp {
+                                    nanos: l38 as u64,
+                                }
                             };
                             Some(e)
                         }
                         _ => _rt::invalid_enum_discriminant(),
                     },
-                    end_time: match l35 {
+                    end_time: match l39 {
                         0 => None,
                         1 => {
                             let e = {
-                                let l36 = *arg0.add(56).cast::<i64>();
-                                wavs::worker::layer_types::Timestamp { nanos: l36 as u64 }
+                                let l40 = *arg0.add(56).cast::<i64>();
+                                wavs::worker::layer_types::Timestamp {
+                                    nanos: l40 as u64,
+                                }
                             };
                             Some(e)
                         }
@@ -112,197 +139,199 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
                     },
                 }
             };
-            V37::Cron(e37)
+            V41::Cron(e41)
         }
         n => {
             debug_assert_eq!(n, 4, "invalid enum discriminant");
-            V37::Manual
+            V41::Manual
         }
     };
-    let l38 = i32::from(*arg0.add(64).cast::<u8>());
-    use wavs::worker::layer_types::TriggerData as V83;
-    let v83 = match l38 {
+    let l42 = i32::from(*arg0.add(72).cast::<u8>());
+    use wavs::worker::layer_types::TriggerData as V87;
+    let v87 = match l42 {
         0 => {
-            let e83 = {
-                let l39 = *arg0.add(72).cast::<*mut u8>();
-                let l40 = *arg0.add(76).cast::<usize>();
-                let len41 = l40;
-                let l42 = *arg0.add(80).cast::<*mut u8>();
-                let l43 = *arg0.add(84).cast::<usize>();
-                let len44 = l43;
-                let bytes44 = _rt::Vec::from_raw_parts(l42.cast(), len44, len44);
-                let l45 = *arg0.add(88).cast::<*mut u8>();
-                let l46 = *arg0.add(92).cast::<usize>();
-                let base50 = l45;
-                let len50 = l46;
-                let mut result50 = _rt::Vec::with_capacity(len50);
-                for i in 0..len50 {
-                    let base = base50.add(i * 8);
-                    let e50 = {
-                        let l47 = *base.add(0).cast::<*mut u8>();
-                        let l48 = *base.add(4).cast::<usize>();
-                        let len49 = l48;
-                        _rt::Vec::from_raw_parts(l47.cast(), len49, len49)
+            let e87 = {
+                let l43 = *arg0.add(80).cast::<*mut u8>();
+                let l44 = *arg0.add(84).cast::<usize>();
+                let len45 = l44;
+                let l46 = *arg0.add(88).cast::<*mut u8>();
+                let l47 = *arg0.add(92).cast::<usize>();
+                let len48 = l47;
+                let bytes48 = _rt::Vec::from_raw_parts(l46.cast(), len48, len48);
+                let l49 = *arg0.add(96).cast::<*mut u8>();
+                let l50 = *arg0.add(100).cast::<usize>();
+                let base54 = l49;
+                let len54 = l50;
+                let mut result54 = _rt::Vec::with_capacity(len54);
+                for i in 0..len54 {
+                    let base = base54.add(i * 8);
+                    let e54 = {
+                        let l51 = *base.add(0).cast::<*mut u8>();
+                        let l52 = *base.add(4).cast::<usize>();
+                        let len53 = l52;
+                        _rt::Vec::from_raw_parts(l51.cast(), len53, len53)
                     };
-                    result50.push(e50);
+                    result54.push(e54);
                 }
-                _rt::cabi_dealloc(base50, len50 * 8, 4);
-                let l51 = *arg0.add(96).cast::<*mut u8>();
-                let l52 = *arg0.add(100).cast::<usize>();
-                let len53 = l52;
-                let l54 = *arg0.add(104).cast::<i64>();
+                _rt::cabi_dealloc(base54, len54 * 8, 4);
+                let l55 = *arg0.add(104).cast::<*mut u8>();
+                let l56 = *arg0.add(108).cast::<usize>();
+                let len57 = l56;
+                let l58 = *arg0.add(112).cast::<i64>();
                 wavs::worker::layer_types::TriggerDataEvmContractEvent {
                     contract_address: wavs::worker::layer_types::EvmAddress {
-                        raw_bytes: _rt::Vec::from_raw_parts(l39.cast(), len41, len41),
+                        raw_bytes: _rt::Vec::from_raw_parts(l43.cast(), len45, len45),
                     },
-                    chain_name: _rt::string_lift(bytes44),
+                    chain_name: _rt::string_lift(bytes48),
                     log: wavs::worker::layer_types::EvmEventLogData {
-                        topics: result50,
-                        data: _rt::Vec::from_raw_parts(l51.cast(), len53, len53),
+                        topics: result54,
+                        data: _rt::Vec::from_raw_parts(l55.cast(), len57, len57),
                     },
-                    block_height: l54 as u64,
+                    block_height: l58 as u64,
                 }
             };
-            V83::EvmContractEvent(e83)
+            V87::EvmContractEvent(e87)
         }
         1 => {
-            let e83 = {
-                let l55 = *arg0.add(72).cast::<*mut u8>();
-                let l56 = *arg0.add(76).cast::<usize>();
-                let len57 = l56;
-                let bytes57 = _rt::Vec::from_raw_parts(l55.cast(), len57, len57);
-                let l58 = *arg0.add(80).cast::<i32>();
-                let l59 = *arg0.add(84).cast::<*mut u8>();
-                let l60 = *arg0.add(88).cast::<usize>();
+            let e87 = {
+                let l59 = *arg0.add(80).cast::<*mut u8>();
+                let l60 = *arg0.add(84).cast::<usize>();
                 let len61 = l60;
                 let bytes61 = _rt::Vec::from_raw_parts(l59.cast(), len61, len61);
-                let l62 = *arg0.add(92).cast::<*mut u8>();
-                let l63 = *arg0.add(96).cast::<usize>();
-                let len64 = l63;
-                let bytes64 = _rt::Vec::from_raw_parts(l62.cast(), len64, len64);
-                let l65 = *arg0.add(100).cast::<*mut u8>();
-                let l66 = *arg0.add(104).cast::<usize>();
-                let base73 = l65;
-                let len73 = l66;
-                let mut result73 = _rt::Vec::with_capacity(len73);
-                for i in 0..len73 {
-                    let base = base73.add(i * 16);
-                    let e73 = {
-                        let l67 = *base.add(0).cast::<*mut u8>();
-                        let l68 = *base.add(4).cast::<usize>();
-                        let len69 = l68;
-                        let bytes69 = _rt::Vec::from_raw_parts(l67.cast(), len69, len69);
-                        let l70 = *base.add(8).cast::<*mut u8>();
-                        let l71 = *base.add(12).cast::<usize>();
-                        let len72 = l71;
-                        let bytes72 = _rt::Vec::from_raw_parts(l70.cast(), len72, len72);
-                        (_rt::string_lift(bytes69), _rt::string_lift(bytes72))
+                let l62 = *arg0.add(88).cast::<i32>();
+                let l63 = *arg0.add(92).cast::<*mut u8>();
+                let l64 = *arg0.add(96).cast::<usize>();
+                let len65 = l64;
+                let bytes65 = _rt::Vec::from_raw_parts(l63.cast(), len65, len65);
+                let l66 = *arg0.add(100).cast::<*mut u8>();
+                let l67 = *arg0.add(104).cast::<usize>();
+                let len68 = l67;
+                let bytes68 = _rt::Vec::from_raw_parts(l66.cast(), len68, len68);
+                let l69 = *arg0.add(108).cast::<*mut u8>();
+                let l70 = *arg0.add(112).cast::<usize>();
+                let base77 = l69;
+                let len77 = l70;
+                let mut result77 = _rt::Vec::with_capacity(len77);
+                for i in 0..len77 {
+                    let base = base77.add(i * 16);
+                    let e77 = {
+                        let l71 = *base.add(0).cast::<*mut u8>();
+                        let l72 = *base.add(4).cast::<usize>();
+                        let len73 = l72;
+                        let bytes73 = _rt::Vec::from_raw_parts(l71.cast(), len73, len73);
+                        let l74 = *base.add(8).cast::<*mut u8>();
+                        let l75 = *base.add(12).cast::<usize>();
+                        let len76 = l75;
+                        let bytes76 = _rt::Vec::from_raw_parts(l74.cast(), len76, len76);
+                        (_rt::string_lift(bytes73), _rt::string_lift(bytes76))
                     };
-                    result73.push(e73);
+                    result77.push(e77);
                 }
-                _rt::cabi_dealloc(base73, len73 * 16, 4);
-                let l74 = *arg0.add(112).cast::<i64>();
+                _rt::cabi_dealloc(base77, len77 * 16, 4);
+                let l78 = *arg0.add(120).cast::<i64>();
                 wavs::worker::layer_types::TriggerDataCosmosContractEvent {
                     contract_address: wavs::worker::layer_types::CosmosAddress {
-                        bech32_addr: _rt::string_lift(bytes57),
-                        prefix_len: l58 as u32,
+                        bech32_addr: _rt::string_lift(bytes61),
+                        prefix_len: l62 as u32,
                     },
-                    chain_name: _rt::string_lift(bytes61),
+                    chain_name: _rt::string_lift(bytes65),
                     event: wavs::worker::layer_types::CosmosEvent {
-                        ty: _rt::string_lift(bytes64),
-                        attributes: result73,
+                        ty: _rt::string_lift(bytes68),
+                        attributes: result77,
                     },
-                    block_height: l74 as u64,
-                }
-            };
-            V83::CosmosContractEvent(e83)
-        }
-        2 => {
-            let e83 = {
-                let l75 = *arg0.add(72).cast::<*mut u8>();
-                let l76 = *arg0.add(76).cast::<usize>();
-                let len77 = l76;
-                let bytes77 = _rt::Vec::from_raw_parts(l75.cast(), len77, len77);
-                let l78 = *arg0.add(80).cast::<i64>();
-                wavs::worker::layer_types::BlockIntervalData {
-                    chain_name: _rt::string_lift(bytes77),
                     block_height: l78 as u64,
                 }
             };
-            V83::BlockInterval(e83)
+            V87::CosmosContractEvent(e87)
         }
-        3 => {
-            let e83 = {
-                let l79 = *arg0.add(72).cast::<i64>();
-                wavs::worker::layer_types::TriggerDataCron {
-                    trigger_time: wavs::worker::layer_types::Timestamp { nanos: l79 as u64 },
+        2 => {
+            let e87 = {
+                let l79 = *arg0.add(80).cast::<*mut u8>();
+                let l80 = *arg0.add(84).cast::<usize>();
+                let len81 = l80;
+                let bytes81 = _rt::Vec::from_raw_parts(l79.cast(), len81, len81);
+                let l82 = *arg0.add(88).cast::<i64>();
+                wavs::worker::layer_types::BlockIntervalData {
+                    chain_name: _rt::string_lift(bytes81),
+                    block_height: l82 as u64,
                 }
             };
-            V83::Cron(e83)
+            V87::BlockInterval(e87)
+        }
+        3 => {
+            let e87 = {
+                let l83 = *arg0.add(80).cast::<i64>();
+                wavs::worker::layer_types::TriggerDataCron {
+                    trigger_time: wavs::worker::layer_types::Timestamp {
+                        nanos: l83 as u64,
+                    },
+                }
+            };
+            V87::Cron(e87)
         }
         n => {
             debug_assert_eq!(n, 4, "invalid enum discriminant");
-            let e83 = {
-                let l80 = *arg0.add(72).cast::<*mut u8>();
-                let l81 = *arg0.add(76).cast::<usize>();
-                let len82 = l81;
-                _rt::Vec::from_raw_parts(l80.cast(), len82, len82)
+            let e87 = {
+                let l84 = *arg0.add(80).cast::<*mut u8>();
+                let l85 = *arg0.add(84).cast::<usize>();
+                let len86 = l85;
+                _rt::Vec::from_raw_parts(l84.cast(), len86, len86)
             };
-            V83::Raw(e83)
+            V87::Raw(e87)
         }
     };
-    let result84 = T::run(wavs::worker::layer_types::TriggerAction {
+    let result88 = T::run(wavs::worker::layer_types::TriggerAction {
         config: wavs::worker::layer_types::TriggerConfig {
             service_id: _rt::string_lift(bytes2),
             workflow_id: _rt::string_lift(bytes5),
-            trigger_source: v37,
+            trigger_source: v41,
         },
-        data: v83,
+        data: v87,
     });
-    _rt::cabi_dealloc(arg0, 120, 8);
-    let ptr85 = _RET_AREA.0.as_mut_ptr().cast::<u8>();
-    match result84 {
+    _rt::cabi_dealloc(arg0, 128, 8);
+    let ptr89 = _RET_AREA.0.as_mut_ptr().cast::<u8>();
+    match result88 {
         Ok(e) => {
-            *ptr85.add(0).cast::<u8>() = (0i32) as u8;
+            *ptr89.add(0).cast::<u8>() = (0i32) as u8;
             match e {
                 Some(e) => {
-                    *ptr85.add(8).cast::<u8>() = (1i32) as u8;
+                    *ptr89.add(8).cast::<u8>() = (1i32) as u8;
                     let wavs::worker::layer_types::WasmResponse {
-                        payload: payload86,
-                        ordering: ordering86,
+                        payload: payload90,
+                        ordering: ordering90,
                     } = e;
-                    let vec87 = (payload86).into_boxed_slice();
-                    let ptr87 = vec87.as_ptr().cast::<u8>();
-                    let len87 = vec87.len();
-                    ::core::mem::forget(vec87);
-                    *ptr85.add(20).cast::<usize>() = len87;
-                    *ptr85.add(16).cast::<*mut u8>() = ptr87.cast_mut();
-                    match ordering86 {
+                    let vec91 = (payload90).into_boxed_slice();
+                    let ptr91 = vec91.as_ptr().cast::<u8>();
+                    let len91 = vec91.len();
+                    ::core::mem::forget(vec91);
+                    *ptr89.add(20).cast::<usize>() = len91;
+                    *ptr89.add(16).cast::<*mut u8>() = ptr91.cast_mut();
+                    match ordering90 {
                         Some(e) => {
-                            *ptr85.add(24).cast::<u8>() = (1i32) as u8;
-                            *ptr85.add(32).cast::<i64>() = _rt::as_i64(e);
+                            *ptr89.add(24).cast::<u8>() = (1i32) as u8;
+                            *ptr89.add(32).cast::<i64>() = _rt::as_i64(e);
                         }
                         None => {
-                            *ptr85.add(24).cast::<u8>() = (0i32) as u8;
+                            *ptr89.add(24).cast::<u8>() = (0i32) as u8;
                         }
                     };
                 }
                 None => {
-                    *ptr85.add(8).cast::<u8>() = (0i32) as u8;
+                    *ptr89.add(8).cast::<u8>() = (0i32) as u8;
                 }
             };
         }
         Err(e) => {
-            *ptr85.add(0).cast::<u8>() = (1i32) as u8;
-            let vec88 = (e.into_bytes()).into_boxed_slice();
-            let ptr88 = vec88.as_ptr().cast::<u8>();
-            let len88 = vec88.len();
-            ::core::mem::forget(vec88);
-            *ptr85.add(12).cast::<usize>() = len88;
-            *ptr85.add(8).cast::<*mut u8>() = ptr88.cast_mut();
+            *ptr89.add(0).cast::<u8>() = (1i32) as u8;
+            let vec92 = (e.into_bytes()).into_boxed_slice();
+            let ptr92 = vec92.as_ptr().cast::<u8>();
+            let len92 = vec92.len();
+            ::core::mem::forget(vec92);
+            *ptr89.add(12).cast::<usize>() = len92;
+            *ptr89.add(8).cast::<*mut u8>() = ptr92.cast_mut();
         }
     };
-    ptr85
+    ptr89
 }
 #[doc(hidden)]
 #[allow(non_snake_case)]
@@ -354,8 +383,7 @@ pub mod wavs {
         pub mod errors {
             #[used]
             #[doc(hidden)]
-            static __FORCE_SECTION_REF: fn() =
-                super::super::super::__link_custom_section_describing_imports;
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
             /// Possible error types that can occur during agent operations
             #[derive(Clone)]
@@ -388,12 +416,21 @@ pub mod wavs {
                 Other(_rt::String),
             }
             impl ::core::fmt::Debug for AgentError {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     match self {
-                        AgentError::Api(e) => f.debug_tuple("AgentError::Api").field(e).finish(),
-                        AgentError::Http(e) => f.debug_tuple("AgentError::Http").field(e).finish(),
+                        AgentError::Api(e) => {
+                            f.debug_tuple("AgentError::Api").field(e).finish()
+                        }
+                        AgentError::Http(e) => {
+                            f.debug_tuple("AgentError::Http").field(e).finish()
+                        }
                         AgentError::ExternalService(e) => {
-                            f.debug_tuple("AgentError::ExternalService").field(e).finish()
+                            f.debug_tuple("AgentError::ExternalService")
+                                .field(e)
+                                .finish()
                         }
                         AgentError::Config(e) => {
                             f.debug_tuple("AgentError::Config").field(e).finish()
@@ -408,14 +445,22 @@ pub mod wavs {
                             f.debug_tuple("AgentError::ContextLoading").field(e).finish()
                         }
                         AgentError::ContextValidation(e) => {
-                            f.debug_tuple("AgentError::ContextValidation").field(e).finish()
+                            f.debug_tuple("AgentError::ContextValidation")
+                                .field(e)
+                                .finish()
                         }
-                        AgentError::Llm(e) => f.debug_tuple("AgentError::Llm").field(e).finish(),
-                        AgentError::Io(e) => f.debug_tuple("AgentError::Io").field(e).finish(),
+                        AgentError::Llm(e) => {
+                            f.debug_tuple("AgentError::Llm").field(e).finish()
+                        }
+                        AgentError::Io(e) => {
+                            f.debug_tuple("AgentError::Io").field(e).finish()
+                        }
                         AgentError::Transaction(e) => {
                             f.debug_tuple("AgentError::Transaction").field(e).finish()
                         }
-                        AgentError::Utf8(e) => f.debug_tuple("AgentError::Utf8").field(e).finish(),
+                        AgentError::Utf8(e) => {
+                            f.debug_tuple("AgentError::Utf8").field(e).finish()
+                        }
                         AgentError::Other(e) => {
                             f.debug_tuple("AgentError::Other").field(e).finish()
                         }
@@ -423,7 +468,10 @@ pub mod wavs {
                 }
             }
             impl ::core::fmt::Display for AgentError {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     write!(f, "{:?}", self)
                 }
             }
@@ -433,8 +481,7 @@ pub mod wavs {
         pub mod types {
             #[used]
             #[doc(hidden)]
-            static __FORCE_SECTION_REF: fn() =
-                super::super::super::__link_custom_section_describing_imports;
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
             /// Function definition for tool calls
             #[derive(Clone)]
@@ -444,7 +491,10 @@ pub mod wavs {
                 pub parameters: Option<_rt::String>,
             }
             impl ::core::fmt::Debug for Function {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("Function")
                         .field("name", &self.name)
                         .field("description", &self.description)
@@ -459,7 +509,10 @@ pub mod wavs {
                 pub function: Function,
             }
             impl ::core::fmt::Debug for Tool {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("Tool")
                         .field("tool-type", &self.tool_type)
                         .field("function", &self.function)
@@ -473,7 +526,10 @@ pub mod wavs {
                 pub arguments: _rt::String,
             }
             impl ::core::fmt::Debug for ToolCallFunction {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("ToolCallFunction")
                         .field("name", &self.name)
                         .field("arguments", &self.arguments)
@@ -488,7 +544,10 @@ pub mod wavs {
                 pub function: ToolCallFunction,
             }
             impl ::core::fmt::Debug for ToolCall {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("ToolCall")
                         .field("id", &self.id)
                         .field("tool-type", &self.tool_type)
@@ -506,7 +565,10 @@ pub mod wavs {
                 pub name: Option<_rt::String>,
             }
             impl ::core::fmt::Debug for Message {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("Message")
                         .field("role", &self.role)
                         .field("content", &self.content)
@@ -525,7 +587,9 @@ pub mod wavs {
             impl CustomToolHandler {
                 #[doc(hidden)]
                 pub unsafe fn from_handle(handle: u32) -> Self {
-                    Self { handle: _rt::Resource::from_handle(handle) }
+                    Self {
+                        handle: _rt::Resource::from_handle(handle),
+                    }
                 }
                 #[doc(hidden)]
                 pub fn take_handle(&self) -> u32 {
@@ -568,7 +632,10 @@ pub mod wavs {
                 pub context_window: Option<u32>,
             }
             impl ::core::fmt::Debug for LlmOptions {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("LlmOptions")
                         .field("temperature", &self.temperature)
                         .field("top-p", &self.top_p)
@@ -591,7 +658,10 @@ pub mod wavs {
                 pub api_key: Option<_rt::String>,
             }
             impl ::core::fmt::Debug for LlmClient {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("LlmClient")
                         .field("model", &self.model)
                         .field("config", &self.config)
@@ -609,7 +679,10 @@ pub mod wavs {
                 pub description: Option<_rt::String>,
             }
             impl ::core::fmt::Debug for Contract {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("Contract")
                         .field("name", &self.name)
                         .field("address", &self.address)
@@ -629,7 +702,10 @@ pub mod wavs {
                 pub config: _rt::Vec<(_rt::String, _rt::String)>,
             }
             impl ::core::fmt::Debug for Config {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("Config")
                         .field("contracts", &self.contracts)
                         .field("llm-config", &self.llm_config)
@@ -646,7 +722,10 @@ pub mod wavs {
                 pub args: _rt::Vec<_rt::String>,
             }
             impl ::core::fmt::Debug for ContractCall {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("ContractCall")
                         .field("function", &self.function)
                         .field("args", &self.args)
@@ -663,7 +742,10 @@ pub mod wavs {
                 pub description: _rt::String,
             }
             impl ::core::fmt::Debug for Transaction {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("Transaction")
                         .field("to", &self.to)
                         .field("value", &self.value)
@@ -682,7 +764,10 @@ pub mod wavs {
                 Text(_rt::String),
             }
             impl ::core::fmt::Debug for LlmResponse {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     match self {
                         LlmResponse::Transaction(e) => {
                             f.debug_tuple("LlmResponse::Transaction").field(e).finish()
@@ -711,7 +796,11 @@ pub mod wavs {
                         fn wit_import(_: i32, _: *mut u8, _: usize) -> i32 {
                             unreachable!()
                         }
-                        let ret = wit_import((self).handle() as i32, ptr0.cast_mut(), len0);
+                        let ret = wit_import(
+                            (self).handle() as i32,
+                            ptr0.cast_mut(),
+                            len0,
+                        );
                         _rt::bool_lift(ret as u8)
                     }
                 }
@@ -719,13 +808,21 @@ pub mod wavs {
             impl CustomToolHandler {
                 #[allow(unused_unsafe, clippy::all)]
                 /// Execute the tool call and return a result
-                pub fn execute(&self, tool_call: &ToolCall) -> Result<_rt::String, _rt::String> {
+                pub fn execute(
+                    &self,
+                    tool_call: &ToolCall,
+                ) -> Result<_rt::String, _rt::String> {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 12]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 12]);
-                        let ToolCall { id: id0, tool_type: tool_type0, function: function0 } =
-                            tool_call;
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 12],
+                        );
+                        let ToolCall {
+                            id: id0,
+                            tool_type: tool_type0,
+                            function: function0,
+                        } = tool_call;
                         let vec1 = id0;
                         let ptr1 = vec1.as_ptr().cast::<u8>();
                         let len1 = vec1.len();
@@ -791,7 +888,11 @@ pub mod wavs {
                                     let l8 = *ptr6.add(4).cast::<*mut u8>();
                                     let l9 = *ptr6.add(8).cast::<usize>();
                                     let len10 = l9;
-                                    let bytes10 = _rt::Vec::from_raw_parts(l8.cast(), len10, len10);
+                                    let bytes10 = _rt::Vec::from_raw_parts(
+                                        l8.cast(),
+                                        len10,
+                                        len10,
+                                    );
                                     _rt::string_lift(bytes10)
                                 };
                                 Ok(e)
@@ -801,8 +902,11 @@ pub mod wavs {
                                     let l11 = *ptr6.add(4).cast::<*mut u8>();
                                     let l12 = *ptr6.add(8).cast::<usize>();
                                     let len13 = l12;
-                                    let bytes13 =
-                                        _rt::Vec::from_raw_parts(l11.cast(), len13, len13);
+                                    let bytes13 = _rt::Vec::from_raw_parts(
+                                        l11.cast(),
+                                        len13,
+                                        len13,
+                                    );
                                     _rt::string_lift(bytes13)
                                 };
                                 Err(e)
@@ -817,8 +921,7 @@ pub mod wavs {
         pub mod client {
             #[used]
             #[doc(hidden)]
-            static __FORCE_SECTION_REF: fn() =
-                super::super::super::__link_custom_section_describing_imports;
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
             pub type AgentError = super::super::super::wavs::agent::errors::AgentError;
             pub type Message = super::super::super::wavs::agent::types::Message;
@@ -837,7 +940,9 @@ pub mod wavs {
             impl LlmClientManager {
                 #[doc(hidden)]
                 pub unsafe fn from_handle(handle: u32) -> Self {
-                    Self { handle: _rt::Resource::from_handle(handle) }
+                    Self {
+                        handle: _rt::Resource::from_handle(handle),
+                    }
                 }
                 #[doc(hidden)]
                 pub fn take_handle(&self) -> u32 {
@@ -893,7 +998,11 @@ pub mod wavs {
                                 let l3 = *ptr1.add(4).cast::<*mut u8>();
                                 let l4 = *ptr1.add(8).cast::<usize>();
                                 let len5 = l4;
-                                let bytes5 = _rt::Vec::from_raw_parts(l3.cast(), len5, len5);
+                                let bytes5 = _rt::Vec::from_raw_parts(
+                                    l3.cast(),
+                                    len5,
+                                    len5,
+                                );
                                 let l6 = *ptr1.add(12).cast::<f32>();
                                 let l7 = *ptr1.add(16).cast::<f32>();
                                 let l8 = *ptr1.add(20).cast::<i32>();
@@ -902,7 +1011,11 @@ pub mod wavs {
                                 let l13 = *ptr1.add(40).cast::<*mut u8>();
                                 let l14 = *ptr1.add(44).cast::<usize>();
                                 let len15 = l14;
-                                let bytes15 = _rt::Vec::from_raw_parts(l13.cast(), len15, len15);
+                                let bytes15 = _rt::Vec::from_raw_parts(
+                                    l13.cast(),
+                                    len15,
+                                    len15,
+                                );
                                 let l16 = i32::from(*ptr1.add(48).cast::<u8>());
                                 super::super::super::wavs::agent::types::LlmClient {
                                     model: _rt::string_lift(bytes5),
@@ -966,8 +1079,11 @@ pub mod wavs {
                                             let l21 = *ptr1.add(8).cast::<*mut u8>();
                                             let l22 = *ptr1.add(12).cast::<usize>();
                                             let len23 = l22;
-                                            let bytes23 =
-                                                _rt::Vec::from_raw_parts(l21.cast(), len23, len23);
+                                            let bytes23 = _rt::Vec::from_raw_parts(
+                                                l21.cast(),
+                                                len23,
+                                                len23,
+                                            );
                                             _rt::string_lift(bytes23)
                                         };
                                         V60::Api(e60)
@@ -977,8 +1093,11 @@ pub mod wavs {
                                             let l24 = *ptr1.add(8).cast::<*mut u8>();
                                             let l25 = *ptr1.add(12).cast::<usize>();
                                             let len26 = l25;
-                                            let bytes26 =
-                                                _rt::Vec::from_raw_parts(l24.cast(), len26, len26);
+                                            let bytes26 = _rt::Vec::from_raw_parts(
+                                                l24.cast(),
+                                                len26,
+                                                len26,
+                                            );
                                             _rt::string_lift(bytes26)
                                         };
                                         V60::Http(e60)
@@ -988,8 +1107,11 @@ pub mod wavs {
                                             let l27 = *ptr1.add(8).cast::<*mut u8>();
                                             let l28 = *ptr1.add(12).cast::<usize>();
                                             let len29 = l28;
-                                            let bytes29 =
-                                                _rt::Vec::from_raw_parts(l27.cast(), len29, len29);
+                                            let bytes29 = _rt::Vec::from_raw_parts(
+                                                l27.cast(),
+                                                len29,
+                                                len29,
+                                            );
                                             _rt::string_lift(bytes29)
                                         };
                                         V60::ExternalService(e60)
@@ -999,8 +1121,11 @@ pub mod wavs {
                                             let l30 = *ptr1.add(8).cast::<*mut u8>();
                                             let l31 = *ptr1.add(12).cast::<usize>();
                                             let len32 = l31;
-                                            let bytes32 =
-                                                _rt::Vec::from_raw_parts(l30.cast(), len32, len32);
+                                            let bytes32 = _rt::Vec::from_raw_parts(
+                                                l30.cast(),
+                                                len32,
+                                                len32,
+                                            );
                                             _rt::string_lift(bytes32)
                                         };
                                         V60::Config(e60)
@@ -1010,8 +1135,11 @@ pub mod wavs {
                                             let l33 = *ptr1.add(8).cast::<*mut u8>();
                                             let l34 = *ptr1.add(12).cast::<usize>();
                                             let len35 = l34;
-                                            let bytes35 =
-                                                _rt::Vec::from_raw_parts(l33.cast(), len35, len35);
+                                            let bytes35 = _rt::Vec::from_raw_parts(
+                                                l33.cast(),
+                                                len35,
+                                                len35,
+                                            );
                                             _rt::string_lift(bytes35)
                                         };
                                         V60::Contract(e60)
@@ -1021,8 +1149,11 @@ pub mod wavs {
                                             let l36 = *ptr1.add(8).cast::<*mut u8>();
                                             let l37 = *ptr1.add(12).cast::<usize>();
                                             let len38 = l37;
-                                            let bytes38 =
-                                                _rt::Vec::from_raw_parts(l36.cast(), len38, len38);
+                                            let bytes38 = _rt::Vec::from_raw_parts(
+                                                l36.cast(),
+                                                len38,
+                                                len38,
+                                            );
                                             _rt::string_lift(bytes38)
                                         };
                                         V60::Configuration(e60)
@@ -1032,8 +1163,11 @@ pub mod wavs {
                                             let l39 = *ptr1.add(8).cast::<*mut u8>();
                                             let l40 = *ptr1.add(12).cast::<usize>();
                                             let len41 = l40;
-                                            let bytes41 =
-                                                _rt::Vec::from_raw_parts(l39.cast(), len41, len41);
+                                            let bytes41 = _rt::Vec::from_raw_parts(
+                                                l39.cast(),
+                                                len41,
+                                                len41,
+                                            );
                                             _rt::string_lift(bytes41)
                                         };
                                         V60::ContextLoading(e60)
@@ -1043,8 +1177,11 @@ pub mod wavs {
                                             let l42 = *ptr1.add(8).cast::<*mut u8>();
                                             let l43 = *ptr1.add(12).cast::<usize>();
                                             let len44 = l43;
-                                            let bytes44 =
-                                                _rt::Vec::from_raw_parts(l42.cast(), len44, len44);
+                                            let bytes44 = _rt::Vec::from_raw_parts(
+                                                l42.cast(),
+                                                len44,
+                                                len44,
+                                            );
                                             _rt::string_lift(bytes44)
                                         };
                                         V60::ContextValidation(e60)
@@ -1054,8 +1191,11 @@ pub mod wavs {
                                             let l45 = *ptr1.add(8).cast::<*mut u8>();
                                             let l46 = *ptr1.add(12).cast::<usize>();
                                             let len47 = l46;
-                                            let bytes47 =
-                                                _rt::Vec::from_raw_parts(l45.cast(), len47, len47);
+                                            let bytes47 = _rt::Vec::from_raw_parts(
+                                                l45.cast(),
+                                                len47,
+                                                len47,
+                                            );
                                             _rt::string_lift(bytes47)
                                         };
                                         V60::Llm(e60)
@@ -1065,8 +1205,11 @@ pub mod wavs {
                                             let l48 = *ptr1.add(8).cast::<*mut u8>();
                                             let l49 = *ptr1.add(12).cast::<usize>();
                                             let len50 = l49;
-                                            let bytes50 =
-                                                _rt::Vec::from_raw_parts(l48.cast(), len50, len50);
+                                            let bytes50 = _rt::Vec::from_raw_parts(
+                                                l48.cast(),
+                                                len50,
+                                                len50,
+                                            );
                                             _rt::string_lift(bytes50)
                                         };
                                         V60::Io(e60)
@@ -1076,8 +1219,11 @@ pub mod wavs {
                                             let l51 = *ptr1.add(8).cast::<*mut u8>();
                                             let l52 = *ptr1.add(12).cast::<usize>();
                                             let len53 = l52;
-                                            let bytes53 =
-                                                _rt::Vec::from_raw_parts(l51.cast(), len53, len53);
+                                            let bytes53 = _rt::Vec::from_raw_parts(
+                                                l51.cast(),
+                                                len53,
+                                                len53,
+                                            );
                                             _rt::string_lift(bytes53)
                                         };
                                         V60::Transaction(e60)
@@ -1087,8 +1233,11 @@ pub mod wavs {
                                             let l54 = *ptr1.add(8).cast::<*mut u8>();
                                             let l55 = *ptr1.add(12).cast::<usize>();
                                             let len56 = l55;
-                                            let bytes56 =
-                                                _rt::Vec::from_raw_parts(l54.cast(), len56, len56);
+                                            let bytes56 = _rt::Vec::from_raw_parts(
+                                                l54.cast(),
+                                                len56,
+                                                len56,
+                                            );
                                             _rt::string_lift(bytes56)
                                         };
                                         V60::Utf8(e60)
@@ -1099,8 +1248,11 @@ pub mod wavs {
                                             let l57 = *ptr1.add(8).cast::<*mut u8>();
                                             let l58 = *ptr1.add(12).cast::<usize>();
                                             let len59 = l58;
-                                            let bytes59 =
-                                                _rt::Vec::from_raw_parts(l57.cast(), len59, len59);
+                                            let bytes59 = _rt::Vec::from_raw_parts(
+                                                l57.cast(),
+                                                len59,
+                                                len59,
+                                            );
                                             _rt::string_lift(bytes59)
                                         };
                                         V60::Other(e60)
@@ -1116,7 +1268,10 @@ pub mod wavs {
             }
             #[allow(unused_unsafe, clippy::all)]
             /// Create a new LLM client from a JSON configuration string
-            pub fn from_json(model: &str, json_config: &str) -> Result<LlmClient, AgentError> {
+            pub fn from_json(
+                model: &str,
+                json_config: &str,
+            ) -> Result<LlmClient, AgentError> {
                 unsafe {
                     #[repr(align(4))]
                     struct RetArea([::core::mem::MaybeUninit<u8>; 60]);
@@ -1132,10 +1287,22 @@ pub mod wavs {
                     #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
                     extern "C" {
                         #[link_name = "from-json"]
-                        fn wit_import(_: *mut u8, _: usize, _: *mut u8, _: usize, _: *mut u8);
+                        fn wit_import(
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                        );
                     }
                     #[cfg(not(target_arch = "wasm32"))]
-                    fn wit_import(_: *mut u8, _: usize, _: *mut u8, _: usize, _: *mut u8) {
+                    fn wit_import(
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                    ) {
                         unreachable!()
                     }
                     wit_import(ptr0.cast_mut(), len0, ptr1.cast_mut(), len1, ptr2);
@@ -1146,7 +1313,11 @@ pub mod wavs {
                                 let l4 = *ptr2.add(4).cast::<*mut u8>();
                                 let l5 = *ptr2.add(8).cast::<usize>();
                                 let len6 = l5;
-                                let bytes6 = _rt::Vec::from_raw_parts(l4.cast(), len6, len6);
+                                let bytes6 = _rt::Vec::from_raw_parts(
+                                    l4.cast(),
+                                    len6,
+                                    len6,
+                                );
                                 let l7 = *ptr2.add(12).cast::<f32>();
                                 let l8 = *ptr2.add(16).cast::<f32>();
                                 let l9 = *ptr2.add(20).cast::<i32>();
@@ -1155,7 +1326,11 @@ pub mod wavs {
                                 let l14 = *ptr2.add(40).cast::<*mut u8>();
                                 let l15 = *ptr2.add(44).cast::<usize>();
                                 let len16 = l15;
-                                let bytes16 = _rt::Vec::from_raw_parts(l14.cast(), len16, len16);
+                                let bytes16 = _rt::Vec::from_raw_parts(
+                                    l14.cast(),
+                                    len16,
+                                    len16,
+                                );
                                 let l17 = i32::from(*ptr2.add(48).cast::<u8>());
                                 super::super::super::wavs::agent::types::LlmClient {
                                     model: _rt::string_lift(bytes6),
@@ -1219,8 +1394,11 @@ pub mod wavs {
                                             let l22 = *ptr2.add(8).cast::<*mut u8>();
                                             let l23 = *ptr2.add(12).cast::<usize>();
                                             let len24 = l23;
-                                            let bytes24 =
-                                                _rt::Vec::from_raw_parts(l22.cast(), len24, len24);
+                                            let bytes24 = _rt::Vec::from_raw_parts(
+                                                l22.cast(),
+                                                len24,
+                                                len24,
+                                            );
                                             _rt::string_lift(bytes24)
                                         };
                                         V61::Api(e61)
@@ -1230,8 +1408,11 @@ pub mod wavs {
                                             let l25 = *ptr2.add(8).cast::<*mut u8>();
                                             let l26 = *ptr2.add(12).cast::<usize>();
                                             let len27 = l26;
-                                            let bytes27 =
-                                                _rt::Vec::from_raw_parts(l25.cast(), len27, len27);
+                                            let bytes27 = _rt::Vec::from_raw_parts(
+                                                l25.cast(),
+                                                len27,
+                                                len27,
+                                            );
                                             _rt::string_lift(bytes27)
                                         };
                                         V61::Http(e61)
@@ -1241,8 +1422,11 @@ pub mod wavs {
                                             let l28 = *ptr2.add(8).cast::<*mut u8>();
                                             let l29 = *ptr2.add(12).cast::<usize>();
                                             let len30 = l29;
-                                            let bytes30 =
-                                                _rt::Vec::from_raw_parts(l28.cast(), len30, len30);
+                                            let bytes30 = _rt::Vec::from_raw_parts(
+                                                l28.cast(),
+                                                len30,
+                                                len30,
+                                            );
                                             _rt::string_lift(bytes30)
                                         };
                                         V61::ExternalService(e61)
@@ -1252,8 +1436,11 @@ pub mod wavs {
                                             let l31 = *ptr2.add(8).cast::<*mut u8>();
                                             let l32 = *ptr2.add(12).cast::<usize>();
                                             let len33 = l32;
-                                            let bytes33 =
-                                                _rt::Vec::from_raw_parts(l31.cast(), len33, len33);
+                                            let bytes33 = _rt::Vec::from_raw_parts(
+                                                l31.cast(),
+                                                len33,
+                                                len33,
+                                            );
                                             _rt::string_lift(bytes33)
                                         };
                                         V61::Config(e61)
@@ -1263,8 +1450,11 @@ pub mod wavs {
                                             let l34 = *ptr2.add(8).cast::<*mut u8>();
                                             let l35 = *ptr2.add(12).cast::<usize>();
                                             let len36 = l35;
-                                            let bytes36 =
-                                                _rt::Vec::from_raw_parts(l34.cast(), len36, len36);
+                                            let bytes36 = _rt::Vec::from_raw_parts(
+                                                l34.cast(),
+                                                len36,
+                                                len36,
+                                            );
                                             _rt::string_lift(bytes36)
                                         };
                                         V61::Contract(e61)
@@ -1274,8 +1464,11 @@ pub mod wavs {
                                             let l37 = *ptr2.add(8).cast::<*mut u8>();
                                             let l38 = *ptr2.add(12).cast::<usize>();
                                             let len39 = l38;
-                                            let bytes39 =
-                                                _rt::Vec::from_raw_parts(l37.cast(), len39, len39);
+                                            let bytes39 = _rt::Vec::from_raw_parts(
+                                                l37.cast(),
+                                                len39,
+                                                len39,
+                                            );
                                             _rt::string_lift(bytes39)
                                         };
                                         V61::Configuration(e61)
@@ -1285,8 +1478,11 @@ pub mod wavs {
                                             let l40 = *ptr2.add(8).cast::<*mut u8>();
                                             let l41 = *ptr2.add(12).cast::<usize>();
                                             let len42 = l41;
-                                            let bytes42 =
-                                                _rt::Vec::from_raw_parts(l40.cast(), len42, len42);
+                                            let bytes42 = _rt::Vec::from_raw_parts(
+                                                l40.cast(),
+                                                len42,
+                                                len42,
+                                            );
                                             _rt::string_lift(bytes42)
                                         };
                                         V61::ContextLoading(e61)
@@ -1296,8 +1492,11 @@ pub mod wavs {
                                             let l43 = *ptr2.add(8).cast::<*mut u8>();
                                             let l44 = *ptr2.add(12).cast::<usize>();
                                             let len45 = l44;
-                                            let bytes45 =
-                                                _rt::Vec::from_raw_parts(l43.cast(), len45, len45);
+                                            let bytes45 = _rt::Vec::from_raw_parts(
+                                                l43.cast(),
+                                                len45,
+                                                len45,
+                                            );
                                             _rt::string_lift(bytes45)
                                         };
                                         V61::ContextValidation(e61)
@@ -1307,8 +1506,11 @@ pub mod wavs {
                                             let l46 = *ptr2.add(8).cast::<*mut u8>();
                                             let l47 = *ptr2.add(12).cast::<usize>();
                                             let len48 = l47;
-                                            let bytes48 =
-                                                _rt::Vec::from_raw_parts(l46.cast(), len48, len48);
+                                            let bytes48 = _rt::Vec::from_raw_parts(
+                                                l46.cast(),
+                                                len48,
+                                                len48,
+                                            );
                                             _rt::string_lift(bytes48)
                                         };
                                         V61::Llm(e61)
@@ -1318,8 +1520,11 @@ pub mod wavs {
                                             let l49 = *ptr2.add(8).cast::<*mut u8>();
                                             let l50 = *ptr2.add(12).cast::<usize>();
                                             let len51 = l50;
-                                            let bytes51 =
-                                                _rt::Vec::from_raw_parts(l49.cast(), len51, len51);
+                                            let bytes51 = _rt::Vec::from_raw_parts(
+                                                l49.cast(),
+                                                len51,
+                                                len51,
+                                            );
                                             _rt::string_lift(bytes51)
                                         };
                                         V61::Io(e61)
@@ -1329,8 +1534,11 @@ pub mod wavs {
                                             let l52 = *ptr2.add(8).cast::<*mut u8>();
                                             let l53 = *ptr2.add(12).cast::<usize>();
                                             let len54 = l53;
-                                            let bytes54 =
-                                                _rt::Vec::from_raw_parts(l52.cast(), len54, len54);
+                                            let bytes54 = _rt::Vec::from_raw_parts(
+                                                l52.cast(),
+                                                len54,
+                                                len54,
+                                            );
                                             _rt::string_lift(bytes54)
                                         };
                                         V61::Transaction(e61)
@@ -1340,8 +1548,11 @@ pub mod wavs {
                                             let l55 = *ptr2.add(8).cast::<*mut u8>();
                                             let l56 = *ptr2.add(12).cast::<usize>();
                                             let len57 = l56;
-                                            let bytes57 =
-                                                _rt::Vec::from_raw_parts(l55.cast(), len57, len57);
+                                            let bytes57 = _rt::Vec::from_raw_parts(
+                                                l55.cast(),
+                                                len57,
+                                                len57,
+                                            );
                                             _rt::string_lift(bytes57)
                                         };
                                         V61::Utf8(e61)
@@ -1352,8 +1563,11 @@ pub mod wavs {
                                             let l58 = *ptr2.add(8).cast::<*mut u8>();
                                             let l59 = *ptr2.add(12).cast::<usize>();
                                             let len60 = l59;
-                                            let bytes60 =
-                                                _rt::Vec::from_raw_parts(l58.cast(), len60, len60);
+                                            let bytes60 = _rt::Vec::from_raw_parts(
+                                                l58.cast(),
+                                                len60,
+                                                len60,
+                                            );
                                             _rt::string_lift(bytes60)
                                         };
                                         V61::Other(e61)
@@ -1369,7 +1583,10 @@ pub mod wavs {
             }
             #[allow(unused_unsafe, clippy::all)]
             /// Create a new LLM client with custom configuration
-            pub fn with_config(model: &str, config: LlmOptions) -> Result<LlmClient, AgentError> {
+            pub fn with_config(
+                model: &str,
+                config: LlmOptions,
+            ) -> Result<LlmClient, AgentError> {
                 unsafe {
                     #[repr(align(4))]
                     struct RetArea([::core::mem::MaybeUninit<u8>; 60]);
@@ -1444,7 +1661,11 @@ pub mod wavs {
                                 let l6 = *ptr4.add(4).cast::<*mut u8>();
                                 let l7 = *ptr4.add(8).cast::<usize>();
                                 let len8 = l7;
-                                let bytes8 = _rt::Vec::from_raw_parts(l6.cast(), len8, len8);
+                                let bytes8 = _rt::Vec::from_raw_parts(
+                                    l6.cast(),
+                                    len8,
+                                    len8,
+                                );
                                 let l9 = *ptr4.add(12).cast::<f32>();
                                 let l10 = *ptr4.add(16).cast::<f32>();
                                 let l11 = *ptr4.add(20).cast::<i32>();
@@ -1453,7 +1674,11 @@ pub mod wavs {
                                 let l16 = *ptr4.add(40).cast::<*mut u8>();
                                 let l17 = *ptr4.add(44).cast::<usize>();
                                 let len18 = l17;
-                                let bytes18 = _rt::Vec::from_raw_parts(l16.cast(), len18, len18);
+                                let bytes18 = _rt::Vec::from_raw_parts(
+                                    l16.cast(),
+                                    len18,
+                                    len18,
+                                );
                                 let l19 = i32::from(*ptr4.add(48).cast::<u8>());
                                 super::super::super::wavs::agent::types::LlmClient {
                                     model: _rt::string_lift(bytes8),
@@ -1517,8 +1742,11 @@ pub mod wavs {
                                             let l24 = *ptr4.add(8).cast::<*mut u8>();
                                             let l25 = *ptr4.add(12).cast::<usize>();
                                             let len26 = l25;
-                                            let bytes26 =
-                                                _rt::Vec::from_raw_parts(l24.cast(), len26, len26);
+                                            let bytes26 = _rt::Vec::from_raw_parts(
+                                                l24.cast(),
+                                                len26,
+                                                len26,
+                                            );
                                             _rt::string_lift(bytes26)
                                         };
                                         V63::Api(e63)
@@ -1528,8 +1756,11 @@ pub mod wavs {
                                             let l27 = *ptr4.add(8).cast::<*mut u8>();
                                             let l28 = *ptr4.add(12).cast::<usize>();
                                             let len29 = l28;
-                                            let bytes29 =
-                                                _rt::Vec::from_raw_parts(l27.cast(), len29, len29);
+                                            let bytes29 = _rt::Vec::from_raw_parts(
+                                                l27.cast(),
+                                                len29,
+                                                len29,
+                                            );
                                             _rt::string_lift(bytes29)
                                         };
                                         V63::Http(e63)
@@ -1539,8 +1770,11 @@ pub mod wavs {
                                             let l30 = *ptr4.add(8).cast::<*mut u8>();
                                             let l31 = *ptr4.add(12).cast::<usize>();
                                             let len32 = l31;
-                                            let bytes32 =
-                                                _rt::Vec::from_raw_parts(l30.cast(), len32, len32);
+                                            let bytes32 = _rt::Vec::from_raw_parts(
+                                                l30.cast(),
+                                                len32,
+                                                len32,
+                                            );
                                             _rt::string_lift(bytes32)
                                         };
                                         V63::ExternalService(e63)
@@ -1550,8 +1784,11 @@ pub mod wavs {
                                             let l33 = *ptr4.add(8).cast::<*mut u8>();
                                             let l34 = *ptr4.add(12).cast::<usize>();
                                             let len35 = l34;
-                                            let bytes35 =
-                                                _rt::Vec::from_raw_parts(l33.cast(), len35, len35);
+                                            let bytes35 = _rt::Vec::from_raw_parts(
+                                                l33.cast(),
+                                                len35,
+                                                len35,
+                                            );
                                             _rt::string_lift(bytes35)
                                         };
                                         V63::Config(e63)
@@ -1561,8 +1798,11 @@ pub mod wavs {
                                             let l36 = *ptr4.add(8).cast::<*mut u8>();
                                             let l37 = *ptr4.add(12).cast::<usize>();
                                             let len38 = l37;
-                                            let bytes38 =
-                                                _rt::Vec::from_raw_parts(l36.cast(), len38, len38);
+                                            let bytes38 = _rt::Vec::from_raw_parts(
+                                                l36.cast(),
+                                                len38,
+                                                len38,
+                                            );
                                             _rt::string_lift(bytes38)
                                         };
                                         V63::Contract(e63)
@@ -1572,8 +1812,11 @@ pub mod wavs {
                                             let l39 = *ptr4.add(8).cast::<*mut u8>();
                                             let l40 = *ptr4.add(12).cast::<usize>();
                                             let len41 = l40;
-                                            let bytes41 =
-                                                _rt::Vec::from_raw_parts(l39.cast(), len41, len41);
+                                            let bytes41 = _rt::Vec::from_raw_parts(
+                                                l39.cast(),
+                                                len41,
+                                                len41,
+                                            );
                                             _rt::string_lift(bytes41)
                                         };
                                         V63::Configuration(e63)
@@ -1583,8 +1826,11 @@ pub mod wavs {
                                             let l42 = *ptr4.add(8).cast::<*mut u8>();
                                             let l43 = *ptr4.add(12).cast::<usize>();
                                             let len44 = l43;
-                                            let bytes44 =
-                                                _rt::Vec::from_raw_parts(l42.cast(), len44, len44);
+                                            let bytes44 = _rt::Vec::from_raw_parts(
+                                                l42.cast(),
+                                                len44,
+                                                len44,
+                                            );
                                             _rt::string_lift(bytes44)
                                         };
                                         V63::ContextLoading(e63)
@@ -1594,8 +1840,11 @@ pub mod wavs {
                                             let l45 = *ptr4.add(8).cast::<*mut u8>();
                                             let l46 = *ptr4.add(12).cast::<usize>();
                                             let len47 = l46;
-                                            let bytes47 =
-                                                _rt::Vec::from_raw_parts(l45.cast(), len47, len47);
+                                            let bytes47 = _rt::Vec::from_raw_parts(
+                                                l45.cast(),
+                                                len47,
+                                                len47,
+                                            );
                                             _rt::string_lift(bytes47)
                                         };
                                         V63::ContextValidation(e63)
@@ -1605,8 +1854,11 @@ pub mod wavs {
                                             let l48 = *ptr4.add(8).cast::<*mut u8>();
                                             let l49 = *ptr4.add(12).cast::<usize>();
                                             let len50 = l49;
-                                            let bytes50 =
-                                                _rt::Vec::from_raw_parts(l48.cast(), len50, len50);
+                                            let bytes50 = _rt::Vec::from_raw_parts(
+                                                l48.cast(),
+                                                len50,
+                                                len50,
+                                            );
                                             _rt::string_lift(bytes50)
                                         };
                                         V63::Llm(e63)
@@ -1616,8 +1868,11 @@ pub mod wavs {
                                             let l51 = *ptr4.add(8).cast::<*mut u8>();
                                             let l52 = *ptr4.add(12).cast::<usize>();
                                             let len53 = l52;
-                                            let bytes53 =
-                                                _rt::Vec::from_raw_parts(l51.cast(), len53, len53);
+                                            let bytes53 = _rt::Vec::from_raw_parts(
+                                                l51.cast(),
+                                                len53,
+                                                len53,
+                                            );
                                             _rt::string_lift(bytes53)
                                         };
                                         V63::Io(e63)
@@ -1627,8 +1882,11 @@ pub mod wavs {
                                             let l54 = *ptr4.add(8).cast::<*mut u8>();
                                             let l55 = *ptr4.add(12).cast::<usize>();
                                             let len56 = l55;
-                                            let bytes56 =
-                                                _rt::Vec::from_raw_parts(l54.cast(), len56, len56);
+                                            let bytes56 = _rt::Vec::from_raw_parts(
+                                                l54.cast(),
+                                                len56,
+                                                len56,
+                                            );
                                             _rt::string_lift(bytes56)
                                         };
                                         V63::Transaction(e63)
@@ -1638,8 +1896,11 @@ pub mod wavs {
                                             let l57 = *ptr4.add(8).cast::<*mut u8>();
                                             let l58 = *ptr4.add(12).cast::<usize>();
                                             let len59 = l58;
-                                            let bytes59 =
-                                                _rt::Vec::from_raw_parts(l57.cast(), len59, len59);
+                                            let bytes59 = _rt::Vec::from_raw_parts(
+                                                l57.cast(),
+                                                len59,
+                                                len59,
+                                            );
                                             _rt::string_lift(bytes59)
                                         };
                                         V63::Utf8(e63)
@@ -1650,8 +1911,11 @@ pub mod wavs {
                                             let l60 = *ptr4.add(8).cast::<*mut u8>();
                                             let l61 = *ptr4.add(12).cast::<usize>();
                                             let len62 = l61;
-                                            let bytes62 =
-                                                _rt::Vec::from_raw_parts(l60.cast(), len62, len62);
+                                            let bytes62 = _rt::Vec::from_raw_parts(
+                                                l60.cast(),
+                                                len62,
+                                                len62,
+                                            );
                                             _rt::string_lift(bytes62)
                                         };
                                         V63::Other(e63)
@@ -1672,7 +1936,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 8]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 8]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 8],
+                        );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
@@ -1700,7 +1966,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 28]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 28]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 28],
+                        );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/client@0.0.1")]
@@ -1760,11 +2028,15 @@ pub mod wavs {
                         let mut cleanup_list = _rt::Vec::new();
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 60]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 60]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 60],
+                        );
                         let vec12 = messages;
                         let len12 = vec12.len();
-                        let layout12 =
-                            _rt::alloc::Layout::from_size_align_unchecked(vec12.len() * 56, 4);
+                        let layout12 = _rt::alloc::Layout::from_size_align_unchecked(
+                            vec12.len() * 56,
+                            4,
+                        );
                         let result12 = if layout12.size() != 0 {
                             let ptr = _rt::alloc::alloc(layout12).cast::<u8>();
                             if ptr.is_null() {
@@ -2013,8 +2285,11 @@ pub mod wavs {
                                     let l23 = *ptr21.add(4).cast::<*mut u8>();
                                     let l24 = *ptr21.add(8).cast::<usize>();
                                     let len25 = l24;
-                                    let bytes25 =
-                                        _rt::Vec::from_raw_parts(l23.cast(), len25, len25);
+                                    let bytes25 = _rt::Vec::from_raw_parts(
+                                        l23.cast(),
+                                        len25,
+                                        len25,
+                                    );
                                     let l26 = i32::from(*ptr21.add(12).cast::<u8>());
                                     let l30 = i32::from(*ptr21.add(24).cast::<u8>());
                                     let l46 = i32::from(*ptr21.add(36).cast::<u8>());
@@ -2047,13 +2322,11 @@ pub mod wavs {
                                                     let l32 = *ptr21.add(32).cast::<usize>();
                                                     let base45 = l31;
                                                     let len45 = l32;
-                                                    let mut result45 =
-                                                        _rt::Vec::with_capacity(len45);
+                                                    let mut result45 = _rt::Vec::with_capacity(len45);
                                                     for i in 0..len45 {
                                                         let base = base45.add(i * 32);
                                                         let e45 = {
-                                                            let l33 =
-                                                                *base.add(0).cast::<*mut u8>();
+                                                            let l33 = *base.add(0).cast::<*mut u8>();
                                                             let l34 = *base.add(4).cast::<usize>();
                                                             let len35 = l34;
                                                             let bytes35 = _rt::Vec::from_raw_parts(
@@ -2061,8 +2334,7 @@ pub mod wavs {
                                                                 len35,
                                                                 len35,
                                                             );
-                                                            let l36 =
-                                                                *base.add(8).cast::<*mut u8>();
+                                                            let l36 = *base.add(8).cast::<*mut u8>();
                                                             let l37 = *base.add(12).cast::<usize>();
                                                             let len38 = l37;
                                                             let bytes38 = _rt::Vec::from_raw_parts(
@@ -2070,8 +2342,7 @@ pub mod wavs {
                                                                 len38,
                                                                 len38,
                                                             );
-                                                            let l39 =
-                                                                *base.add(16).cast::<*mut u8>();
+                                                            let l39 = *base.add(16).cast::<*mut u8>();
                                                             let l40 = *base.add(20).cast::<usize>();
                                                             let len41 = l40;
                                                             let bytes41 = _rt::Vec::from_raw_parts(
@@ -2079,8 +2350,7 @@ pub mod wavs {
                                                                 len41,
                                                                 len41,
                                                             );
-                                                            let l42 =
-                                                                *base.add(24).cast::<*mut u8>();
+                                                            let l42 = *base.add(24).cast::<*mut u8>();
                                                             let l43 = *base.add(28).cast::<usize>();
                                                             let len44 = l43;
                                                             let bytes44 = _rt::Vec::from_raw_parts(
@@ -2355,11 +2625,15 @@ pub mod wavs {
                         let mut cleanup_list = _rt::Vec::new();
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 16]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 16]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 16],
+                        );
                         let vec12 = messages;
                         let len12 = vec12.len();
-                        let layout12 =
-                            _rt::alloc::Layout::from_size_align_unchecked(vec12.len() * 56, 4);
+                        let layout12 = _rt::alloc::Layout::from_size_align_unchecked(
+                            vec12.len() * 56,
+                            4,
+                        );
                         let result12 = if layout12.size() != 0 {
                             let ptr = _rt::alloc::alloc(layout12).cast::<u8>();
                             if ptr.is_null() {
@@ -2512,8 +2786,11 @@ pub mod wavs {
                                     let l15 = *ptr13.add(4).cast::<*mut u8>();
                                     let l16 = *ptr13.add(8).cast::<usize>();
                                     let len17 = l16;
-                                    let bytes17 =
-                                        _rt::Vec::from_raw_parts(l15.cast(), len17, len17);
+                                    let bytes17 = _rt::Vec::from_raw_parts(
+                                        l15.cast(),
+                                        len17,
+                                        len17,
+                                    );
                                     _rt::string_lift(bytes17)
                                 };
                                 Ok(e)
@@ -2730,7 +3007,9 @@ pub mod wavs {
                         let mut cleanup_list = _rt::Vec::new();
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 96]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 96]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 96],
+                        );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         *ptr0.add(0).cast::<i32>() = (self).handle() as i32;
                         let vec1 = prompt;
@@ -2747,8 +3026,10 @@ pub mod wavs {
                         } = config;
                         let vec8 = contracts2;
                         let len8 = vec8.len();
-                        let layout8 =
-                            _rt::alloc::Layout::from_size_align_unchecked(vec8.len() * 36, 4);
+                        let layout8 = _rt::alloc::Layout::from_size_align_unchecked(
+                            vec8.len() * 36,
+                            4,
+                        );
                         let result8 = if layout8.size() != 0 {
                             let ptr = _rt::alloc::alloc(layout8).cast::<u8>();
                             if ptr.is_null() {
@@ -2834,8 +3115,10 @@ pub mod wavs {
                         *ptr0.add(48).cast::<*mut u8>() = ptr10.cast_mut();
                         let vec23 = messages2;
                         let len23 = vec23.len();
-                        let layout23 =
-                            _rt::alloc::Layout::from_size_align_unchecked(vec23.len() * 56, 4);
+                        let layout23 = _rt::alloc::Layout::from_size_align_unchecked(
+                            vec23.len() * 56,
+                            4,
+                        );
                         let result23 = if layout23.size() != 0 {
                             let ptr = _rt::alloc::alloc(layout23).cast::<u8>();
                             if ptr.is_null() {
@@ -2878,11 +3161,10 @@ pub mod wavs {
                                         *base.add(20).cast::<u8>() = (1i32) as u8;
                                         let vec20 = e;
                                         let len20 = vec20.len();
-                                        let layout20 =
-                                            _rt::alloc::Layout::from_size_align_unchecked(
-                                                vec20.len() * 32,
-                                                4,
-                                            );
+                                        let layout20 = _rt::alloc::Layout::from_size_align_unchecked(
+                                            vec20.len() * 32,
+                                            4,
+                                        );
                                         let result20 = if layout20.size() != 0 {
                                             let ptr = _rt::alloc::alloc(layout20).cast::<u8>();
                                             if ptr.is_null() {
@@ -2966,8 +3248,10 @@ pub mod wavs {
                         *ptr0.add(56).cast::<*mut u8>() = result23;
                         let vec27 = config2;
                         let len27 = vec27.len();
-                        let layout27 =
-                            _rt::alloc::Layout::from_size_align_unchecked(vec27.len() * 16, 4);
+                        let layout27 = _rt::alloc::Layout::from_size_align_unchecked(
+                            vec27.len() * 16,
+                            4,
+                        );
                         let result27 = if layout27.size() != 0 {
                             let ptr = _rt::alloc::alloc(layout27).cast::<u8>();
                             if ptr.is_null() {
@@ -3445,8 +3729,7 @@ pub mod wavs {
         pub mod config {
             #[used]
             #[doc(hidden)]
-            static __FORCE_SECTION_REF: fn() =
-                super::super::super::__link_custom_section_describing_imports;
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
             pub type AgentError = super::super::super::wavs::agent::errors::AgentError;
             pub type Config = super::super::super::wavs::agent::types::Config;
@@ -3461,7 +3744,9 @@ pub mod wavs {
             impl LlmOptionsFuncs {
                 #[doc(hidden)]
                 pub unsafe fn from_handle(handle: u32) -> Self {
-                    Self { handle: _rt::Resource::from_handle(handle) }
+                    Self {
+                        handle: _rt::Resource::from_handle(handle),
+                    }
                 }
                 #[doc(hidden)]
                 pub fn take_handle(&self) -> u32 {
@@ -3497,7 +3782,9 @@ pub mod wavs {
             impl ConfigManager {
                 #[doc(hidden)]
                 pub unsafe fn from_handle(handle: u32) -> Self {
-                    Self { handle: _rt::Resource::from_handle(handle) }
+                    Self {
+                        handle: _rt::Resource::from_handle(handle),
+                    }
                 }
                 #[doc(hidden)]
                 pub fn take_handle(&self) -> u32 {
@@ -3531,7 +3818,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 28]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 28]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 28],
+                        );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
@@ -3586,7 +3875,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 28]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 28]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 28],
+                        );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
@@ -3641,7 +3932,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 28]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 28]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 28],
+                        );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
@@ -3696,7 +3989,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 28]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 28]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 28],
+                        );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
@@ -3751,7 +4046,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 28]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 28]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 28],
+                        );
                         let (result0_0, result0_1) = match max_tokens {
                             Some(e) => (1i32, _rt::as_i32(e)),
                             None => (0i32, 0i32),
@@ -3810,7 +4107,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 28]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 28]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 28],
+                        );
                         let (result0_0, result0_1) = match context_window {
                             Some(e) => (1i32, _rt::as_i32(e)),
                             None => (0i32, 0i32),
@@ -3869,7 +4168,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 64]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 64]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 64],
+                        );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
@@ -3897,18 +4198,27 @@ pub mod wavs {
                                             let l4 = *base.add(0).cast::<*mut u8>();
                                             let l5 = *base.add(4).cast::<usize>();
                                             let len6 = l5;
-                                            let bytes6 =
-                                                _rt::Vec::from_raw_parts(l4.cast(), len6, len6);
+                                            let bytes6 = _rt::Vec::from_raw_parts(
+                                                l4.cast(),
+                                                len6,
+                                                len6,
+                                            );
                                             let l7 = *base.add(8).cast::<*mut u8>();
                                             let l8 = *base.add(12).cast::<usize>();
                                             let len9 = l8;
-                                            let bytes9 =
-                                                _rt::Vec::from_raw_parts(l7.cast(), len9, len9);
+                                            let bytes9 = _rt::Vec::from_raw_parts(
+                                                l7.cast(),
+                                                len9,
+                                                len9,
+                                            );
                                             let l10 = *base.add(16).cast::<*mut u8>();
                                             let l11 = *base.add(20).cast::<usize>();
                                             let len12 = l11;
-                                            let bytes12 =
-                                                _rt::Vec::from_raw_parts(l10.cast(), len12, len12);
+                                            let bytes12 = _rt::Vec::from_raw_parts(
+                                                l10.cast(),
+                                                len12,
+                                                len12,
+                                            );
                                             let l13 = i32::from(*base.add(24).cast::<u8>());
                                             super::super::super::wavs::agent::types::Contract {
                                                 name: _rt::string_lift(bytes6),
@@ -3918,8 +4228,7 @@ pub mod wavs {
                                                     0 => None,
                                                     1 => {
                                                         let e = {
-                                                            let l14 =
-                                                                *base.add(28).cast::<*mut u8>();
+                                                            let l14 = *base.add(28).cast::<*mut u8>();
                                                             let l15 = *base.add(32).cast::<usize>();
                                                             let len16 = l15;
                                                             let bytes16 = _rt::Vec::from_raw_parts(
@@ -3946,8 +4255,11 @@ pub mod wavs {
                                     let l25 = *ptr0.add(40).cast::<*mut u8>();
                                     let l26 = *ptr0.add(44).cast::<usize>();
                                     let len27 = l26;
-                                    let bytes27 =
-                                        _rt::Vec::from_raw_parts(l25.cast(), len27, len27);
+                                    let bytes27 = _rt::Vec::from_raw_parts(
+                                        l25.cast(),
+                                        len27,
+                                        len27,
+                                    );
                                     let l28 = *ptr0.add(48).cast::<*mut u8>();
                                     let l29 = *ptr0.add(52).cast::<usize>();
                                     let base61 = l28;
@@ -3959,8 +4271,11 @@ pub mod wavs {
                                             let l30 = *base.add(0).cast::<*mut u8>();
                                             let l31 = *base.add(4).cast::<usize>();
                                             let len32 = l31;
-                                            let bytes32 =
-                                                _rt::Vec::from_raw_parts(l30.cast(), len32, len32);
+                                            let bytes32 = _rt::Vec::from_raw_parts(
+                                                l30.cast(),
+                                                len32,
+                                                len32,
+                                            );
                                             let l33 = i32::from(*base.add(8).cast::<u8>());
                                             let l37 = i32::from(*base.add(20).cast::<u8>());
                                             let l53 = i32::from(*base.add(32).cast::<u8>());
@@ -3971,8 +4286,7 @@ pub mod wavs {
                                                     0 => None,
                                                     1 => {
                                                         let e = {
-                                                            let l34 =
-                                                                *base.add(12).cast::<*mut u8>();
+                                                            let l34 = *base.add(12).cast::<*mut u8>();
                                                             let l35 = *base.add(16).cast::<usize>();
                                                             let len36 = l35;
                                                             let bytes36 = _rt::Vec::from_raw_parts(
@@ -3990,68 +4304,46 @@ pub mod wavs {
                                                     0 => None,
                                                     1 => {
                                                         let e = {
-                                                            let l38 =
-                                                                *base.add(24).cast::<*mut u8>();
+                                                            let l38 = *base.add(24).cast::<*mut u8>();
                                                             let l39 = *base.add(28).cast::<usize>();
                                                             let base52 = l38;
                                                             let len52 = l39;
-                                                            let mut result52 =
-                                                                _rt::Vec::with_capacity(len52);
+                                                            let mut result52 = _rt::Vec::with_capacity(len52);
                                                             for i in 0..len52 {
                                                                 let base = base52.add(i * 32);
                                                                 let e52 = {
-                                                                    let l40 = *base
-                                                                        .add(0)
-                                                                        .cast::<*mut u8>();
-                                                                    let l41 = *base
-                                                                        .add(4)
-                                                                        .cast::<usize>();
+                                                                    let l40 = *base.add(0).cast::<*mut u8>();
+                                                                    let l41 = *base.add(4).cast::<usize>();
                                                                     let len42 = l41;
-                                                                    let bytes42 =
-                                                                        _rt::Vec::from_raw_parts(
-                                                                            l40.cast(),
-                                                                            len42,
-                                                                            len42,
-                                                                        );
-                                                                    let l43 = *base
-                                                                        .add(8)
-                                                                        .cast::<*mut u8>();
-                                                                    let l44 = *base
-                                                                        .add(12)
-                                                                        .cast::<usize>();
+                                                                    let bytes42 = _rt::Vec::from_raw_parts(
+                                                                        l40.cast(),
+                                                                        len42,
+                                                                        len42,
+                                                                    );
+                                                                    let l43 = *base.add(8).cast::<*mut u8>();
+                                                                    let l44 = *base.add(12).cast::<usize>();
                                                                     let len45 = l44;
-                                                                    let bytes45 =
-                                                                        _rt::Vec::from_raw_parts(
-                                                                            l43.cast(),
-                                                                            len45,
-                                                                            len45,
-                                                                        );
-                                                                    let l46 = *base
-                                                                        .add(16)
-                                                                        .cast::<*mut u8>();
-                                                                    let l47 = *base
-                                                                        .add(20)
-                                                                        .cast::<usize>();
+                                                                    let bytes45 = _rt::Vec::from_raw_parts(
+                                                                        l43.cast(),
+                                                                        len45,
+                                                                        len45,
+                                                                    );
+                                                                    let l46 = *base.add(16).cast::<*mut u8>();
+                                                                    let l47 = *base.add(20).cast::<usize>();
                                                                     let len48 = l47;
-                                                                    let bytes48 =
-                                                                        _rt::Vec::from_raw_parts(
-                                                                            l46.cast(),
-                                                                            len48,
-                                                                            len48,
-                                                                        );
-                                                                    let l49 = *base
-                                                                        .add(24)
-                                                                        .cast::<*mut u8>();
-                                                                    let l50 = *base
-                                                                        .add(28)
-                                                                        .cast::<usize>();
+                                                                    let bytes48 = _rt::Vec::from_raw_parts(
+                                                                        l46.cast(),
+                                                                        len48,
+                                                                        len48,
+                                                                    );
+                                                                    let l49 = *base.add(24).cast::<*mut u8>();
+                                                                    let l50 = *base.add(28).cast::<usize>();
                                                                     let len51 = l50;
-                                                                    let bytes51 =
-                                                                        _rt::Vec::from_raw_parts(
-                                                                            l49.cast(),
-                                                                            len51,
-                                                                            len51,
-                                                                        );
+                                                                    let bytes51 = _rt::Vec::from_raw_parts(
+                                                                        l49.cast(),
+                                                                        len51,
+                                                                        len51,
+                                                                    );
                                                                     super::super::super::wavs::agent::types::ToolCall {
                                                                         id: _rt::string_lift(bytes42),
                                                                         tool_type: _rt::string_lift(bytes45),
@@ -4063,11 +4355,7 @@ pub mod wavs {
                                                                 };
                                                                 result52.push(e52);
                                                             }
-                                                            _rt::cabi_dealloc(
-                                                                base52,
-                                                                len52 * 32,
-                                                                4,
-                                                            );
+                                                            _rt::cabi_dealloc(base52, len52 * 32, 4);
                                                             result52
                                                         };
                                                         Some(e)
@@ -4078,8 +4366,7 @@ pub mod wavs {
                                                     0 => None,
                                                     1 => {
                                                         let e = {
-                                                            let l54 =
-                                                                *base.add(36).cast::<*mut u8>();
+                                                            let l54 = *base.add(36).cast::<*mut u8>();
                                                             let l55 = *base.add(40).cast::<usize>();
                                                             let len56 = l55;
                                                             let bytes56 = _rt::Vec::from_raw_parts(
@@ -4097,8 +4384,7 @@ pub mod wavs {
                                                     0 => None,
                                                     1 => {
                                                         let e = {
-                                                            let l58 =
-                                                                *base.add(48).cast::<*mut u8>();
+                                                            let l58 = *base.add(48).cast::<*mut u8>();
                                                             let l59 = *base.add(52).cast::<usize>();
                                                             let len60 = l59;
                                                             let bytes60 = _rt::Vec::from_raw_parts(
@@ -4128,13 +4414,19 @@ pub mod wavs {
                                             let l64 = *base.add(0).cast::<*mut u8>();
                                             let l65 = *base.add(4).cast::<usize>();
                                             let len66 = l65;
-                                            let bytes66 =
-                                                _rt::Vec::from_raw_parts(l64.cast(), len66, len66);
+                                            let bytes66 = _rt::Vec::from_raw_parts(
+                                                l64.cast(),
+                                                len66,
+                                                len66,
+                                            );
                                             let l67 = *base.add(8).cast::<*mut u8>();
                                             let l68 = *base.add(12).cast::<usize>();
                                             let len69 = l68;
-                                            let bytes69 =
-                                                _rt::Vec::from_raw_parts(l67.cast(), len69, len69);
+                                            let bytes69 = _rt::Vec::from_raw_parts(
+                                                l67.cast(),
+                                                len69,
+                                                len69,
+                                            );
                                             (_rt::string_lift(bytes66), _rt::string_lift(bytes69))
                                         };
                                         result70.push(e70);
@@ -4142,34 +4434,33 @@ pub mod wavs {
                                     _rt::cabi_dealloc(base70, len70 * 16, 4);
                                     super::super::super::wavs::agent::types::Config {
                                         contracts: result17,
-                                        llm_config:
-                                            super::super::super::wavs::agent::types::LlmOptions {
-                                                temperature: l18,
-                                                top_p: l19,
-                                                seed: l20 as u32,
-                                                max_tokens: match l21 {
-                                                    0 => None,
-                                                    1 => {
-                                                        let e = {
-                                                            let l22 = *ptr0.add(28).cast::<i32>();
-                                                            l22 as u32
-                                                        };
-                                                        Some(e)
-                                                    }
-                                                    _ => _rt::invalid_enum_discriminant(),
-                                                },
-                                                context_window: match l23 {
-                                                    0 => None,
-                                                    1 => {
-                                                        let e = {
-                                                            let l24 = *ptr0.add(36).cast::<i32>();
-                                                            l24 as u32
-                                                        };
-                                                        Some(e)
-                                                    }
-                                                    _ => _rt::invalid_enum_discriminant(),
-                                                },
+                                        llm_config: super::super::super::wavs::agent::types::LlmOptions {
+                                            temperature: l18,
+                                            top_p: l19,
+                                            seed: l20 as u32,
+                                            max_tokens: match l21 {
+                                                0 => None,
+                                                1 => {
+                                                    let e = {
+                                                        let l22 = *ptr0.add(28).cast::<i32>();
+                                                        l22 as u32
+                                                    };
+                                                    Some(e)
+                                                }
+                                                _ => _rt::invalid_enum_discriminant(),
                                             },
+                                            context_window: match l23 {
+                                                0 => None,
+                                                1 => {
+                                                    let e = {
+                                                        let l24 = *ptr0.add(36).cast::<i32>();
+                                                        l24 as u32
+                                                    };
+                                                    Some(e)
+                                                }
+                                                _ => _rt::invalid_enum_discriminant(),
+                                            },
+                                        },
                                         model: _rt::string_lift(bytes27),
                                         messages: result61,
                                         config: result70,
@@ -4182,8 +4473,11 @@ pub mod wavs {
                                     let l71 = *ptr0.add(4).cast::<*mut u8>();
                                     let l72 = *ptr0.add(8).cast::<usize>();
                                     let len73 = l72;
-                                    let bytes73 =
-                                        _rt::Vec::from_raw_parts(l71.cast(), len73, len73);
+                                    let bytes73 = _rt::Vec::from_raw_parts(
+                                        l71.cast(),
+                                        len73,
+                                        len73,
+                                    );
                                     _rt::string_lift(bytes73)
                                 };
                                 Err(e)
@@ -4200,7 +4494,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 64]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 64]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 64],
+                        );
                         let vec0 = uri;
                         let ptr0 = vec0.as_ptr().cast::<u8>();
                         let len0 = vec0.len();
@@ -4231,18 +4527,27 @@ pub mod wavs {
                                             let l5 = *base.add(0).cast::<*mut u8>();
                                             let l6 = *base.add(4).cast::<usize>();
                                             let len7 = l6;
-                                            let bytes7 =
-                                                _rt::Vec::from_raw_parts(l5.cast(), len7, len7);
+                                            let bytes7 = _rt::Vec::from_raw_parts(
+                                                l5.cast(),
+                                                len7,
+                                                len7,
+                                            );
                                             let l8 = *base.add(8).cast::<*mut u8>();
                                             let l9 = *base.add(12).cast::<usize>();
                                             let len10 = l9;
-                                            let bytes10 =
-                                                _rt::Vec::from_raw_parts(l8.cast(), len10, len10);
+                                            let bytes10 = _rt::Vec::from_raw_parts(
+                                                l8.cast(),
+                                                len10,
+                                                len10,
+                                            );
                                             let l11 = *base.add(16).cast::<*mut u8>();
                                             let l12 = *base.add(20).cast::<usize>();
                                             let len13 = l12;
-                                            let bytes13 =
-                                                _rt::Vec::from_raw_parts(l11.cast(), len13, len13);
+                                            let bytes13 = _rt::Vec::from_raw_parts(
+                                                l11.cast(),
+                                                len13,
+                                                len13,
+                                            );
                                             let l14 = i32::from(*base.add(24).cast::<u8>());
                                             super::super::super::wavs::agent::types::Contract {
                                                 name: _rt::string_lift(bytes7),
@@ -4252,8 +4557,7 @@ pub mod wavs {
                                                     0 => None,
                                                     1 => {
                                                         let e = {
-                                                            let l15 =
-                                                                *base.add(28).cast::<*mut u8>();
+                                                            let l15 = *base.add(28).cast::<*mut u8>();
                                                             let l16 = *base.add(32).cast::<usize>();
                                                             let len17 = l16;
                                                             let bytes17 = _rt::Vec::from_raw_parts(
@@ -4280,8 +4584,11 @@ pub mod wavs {
                                     let l26 = *ptr1.add(40).cast::<*mut u8>();
                                     let l27 = *ptr1.add(44).cast::<usize>();
                                     let len28 = l27;
-                                    let bytes28 =
-                                        _rt::Vec::from_raw_parts(l26.cast(), len28, len28);
+                                    let bytes28 = _rt::Vec::from_raw_parts(
+                                        l26.cast(),
+                                        len28,
+                                        len28,
+                                    );
                                     let l29 = *ptr1.add(48).cast::<*mut u8>();
                                     let l30 = *ptr1.add(52).cast::<usize>();
                                     let base62 = l29;
@@ -4293,8 +4600,11 @@ pub mod wavs {
                                             let l31 = *base.add(0).cast::<*mut u8>();
                                             let l32 = *base.add(4).cast::<usize>();
                                             let len33 = l32;
-                                            let bytes33 =
-                                                _rt::Vec::from_raw_parts(l31.cast(), len33, len33);
+                                            let bytes33 = _rt::Vec::from_raw_parts(
+                                                l31.cast(),
+                                                len33,
+                                                len33,
+                                            );
                                             let l34 = i32::from(*base.add(8).cast::<u8>());
                                             let l38 = i32::from(*base.add(20).cast::<u8>());
                                             let l54 = i32::from(*base.add(32).cast::<u8>());
@@ -4305,8 +4615,7 @@ pub mod wavs {
                                                     0 => None,
                                                     1 => {
                                                         let e = {
-                                                            let l35 =
-                                                                *base.add(12).cast::<*mut u8>();
+                                                            let l35 = *base.add(12).cast::<*mut u8>();
                                                             let l36 = *base.add(16).cast::<usize>();
                                                             let len37 = l36;
                                                             let bytes37 = _rt::Vec::from_raw_parts(
@@ -4324,68 +4633,46 @@ pub mod wavs {
                                                     0 => None,
                                                     1 => {
                                                         let e = {
-                                                            let l39 =
-                                                                *base.add(24).cast::<*mut u8>();
+                                                            let l39 = *base.add(24).cast::<*mut u8>();
                                                             let l40 = *base.add(28).cast::<usize>();
                                                             let base53 = l39;
                                                             let len53 = l40;
-                                                            let mut result53 =
-                                                                _rt::Vec::with_capacity(len53);
+                                                            let mut result53 = _rt::Vec::with_capacity(len53);
                                                             for i in 0..len53 {
                                                                 let base = base53.add(i * 32);
                                                                 let e53 = {
-                                                                    let l41 = *base
-                                                                        .add(0)
-                                                                        .cast::<*mut u8>();
-                                                                    let l42 = *base
-                                                                        .add(4)
-                                                                        .cast::<usize>();
+                                                                    let l41 = *base.add(0).cast::<*mut u8>();
+                                                                    let l42 = *base.add(4).cast::<usize>();
                                                                     let len43 = l42;
-                                                                    let bytes43 =
-                                                                        _rt::Vec::from_raw_parts(
-                                                                            l41.cast(),
-                                                                            len43,
-                                                                            len43,
-                                                                        );
-                                                                    let l44 = *base
-                                                                        .add(8)
-                                                                        .cast::<*mut u8>();
-                                                                    let l45 = *base
-                                                                        .add(12)
-                                                                        .cast::<usize>();
+                                                                    let bytes43 = _rt::Vec::from_raw_parts(
+                                                                        l41.cast(),
+                                                                        len43,
+                                                                        len43,
+                                                                    );
+                                                                    let l44 = *base.add(8).cast::<*mut u8>();
+                                                                    let l45 = *base.add(12).cast::<usize>();
                                                                     let len46 = l45;
-                                                                    let bytes46 =
-                                                                        _rt::Vec::from_raw_parts(
-                                                                            l44.cast(),
-                                                                            len46,
-                                                                            len46,
-                                                                        );
-                                                                    let l47 = *base
-                                                                        .add(16)
-                                                                        .cast::<*mut u8>();
-                                                                    let l48 = *base
-                                                                        .add(20)
-                                                                        .cast::<usize>();
+                                                                    let bytes46 = _rt::Vec::from_raw_parts(
+                                                                        l44.cast(),
+                                                                        len46,
+                                                                        len46,
+                                                                    );
+                                                                    let l47 = *base.add(16).cast::<*mut u8>();
+                                                                    let l48 = *base.add(20).cast::<usize>();
                                                                     let len49 = l48;
-                                                                    let bytes49 =
-                                                                        _rt::Vec::from_raw_parts(
-                                                                            l47.cast(),
-                                                                            len49,
-                                                                            len49,
-                                                                        );
-                                                                    let l50 = *base
-                                                                        .add(24)
-                                                                        .cast::<*mut u8>();
-                                                                    let l51 = *base
-                                                                        .add(28)
-                                                                        .cast::<usize>();
+                                                                    let bytes49 = _rt::Vec::from_raw_parts(
+                                                                        l47.cast(),
+                                                                        len49,
+                                                                        len49,
+                                                                    );
+                                                                    let l50 = *base.add(24).cast::<*mut u8>();
+                                                                    let l51 = *base.add(28).cast::<usize>();
                                                                     let len52 = l51;
-                                                                    let bytes52 =
-                                                                        _rt::Vec::from_raw_parts(
-                                                                            l50.cast(),
-                                                                            len52,
-                                                                            len52,
-                                                                        );
+                                                                    let bytes52 = _rt::Vec::from_raw_parts(
+                                                                        l50.cast(),
+                                                                        len52,
+                                                                        len52,
+                                                                    );
                                                                     super::super::super::wavs::agent::types::ToolCall {
                                                                         id: _rt::string_lift(bytes43),
                                                                         tool_type: _rt::string_lift(bytes46),
@@ -4397,11 +4684,7 @@ pub mod wavs {
                                                                 };
                                                                 result53.push(e53);
                                                             }
-                                                            _rt::cabi_dealloc(
-                                                                base53,
-                                                                len53 * 32,
-                                                                4,
-                                                            );
+                                                            _rt::cabi_dealloc(base53, len53 * 32, 4);
                                                             result53
                                                         };
                                                         Some(e)
@@ -4412,8 +4695,7 @@ pub mod wavs {
                                                     0 => None,
                                                     1 => {
                                                         let e = {
-                                                            let l55 =
-                                                                *base.add(36).cast::<*mut u8>();
+                                                            let l55 = *base.add(36).cast::<*mut u8>();
                                                             let l56 = *base.add(40).cast::<usize>();
                                                             let len57 = l56;
                                                             let bytes57 = _rt::Vec::from_raw_parts(
@@ -4431,8 +4713,7 @@ pub mod wavs {
                                                     0 => None,
                                                     1 => {
                                                         let e = {
-                                                            let l59 =
-                                                                *base.add(48).cast::<*mut u8>();
+                                                            let l59 = *base.add(48).cast::<*mut u8>();
                                                             let l60 = *base.add(52).cast::<usize>();
                                                             let len61 = l60;
                                                             let bytes61 = _rt::Vec::from_raw_parts(
@@ -4462,13 +4743,19 @@ pub mod wavs {
                                             let l65 = *base.add(0).cast::<*mut u8>();
                                             let l66 = *base.add(4).cast::<usize>();
                                             let len67 = l66;
-                                            let bytes67 =
-                                                _rt::Vec::from_raw_parts(l65.cast(), len67, len67);
+                                            let bytes67 = _rt::Vec::from_raw_parts(
+                                                l65.cast(),
+                                                len67,
+                                                len67,
+                                            );
                                             let l68 = *base.add(8).cast::<*mut u8>();
                                             let l69 = *base.add(12).cast::<usize>();
                                             let len70 = l69;
-                                            let bytes70 =
-                                                _rt::Vec::from_raw_parts(l68.cast(), len70, len70);
+                                            let bytes70 = _rt::Vec::from_raw_parts(
+                                                l68.cast(),
+                                                len70,
+                                                len70,
+                                            );
                                             (_rt::string_lift(bytes67), _rt::string_lift(bytes70))
                                         };
                                         result71.push(e71);
@@ -4476,34 +4763,33 @@ pub mod wavs {
                                     _rt::cabi_dealloc(base71, len71 * 16, 4);
                                     super::super::super::wavs::agent::types::Config {
                                         contracts: result18,
-                                        llm_config:
-                                            super::super::super::wavs::agent::types::LlmOptions {
-                                                temperature: l19,
-                                                top_p: l20,
-                                                seed: l21 as u32,
-                                                max_tokens: match l22 {
-                                                    0 => None,
-                                                    1 => {
-                                                        let e = {
-                                                            let l23 = *ptr1.add(28).cast::<i32>();
-                                                            l23 as u32
-                                                        };
-                                                        Some(e)
-                                                    }
-                                                    _ => _rt::invalid_enum_discriminant(),
-                                                },
-                                                context_window: match l24 {
-                                                    0 => None,
-                                                    1 => {
-                                                        let e = {
-                                                            let l25 = *ptr1.add(36).cast::<i32>();
-                                                            l25 as u32
-                                                        };
-                                                        Some(e)
-                                                    }
-                                                    _ => _rt::invalid_enum_discriminant(),
-                                                },
+                                        llm_config: super::super::super::wavs::agent::types::LlmOptions {
+                                            temperature: l19,
+                                            top_p: l20,
+                                            seed: l21 as u32,
+                                            max_tokens: match l22 {
+                                                0 => None,
+                                                1 => {
+                                                    let e = {
+                                                        let l23 = *ptr1.add(28).cast::<i32>();
+                                                        l23 as u32
+                                                    };
+                                                    Some(e)
+                                                }
+                                                _ => _rt::invalid_enum_discriminant(),
                                             },
+                                            context_window: match l24 {
+                                                0 => None,
+                                                1 => {
+                                                    let e = {
+                                                        let l25 = *ptr1.add(36).cast::<i32>();
+                                                        l25 as u32
+                                                    };
+                                                    Some(e)
+                                                }
+                                                _ => _rt::invalid_enum_discriminant(),
+                                            },
+                                        },
                                         model: _rt::string_lift(bytes28),
                                         messages: result62,
                                         config: result71,
@@ -4516,8 +4802,11 @@ pub mod wavs {
                                     let l72 = *ptr1.add(4).cast::<*mut u8>();
                                     let l73 = *ptr1.add(8).cast::<usize>();
                                     let len74 = l73;
-                                    let bytes74 =
-                                        _rt::Vec::from_raw_parts(l72.cast(), len74, len74);
+                                    let bytes74 = _rt::Vec::from_raw_parts(
+                                        l72.cast(),
+                                        len74,
+                                        len74,
+                                    );
                                     _rt::string_lift(bytes74)
                                 };
                                 Err(e)
@@ -4534,7 +4823,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 64]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 64]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 64],
+                        );
                         let vec0 = json;
                         let ptr0 = vec0.as_ptr().cast::<u8>();
                         let len0 = vec0.len();
@@ -4565,18 +4856,27 @@ pub mod wavs {
                                             let l5 = *base.add(0).cast::<*mut u8>();
                                             let l6 = *base.add(4).cast::<usize>();
                                             let len7 = l6;
-                                            let bytes7 =
-                                                _rt::Vec::from_raw_parts(l5.cast(), len7, len7);
+                                            let bytes7 = _rt::Vec::from_raw_parts(
+                                                l5.cast(),
+                                                len7,
+                                                len7,
+                                            );
                                             let l8 = *base.add(8).cast::<*mut u8>();
                                             let l9 = *base.add(12).cast::<usize>();
                                             let len10 = l9;
-                                            let bytes10 =
-                                                _rt::Vec::from_raw_parts(l8.cast(), len10, len10);
+                                            let bytes10 = _rt::Vec::from_raw_parts(
+                                                l8.cast(),
+                                                len10,
+                                                len10,
+                                            );
                                             let l11 = *base.add(16).cast::<*mut u8>();
                                             let l12 = *base.add(20).cast::<usize>();
                                             let len13 = l12;
-                                            let bytes13 =
-                                                _rt::Vec::from_raw_parts(l11.cast(), len13, len13);
+                                            let bytes13 = _rt::Vec::from_raw_parts(
+                                                l11.cast(),
+                                                len13,
+                                                len13,
+                                            );
                                             let l14 = i32::from(*base.add(24).cast::<u8>());
                                             super::super::super::wavs::agent::types::Contract {
                                                 name: _rt::string_lift(bytes7),
@@ -4586,8 +4886,7 @@ pub mod wavs {
                                                     0 => None,
                                                     1 => {
                                                         let e = {
-                                                            let l15 =
-                                                                *base.add(28).cast::<*mut u8>();
+                                                            let l15 = *base.add(28).cast::<*mut u8>();
                                                             let l16 = *base.add(32).cast::<usize>();
                                                             let len17 = l16;
                                                             let bytes17 = _rt::Vec::from_raw_parts(
@@ -4614,8 +4913,11 @@ pub mod wavs {
                                     let l26 = *ptr1.add(40).cast::<*mut u8>();
                                     let l27 = *ptr1.add(44).cast::<usize>();
                                     let len28 = l27;
-                                    let bytes28 =
-                                        _rt::Vec::from_raw_parts(l26.cast(), len28, len28);
+                                    let bytes28 = _rt::Vec::from_raw_parts(
+                                        l26.cast(),
+                                        len28,
+                                        len28,
+                                    );
                                     let l29 = *ptr1.add(48).cast::<*mut u8>();
                                     let l30 = *ptr1.add(52).cast::<usize>();
                                     let base62 = l29;
@@ -4627,8 +4929,11 @@ pub mod wavs {
                                             let l31 = *base.add(0).cast::<*mut u8>();
                                             let l32 = *base.add(4).cast::<usize>();
                                             let len33 = l32;
-                                            let bytes33 =
-                                                _rt::Vec::from_raw_parts(l31.cast(), len33, len33);
+                                            let bytes33 = _rt::Vec::from_raw_parts(
+                                                l31.cast(),
+                                                len33,
+                                                len33,
+                                            );
                                             let l34 = i32::from(*base.add(8).cast::<u8>());
                                             let l38 = i32::from(*base.add(20).cast::<u8>());
                                             let l54 = i32::from(*base.add(32).cast::<u8>());
@@ -4639,8 +4944,7 @@ pub mod wavs {
                                                     0 => None,
                                                     1 => {
                                                         let e = {
-                                                            let l35 =
-                                                                *base.add(12).cast::<*mut u8>();
+                                                            let l35 = *base.add(12).cast::<*mut u8>();
                                                             let l36 = *base.add(16).cast::<usize>();
                                                             let len37 = l36;
                                                             let bytes37 = _rt::Vec::from_raw_parts(
@@ -4658,68 +4962,46 @@ pub mod wavs {
                                                     0 => None,
                                                     1 => {
                                                         let e = {
-                                                            let l39 =
-                                                                *base.add(24).cast::<*mut u8>();
+                                                            let l39 = *base.add(24).cast::<*mut u8>();
                                                             let l40 = *base.add(28).cast::<usize>();
                                                             let base53 = l39;
                                                             let len53 = l40;
-                                                            let mut result53 =
-                                                                _rt::Vec::with_capacity(len53);
+                                                            let mut result53 = _rt::Vec::with_capacity(len53);
                                                             for i in 0..len53 {
                                                                 let base = base53.add(i * 32);
                                                                 let e53 = {
-                                                                    let l41 = *base
-                                                                        .add(0)
-                                                                        .cast::<*mut u8>();
-                                                                    let l42 = *base
-                                                                        .add(4)
-                                                                        .cast::<usize>();
+                                                                    let l41 = *base.add(0).cast::<*mut u8>();
+                                                                    let l42 = *base.add(4).cast::<usize>();
                                                                     let len43 = l42;
-                                                                    let bytes43 =
-                                                                        _rt::Vec::from_raw_parts(
-                                                                            l41.cast(),
-                                                                            len43,
-                                                                            len43,
-                                                                        );
-                                                                    let l44 = *base
-                                                                        .add(8)
-                                                                        .cast::<*mut u8>();
-                                                                    let l45 = *base
-                                                                        .add(12)
-                                                                        .cast::<usize>();
+                                                                    let bytes43 = _rt::Vec::from_raw_parts(
+                                                                        l41.cast(),
+                                                                        len43,
+                                                                        len43,
+                                                                    );
+                                                                    let l44 = *base.add(8).cast::<*mut u8>();
+                                                                    let l45 = *base.add(12).cast::<usize>();
                                                                     let len46 = l45;
-                                                                    let bytes46 =
-                                                                        _rt::Vec::from_raw_parts(
-                                                                            l44.cast(),
-                                                                            len46,
-                                                                            len46,
-                                                                        );
-                                                                    let l47 = *base
-                                                                        .add(16)
-                                                                        .cast::<*mut u8>();
-                                                                    let l48 = *base
-                                                                        .add(20)
-                                                                        .cast::<usize>();
+                                                                    let bytes46 = _rt::Vec::from_raw_parts(
+                                                                        l44.cast(),
+                                                                        len46,
+                                                                        len46,
+                                                                    );
+                                                                    let l47 = *base.add(16).cast::<*mut u8>();
+                                                                    let l48 = *base.add(20).cast::<usize>();
                                                                     let len49 = l48;
-                                                                    let bytes49 =
-                                                                        _rt::Vec::from_raw_parts(
-                                                                            l47.cast(),
-                                                                            len49,
-                                                                            len49,
-                                                                        );
-                                                                    let l50 = *base
-                                                                        .add(24)
-                                                                        .cast::<*mut u8>();
-                                                                    let l51 = *base
-                                                                        .add(28)
-                                                                        .cast::<usize>();
+                                                                    let bytes49 = _rt::Vec::from_raw_parts(
+                                                                        l47.cast(),
+                                                                        len49,
+                                                                        len49,
+                                                                    );
+                                                                    let l50 = *base.add(24).cast::<*mut u8>();
+                                                                    let l51 = *base.add(28).cast::<usize>();
                                                                     let len52 = l51;
-                                                                    let bytes52 =
-                                                                        _rt::Vec::from_raw_parts(
-                                                                            l50.cast(),
-                                                                            len52,
-                                                                            len52,
-                                                                        );
+                                                                    let bytes52 = _rt::Vec::from_raw_parts(
+                                                                        l50.cast(),
+                                                                        len52,
+                                                                        len52,
+                                                                    );
                                                                     super::super::super::wavs::agent::types::ToolCall {
                                                                         id: _rt::string_lift(bytes43),
                                                                         tool_type: _rt::string_lift(bytes46),
@@ -4731,11 +5013,7 @@ pub mod wavs {
                                                                 };
                                                                 result53.push(e53);
                                                             }
-                                                            _rt::cabi_dealloc(
-                                                                base53,
-                                                                len53 * 32,
-                                                                4,
-                                                            );
+                                                            _rt::cabi_dealloc(base53, len53 * 32, 4);
                                                             result53
                                                         };
                                                         Some(e)
@@ -4746,8 +5024,7 @@ pub mod wavs {
                                                     0 => None,
                                                     1 => {
                                                         let e = {
-                                                            let l55 =
-                                                                *base.add(36).cast::<*mut u8>();
+                                                            let l55 = *base.add(36).cast::<*mut u8>();
                                                             let l56 = *base.add(40).cast::<usize>();
                                                             let len57 = l56;
                                                             let bytes57 = _rt::Vec::from_raw_parts(
@@ -4765,8 +5042,7 @@ pub mod wavs {
                                                     0 => None,
                                                     1 => {
                                                         let e = {
-                                                            let l59 =
-                                                                *base.add(48).cast::<*mut u8>();
+                                                            let l59 = *base.add(48).cast::<*mut u8>();
                                                             let l60 = *base.add(52).cast::<usize>();
                                                             let len61 = l60;
                                                             let bytes61 = _rt::Vec::from_raw_parts(
@@ -4796,13 +5072,19 @@ pub mod wavs {
                                             let l65 = *base.add(0).cast::<*mut u8>();
                                             let l66 = *base.add(4).cast::<usize>();
                                             let len67 = l66;
-                                            let bytes67 =
-                                                _rt::Vec::from_raw_parts(l65.cast(), len67, len67);
+                                            let bytes67 = _rt::Vec::from_raw_parts(
+                                                l65.cast(),
+                                                len67,
+                                                len67,
+                                            );
                                             let l68 = *base.add(8).cast::<*mut u8>();
                                             let l69 = *base.add(12).cast::<usize>();
                                             let len70 = l69;
-                                            let bytes70 =
-                                                _rt::Vec::from_raw_parts(l68.cast(), len70, len70);
+                                            let bytes70 = _rt::Vec::from_raw_parts(
+                                                l68.cast(),
+                                                len70,
+                                                len70,
+                                            );
                                             (_rt::string_lift(bytes67), _rt::string_lift(bytes70))
                                         };
                                         result71.push(e71);
@@ -4810,34 +5092,33 @@ pub mod wavs {
                                     _rt::cabi_dealloc(base71, len71 * 16, 4);
                                     super::super::super::wavs::agent::types::Config {
                                         contracts: result18,
-                                        llm_config:
-                                            super::super::super::wavs::agent::types::LlmOptions {
-                                                temperature: l19,
-                                                top_p: l20,
-                                                seed: l21 as u32,
-                                                max_tokens: match l22 {
-                                                    0 => None,
-                                                    1 => {
-                                                        let e = {
-                                                            let l23 = *ptr1.add(28).cast::<i32>();
-                                                            l23 as u32
-                                                        };
-                                                        Some(e)
-                                                    }
-                                                    _ => _rt::invalid_enum_discriminant(),
-                                                },
-                                                context_window: match l24 {
-                                                    0 => None,
-                                                    1 => {
-                                                        let e = {
-                                                            let l25 = *ptr1.add(36).cast::<i32>();
-                                                            l25 as u32
-                                                        };
-                                                        Some(e)
-                                                    }
-                                                    _ => _rt::invalid_enum_discriminant(),
-                                                },
+                                        llm_config: super::super::super::wavs::agent::types::LlmOptions {
+                                            temperature: l19,
+                                            top_p: l20,
+                                            seed: l21 as u32,
+                                            max_tokens: match l22 {
+                                                0 => None,
+                                                1 => {
+                                                    let e = {
+                                                        let l23 = *ptr1.add(28).cast::<i32>();
+                                                        l23 as u32
+                                                    };
+                                                    Some(e)
+                                                }
+                                                _ => _rt::invalid_enum_discriminant(),
                                             },
+                                            context_window: match l24 {
+                                                0 => None,
+                                                1 => {
+                                                    let e = {
+                                                        let l25 = *ptr1.add(36).cast::<i32>();
+                                                        l25 as u32
+                                                    };
+                                                    Some(e)
+                                                }
+                                                _ => _rt::invalid_enum_discriminant(),
+                                            },
+                                        },
                                         model: _rt::string_lift(bytes28),
                                         messages: result62,
                                         config: result71,
@@ -5050,7 +5331,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 12]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 12]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 12],
+                        );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
@@ -5070,7 +5353,11 @@ pub mod wavs {
                                     let l2 = *ptr0.add(4).cast::<*mut u8>();
                                     let l3 = *ptr0.add(8).cast::<usize>();
                                     let len4 = l3;
-                                    let bytes4 = _rt::Vec::from_raw_parts(l2.cast(), len4, len4);
+                                    let bytes4 = _rt::Vec::from_raw_parts(
+                                        l2.cast(),
+                                        len4,
+                                        len4,
+                                    );
                                     _rt::string_lift(bytes4)
                                 };
                                 Ok(e)
@@ -5080,7 +5367,11 @@ pub mod wavs {
                                     let l5 = *ptr0.add(4).cast::<*mut u8>();
                                     let l6 = *ptr0.add(8).cast::<usize>();
                                     let len7 = l6;
-                                    let bytes7 = _rt::Vec::from_raw_parts(l5.cast(), len7, len7);
+                                    let bytes7 = _rt::Vec::from_raw_parts(
+                                        l5.cast(),
+                                        len7,
+                                        len7,
+                                    );
                                     _rt::string_lift(bytes7)
                                 };
                                 Err(e)
@@ -5097,7 +5388,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 8]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 8]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 8],
+                        );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
@@ -5125,7 +5418,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 40]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 40]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 40],
+                        );
                         let vec0 = name;
                         let ptr0 = vec0.as_ptr().cast::<u8>();
                         let len0 = vec0.len();
@@ -5149,15 +5444,27 @@ pub mod wavs {
                                     let l3 = *ptr1.add(4).cast::<*mut u8>();
                                     let l4 = *ptr1.add(8).cast::<usize>();
                                     let len5 = l4;
-                                    let bytes5 = _rt::Vec::from_raw_parts(l3.cast(), len5, len5);
+                                    let bytes5 = _rt::Vec::from_raw_parts(
+                                        l3.cast(),
+                                        len5,
+                                        len5,
+                                    );
                                     let l6 = *ptr1.add(12).cast::<*mut u8>();
                                     let l7 = *ptr1.add(16).cast::<usize>();
                                     let len8 = l7;
-                                    let bytes8 = _rt::Vec::from_raw_parts(l6.cast(), len8, len8);
+                                    let bytes8 = _rt::Vec::from_raw_parts(
+                                        l6.cast(),
+                                        len8,
+                                        len8,
+                                    );
                                     let l9 = *ptr1.add(20).cast::<*mut u8>();
                                     let l10 = *ptr1.add(24).cast::<usize>();
                                     let len11 = l10;
-                                    let bytes11 = _rt::Vec::from_raw_parts(l9.cast(), len11, len11);
+                                    let bytes11 = _rt::Vec::from_raw_parts(
+                                        l9.cast(),
+                                        len11,
+                                        len11,
+                                    );
                                     let l12 = i32::from(*ptr1.add(28).cast::<u8>());
                                     super::super::super::wavs::agent::types::Contract {
                                         name: _rt::string_lift(bytes5),
@@ -5197,7 +5504,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 16]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 16]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 16],
+                        );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/config@0.0.1")]
@@ -5226,8 +5535,11 @@ pub mod wavs {
                                                 let l3 = *ptr0.add(8).cast::<*mut u8>();
                                                 let l4 = *ptr0.add(12).cast::<usize>();
                                                 let len5 = l4;
-                                                let bytes5 =
-                                                    _rt::Vec::from_raw_parts(l3.cast(), len5, len5);
+                                                let bytes5 = _rt::Vec::from_raw_parts(
+                                                    l3.cast(),
+                                                    len5,
+                                                    len5,
+                                                );
                                                 _rt::string_lift(bytes5)
                                             };
                                             V42::Api(e42)
@@ -5237,8 +5549,11 @@ pub mod wavs {
                                                 let l6 = *ptr0.add(8).cast::<*mut u8>();
                                                 let l7 = *ptr0.add(12).cast::<usize>();
                                                 let len8 = l7;
-                                                let bytes8 =
-                                                    _rt::Vec::from_raw_parts(l6.cast(), len8, len8);
+                                                let bytes8 = _rt::Vec::from_raw_parts(
+                                                    l6.cast(),
+                                                    len8,
+                                                    len8,
+                                                );
                                                 _rt::string_lift(bytes8)
                                             };
                                             V42::Http(e42)
@@ -5413,8 +5728,7 @@ pub mod wavs {
         pub mod contracts {
             #[used]
             #[doc(hidden)]
-            static __FORCE_SECTION_REF: fn() =
-                super::super::super::__link_custom_section_describing_imports;
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
             pub type AgentError = super::super::super::wavs::agent::errors::AgentError;
             pub type Contract = super::super::super::wavs::agent::types::Contract;
@@ -5428,7 +5742,9 @@ pub mod wavs {
             impl ContractManager {
                 #[doc(hidden)]
                 pub unsafe fn from_handle(handle: u32) -> Self {
-                    Self { handle: _rt::Resource::from_handle(handle) }
+                    Self {
+                        handle: _rt::Resource::from_handle(handle),
+                    }
                 }
                 #[doc(hidden)]
                 pub fn take_handle(&self) -> u32 {
@@ -5464,7 +5780,9 @@ pub mod wavs {
             impl TransactionManager {
                 #[doc(hidden)]
                 pub unsafe fn from_handle(handle: u32) -> Self {
-                    Self { handle: _rt::Resource::from_handle(handle) }
+                    Self {
+                        handle: _rt::Resource::from_handle(handle),
+                    }
                 }
                 #[doc(hidden)]
                 pub fn take_handle(&self) -> u32 {
@@ -5498,7 +5816,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 36]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 36]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 36],
+                        );
                         let vec0 = name;
                         let ptr0 = vec0.as_ptr().cast::<u8>();
                         let len0 = vec0.len();
@@ -5571,8 +5891,11 @@ pub mod wavs {
                                         let l14 = *ptr3.add(28).cast::<*mut u8>();
                                         let l15 = *ptr3.add(32).cast::<usize>();
                                         let len16 = l15;
-                                        let bytes16 =
-                                            _rt::Vec::from_raw_parts(l14.cast(), len16, len16);
+                                        let bytes16 = _rt::Vec::from_raw_parts(
+                                            l14.cast(),
+                                            len16,
+                                            len16,
+                                        );
                                         _rt::string_lift(bytes16)
                                     };
                                     Some(e)
@@ -5596,7 +5919,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 36]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 36]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 36],
+                        );
                         let vec0 = name;
                         let ptr0 = vec0.as_ptr().cast::<u8>();
                         let len0 = vec0.len();
@@ -5678,8 +6003,11 @@ pub mod wavs {
                                         let l15 = *ptr4.add(28).cast::<*mut u8>();
                                         let l16 = *ptr4.add(32).cast::<usize>();
                                         let len17 = l16;
-                                        let bytes17 =
-                                            _rt::Vec::from_raw_parts(l15.cast(), len17, len17);
+                                        let bytes17 = _rt::Vec::from_raw_parts(
+                                            l15.cast(),
+                                            len17,
+                                            len17,
+                                        );
                                         _rt::string_lift(bytes17)
                                     };
                                     Some(e)
@@ -5693,11 +6021,16 @@ pub mod wavs {
             impl ContractManager {
                 #[allow(unused_unsafe, clippy::all)]
                 /// Parse the JSON ABI to JsonAbi struct
-                pub fn parse_abi(&self, contract: &Contract) -> Result<_rt::String, AgentError> {
+                pub fn parse_abi(
+                    &self,
+                    contract: &Contract,
+                ) -> Result<_rt::String, AgentError> {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 16]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 16]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 16],
+                        );
                         let super::super::super::wavs::agent::types::Contract {
                             name: name0,
                             address: address0,
@@ -5777,7 +6110,11 @@ pub mod wavs {
                                     let l8 = *ptr6.add(4).cast::<*mut u8>();
                                     let l9 = *ptr6.add(8).cast::<usize>();
                                     let len10 = l9;
-                                    let bytes10 = _rt::Vec::from_raw_parts(l8.cast(), len10, len10);
+                                    let bytes10 = _rt::Vec::from_raw_parts(
+                                        l8.cast(),
+                                        len10,
+                                        len10,
+                                    );
                                     _rt::string_lift(bytes10)
                                 };
                                 Ok(e)
@@ -5992,7 +6329,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 16]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 16]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 16],
+                        );
                         let super::super::super::wavs::agent::types::Contract {
                             name: name0,
                             address: address0,
@@ -6022,8 +6361,10 @@ pub mod wavs {
                         let len6 = vec6.len();
                         let vec8 = args;
                         let len8 = vec8.len();
-                        let layout8 =
-                            _rt::alloc::Layout::from_size_align_unchecked(vec8.len() * 8, 4);
+                        let layout8 = _rt::alloc::Layout::from_size_align_unchecked(
+                            vec8.len() * 8,
+                            4,
+                        );
                         let result8 = if layout8.size() != 0 {
                             let ptr = _rt::alloc::alloc(layout8).cast::<u8>();
                             if ptr.is_null() {
@@ -6326,7 +6667,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 16]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 16]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 16],
+                        );
                         let super::super::super::wavs::agent::types::Contract {
                             name: name0,
                             address: address0,
@@ -6415,7 +6758,11 @@ pub mod wavs {
                                     let l9 = *ptr7.add(4).cast::<*mut u8>();
                                     let l10 = *ptr7.add(8).cast::<usize>();
                                     let len11 = l10;
-                                    let bytes11 = _rt::Vec::from_raw_parts(l9.cast(), len11, len11);
+                                    let bytes11 = _rt::Vec::from_raw_parts(
+                                        l9.cast(),
+                                        len11,
+                                        len11,
+                                    );
                                     _rt::string_lift(bytes11)
                                 };
                                 Ok(e)
@@ -6630,7 +6977,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 16]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 16]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 16],
+                        );
                         let super::super::super::wavs::agent::types::Contract {
                             name: name0,
                             address: address0,
@@ -6660,8 +7009,10 @@ pub mod wavs {
                         let len6 = vec6.len();
                         let vec8 = args;
                         let len8 = vec8.len();
-                        let layout8 =
-                            _rt::alloc::Layout::from_size_align_unchecked(vec8.len() * 8, 4);
+                        let layout8 = _rt::alloc::Layout::from_size_align_unchecked(
+                            vec8.len() * 8,
+                            4,
+                        );
                         let result8 = if layout8.size() != 0 {
                             let ptr = _rt::alloc::alloc(layout8).cast::<u8>();
                             if ptr.is_null() {
@@ -6967,52 +7318,53 @@ pub mod wavs {
                         let vec2 = value0;
                         let ptr2 = vec2.as_ptr().cast::<u8>();
                         let len2 = vec2.len();
-                        let (result7_0, result7_1, result7_2, result7_3, result7_4) =
-                            match contract_call0 {
-                                Some(e) => {
-                                    let super::super::super::wavs::agent::types::ContractCall {
-                                        function: function3,
-                                        args: args3,
-                                    } = e;
-                                    let vec4 = function3;
-                                    let ptr4 = vec4.as_ptr().cast::<u8>();
-                                    let len4 = vec4.len();
-                                    let vec6 = args3;
-                                    let len6 = vec6.len();
-                                    let layout6 = _rt::alloc::Layout::from_size_align_unchecked(
-                                        vec6.len() * 8,
-                                        4,
-                                    );
-                                    let result6 = if layout6.size() != 0 {
-                                        let ptr = _rt::alloc::alloc(layout6).cast::<u8>();
-                                        if ptr.is_null() {
-                                            _rt::alloc::handle_alloc_error(layout6);
-                                        }
-                                        ptr
-                                    } else {
-                                        ::core::ptr::null_mut()
-                                    };
-                                    for (i, e) in vec6.into_iter().enumerate() {
-                                        let base = result6.add(i * 8);
-                                        {
-                                            let vec5 = e;
-                                            let ptr5 = vec5.as_ptr().cast::<u8>();
-                                            let len5 = vec5.len();
-                                            *base.add(4).cast::<usize>() = len5;
-                                            *base.add(0).cast::<*mut u8>() = ptr5.cast_mut();
-                                        }
+                        let (result7_0, result7_1, result7_2, result7_3, result7_4) = match contract_call0 {
+                            Some(e) => {
+                                let super::super::super::wavs::agent::types::ContractCall {
+                                    function: function3,
+                                    args: args3,
+                                } = e;
+                                let vec4 = function3;
+                                let ptr4 = vec4.as_ptr().cast::<u8>();
+                                let len4 = vec4.len();
+                                let vec6 = args3;
+                                let len6 = vec6.len();
+                                let layout6 = _rt::alloc::Layout::from_size_align_unchecked(
+                                    vec6.len() * 8,
+                                    4,
+                                );
+                                let result6 = if layout6.size() != 0 {
+                                    let ptr = _rt::alloc::alloc(layout6).cast::<u8>();
+                                    if ptr.is_null() {
+                                        _rt::alloc::handle_alloc_error(layout6);
                                     }
-                                    cleanup_list.extend_from_slice(&[(result6, layout6)]);
-                                    (1i32, ptr4.cast_mut(), len4, result6, len6)
+                                    ptr
+                                } else {
+                                    ::core::ptr::null_mut()
+                                };
+                                for (i, e) in vec6.into_iter().enumerate() {
+                                    let base = result6.add(i * 8);
+                                    {
+                                        let vec5 = e;
+                                        let ptr5 = vec5.as_ptr().cast::<u8>();
+                                        let len5 = vec5.len();
+                                        *base.add(4).cast::<usize>() = len5;
+                                        *base.add(0).cast::<*mut u8>() = ptr5.cast_mut();
+                                    }
                                 }
-                                None => (
+                                cleanup_list.extend_from_slice(&[(result6, layout6)]);
+                                (1i32, ptr4.cast_mut(), len4, result6, len6)
+                            }
+                            None => {
+                                (
                                     0i32,
                                     ::core::ptr::null_mut(),
                                     0usize,
                                     ::core::ptr::null_mut(),
                                     0usize,
-                                ),
-                            };
+                                )
+                            }
+                        };
                         let vec8 = data0;
                         let ptr8 = vec8.as_ptr().cast::<u8>();
                         let len8 = vec8.len();
@@ -7095,7 +7447,9 @@ pub mod wavs {
                         let mut cleanup_list = _rt::Vec::new();
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 16]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 16]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 16],
+                        );
                         let super::super::super::wavs::agent::types::Transaction {
                             to: to0,
                             value: value0,
@@ -7109,52 +7463,53 @@ pub mod wavs {
                         let vec2 = value0;
                         let ptr2 = vec2.as_ptr().cast::<u8>();
                         let len2 = vec2.len();
-                        let (result7_0, result7_1, result7_2, result7_3, result7_4) =
-                            match contract_call0 {
-                                Some(e) => {
-                                    let super::super::super::wavs::agent::types::ContractCall {
-                                        function: function3,
-                                        args: args3,
-                                    } = e;
-                                    let vec4 = function3;
-                                    let ptr4 = vec4.as_ptr().cast::<u8>();
-                                    let len4 = vec4.len();
-                                    let vec6 = args3;
-                                    let len6 = vec6.len();
-                                    let layout6 = _rt::alloc::Layout::from_size_align_unchecked(
-                                        vec6.len() * 8,
-                                        4,
-                                    );
-                                    let result6 = if layout6.size() != 0 {
-                                        let ptr = _rt::alloc::alloc(layout6).cast::<u8>();
-                                        if ptr.is_null() {
-                                            _rt::alloc::handle_alloc_error(layout6);
-                                        }
-                                        ptr
-                                    } else {
-                                        ::core::ptr::null_mut()
-                                    };
-                                    for (i, e) in vec6.into_iter().enumerate() {
-                                        let base = result6.add(i * 8);
-                                        {
-                                            let vec5 = e;
-                                            let ptr5 = vec5.as_ptr().cast::<u8>();
-                                            let len5 = vec5.len();
-                                            *base.add(4).cast::<usize>() = len5;
-                                            *base.add(0).cast::<*mut u8>() = ptr5.cast_mut();
-                                        }
+                        let (result7_0, result7_1, result7_2, result7_3, result7_4) = match contract_call0 {
+                            Some(e) => {
+                                let super::super::super::wavs::agent::types::ContractCall {
+                                    function: function3,
+                                    args: args3,
+                                } = e;
+                                let vec4 = function3;
+                                let ptr4 = vec4.as_ptr().cast::<u8>();
+                                let len4 = vec4.len();
+                                let vec6 = args3;
+                                let len6 = vec6.len();
+                                let layout6 = _rt::alloc::Layout::from_size_align_unchecked(
+                                    vec6.len() * 8,
+                                    4,
+                                );
+                                let result6 = if layout6.size() != 0 {
+                                    let ptr = _rt::alloc::alloc(layout6).cast::<u8>();
+                                    if ptr.is_null() {
+                                        _rt::alloc::handle_alloc_error(layout6);
                                     }
-                                    cleanup_list.extend_from_slice(&[(result6, layout6)]);
-                                    (1i32, ptr4.cast_mut(), len4, result6, len6)
+                                    ptr
+                                } else {
+                                    ::core::ptr::null_mut()
+                                };
+                                for (i, e) in vec6.into_iter().enumerate() {
+                                    let base = result6.add(i * 8);
+                                    {
+                                        let vec5 = e;
+                                        let ptr5 = vec5.as_ptr().cast::<u8>();
+                                        let len5 = vec5.len();
+                                        *base.add(4).cast::<usize>() = len5;
+                                        *base.add(0).cast::<*mut u8>() = ptr5.cast_mut();
+                                    }
                                 }
-                                None => (
+                                cleanup_list.extend_from_slice(&[(result6, layout6)]);
+                                (1i32, ptr4.cast_mut(), len4, result6, len6)
+                            }
+                            None => {
+                                (
                                     0i32,
                                     ::core::ptr::null_mut(),
                                     0usize,
                                     ::core::ptr::null_mut(),
                                     0usize,
-                                ),
-                            };
+                                )
+                            }
+                        };
                         let vec8 = data0;
                         let ptr8 = vec8.as_ptr().cast::<u8>();
                         let len8 = vec8.len();
@@ -7453,52 +7808,53 @@ pub mod wavs {
                     let vec2 = value0;
                     let ptr2 = vec2.as_ptr().cast::<u8>();
                     let len2 = vec2.len();
-                    let (result7_0, result7_1, result7_2, result7_3, result7_4) =
-                        match contract_call0 {
-                            Some(e) => {
-                                let super::super::super::wavs::agent::types::ContractCall {
-                                    function: function3,
-                                    args: args3,
-                                } = e;
-                                let vec4 = function3;
-                                let ptr4 = vec4.as_ptr().cast::<u8>();
-                                let len4 = vec4.len();
-                                let vec6 = args3;
-                                let len6 = vec6.len();
-                                let layout6 = _rt::alloc::Layout::from_size_align_unchecked(
-                                    vec6.len() * 8,
-                                    4,
-                                );
-                                let result6 = if layout6.size() != 0 {
-                                    let ptr = _rt::alloc::alloc(layout6).cast::<u8>();
-                                    if ptr.is_null() {
-                                        _rt::alloc::handle_alloc_error(layout6);
-                                    }
-                                    ptr
-                                } else {
-                                    ::core::ptr::null_mut()
-                                };
-                                for (i, e) in vec6.into_iter().enumerate() {
-                                    let base = result6.add(i * 8);
-                                    {
-                                        let vec5 = e;
-                                        let ptr5 = vec5.as_ptr().cast::<u8>();
-                                        let len5 = vec5.len();
-                                        *base.add(4).cast::<usize>() = len5;
-                                        *base.add(0).cast::<*mut u8>() = ptr5.cast_mut();
-                                    }
+                    let (result7_0, result7_1, result7_2, result7_3, result7_4) = match contract_call0 {
+                        Some(e) => {
+                            let super::super::super::wavs::agent::types::ContractCall {
+                                function: function3,
+                                args: args3,
+                            } = e;
+                            let vec4 = function3;
+                            let ptr4 = vec4.as_ptr().cast::<u8>();
+                            let len4 = vec4.len();
+                            let vec6 = args3;
+                            let len6 = vec6.len();
+                            let layout6 = _rt::alloc::Layout::from_size_align_unchecked(
+                                vec6.len() * 8,
+                                4,
+                            );
+                            let result6 = if layout6.size() != 0 {
+                                let ptr = _rt::alloc::alloc(layout6).cast::<u8>();
+                                if ptr.is_null() {
+                                    _rt::alloc::handle_alloc_error(layout6);
                                 }
-                                cleanup_list.extend_from_slice(&[(result6, layout6)]);
-                                (1i32, ptr4.cast_mut(), len4, result6, len6)
+                                ptr
+                            } else {
+                                ::core::ptr::null_mut()
+                            };
+                            for (i, e) in vec6.into_iter().enumerate() {
+                                let base = result6.add(i * 8);
+                                {
+                                    let vec5 = e;
+                                    let ptr5 = vec5.as_ptr().cast::<u8>();
+                                    let len5 = vec5.len();
+                                    *base.add(4).cast::<usize>() = len5;
+                                    *base.add(0).cast::<*mut u8>() = ptr5.cast_mut();
+                                }
                             }
-                            None => (
+                            cleanup_list.extend_from_slice(&[(result6, layout6)]);
+                            (1i32, ptr4.cast_mut(), len4, result6, len6)
+                        }
+                        None => {
+                            (
                                 0i32,
                                 ::core::ptr::null_mut(),
                                 0usize,
                                 ::core::ptr::null_mut(),
                                 0usize,
-                            ),
-                        };
+                            )
+                        }
+                    };
                     let vec8 = data0;
                     let ptr8 = vec8.as_ptr().cast::<u8>();
                     let len8 = vec8.len();
@@ -7574,7 +7930,11 @@ pub mod wavs {
                                 let l12 = *ptr10.add(4).cast::<*mut u8>();
                                 let l13 = *ptr10.add(8).cast::<usize>();
                                 let len14 = l13;
-                                let bytes14 = _rt::Vec::from_raw_parts(l12.cast(), len14, len14);
+                                let bytes14 = _rt::Vec::from_raw_parts(
+                                    l12.cast(),
+                                    len14,
+                                    len14,
+                                );
                                 _rt::string_lift(bytes14)
                             };
                             Ok(e)
@@ -7589,8 +7949,11 @@ pub mod wavs {
                                             let l16 = *ptr10.add(8).cast::<*mut u8>();
                                             let l17 = *ptr10.add(12).cast::<usize>();
                                             let len18 = l17;
-                                            let bytes18 =
-                                                _rt::Vec::from_raw_parts(l16.cast(), len18, len18);
+                                            let bytes18 = _rt::Vec::from_raw_parts(
+                                                l16.cast(),
+                                                len18,
+                                                len18,
+                                            );
                                             _rt::string_lift(bytes18)
                                         };
                                         V55::Api(e55)
@@ -7600,8 +7963,11 @@ pub mod wavs {
                                             let l19 = *ptr10.add(8).cast::<*mut u8>();
                                             let l20 = *ptr10.add(12).cast::<usize>();
                                             let len21 = l20;
-                                            let bytes21 =
-                                                _rt::Vec::from_raw_parts(l19.cast(), len21, len21);
+                                            let bytes21 = _rt::Vec::from_raw_parts(
+                                                l19.cast(),
+                                                len21,
+                                                len21,
+                                            );
                                             _rt::string_lift(bytes21)
                                         };
                                         V55::Http(e55)
@@ -7611,8 +7977,11 @@ pub mod wavs {
                                             let l22 = *ptr10.add(8).cast::<*mut u8>();
                                             let l23 = *ptr10.add(12).cast::<usize>();
                                             let len24 = l23;
-                                            let bytes24 =
-                                                _rt::Vec::from_raw_parts(l22.cast(), len24, len24);
+                                            let bytes24 = _rt::Vec::from_raw_parts(
+                                                l22.cast(),
+                                                len24,
+                                                len24,
+                                            );
                                             _rt::string_lift(bytes24)
                                         };
                                         V55::ExternalService(e55)
@@ -7622,8 +7991,11 @@ pub mod wavs {
                                             let l25 = *ptr10.add(8).cast::<*mut u8>();
                                             let l26 = *ptr10.add(12).cast::<usize>();
                                             let len27 = l26;
-                                            let bytes27 =
-                                                _rt::Vec::from_raw_parts(l25.cast(), len27, len27);
+                                            let bytes27 = _rt::Vec::from_raw_parts(
+                                                l25.cast(),
+                                                len27,
+                                                len27,
+                                            );
                                             _rt::string_lift(bytes27)
                                         };
                                         V55::Config(e55)
@@ -7633,8 +8005,11 @@ pub mod wavs {
                                             let l28 = *ptr10.add(8).cast::<*mut u8>();
                                             let l29 = *ptr10.add(12).cast::<usize>();
                                             let len30 = l29;
-                                            let bytes30 =
-                                                _rt::Vec::from_raw_parts(l28.cast(), len30, len30);
+                                            let bytes30 = _rt::Vec::from_raw_parts(
+                                                l28.cast(),
+                                                len30,
+                                                len30,
+                                            );
                                             _rt::string_lift(bytes30)
                                         };
                                         V55::Contract(e55)
@@ -7644,8 +8019,11 @@ pub mod wavs {
                                             let l31 = *ptr10.add(8).cast::<*mut u8>();
                                             let l32 = *ptr10.add(12).cast::<usize>();
                                             let len33 = l32;
-                                            let bytes33 =
-                                                _rt::Vec::from_raw_parts(l31.cast(), len33, len33);
+                                            let bytes33 = _rt::Vec::from_raw_parts(
+                                                l31.cast(),
+                                                len33,
+                                                len33,
+                                            );
                                             _rt::string_lift(bytes33)
                                         };
                                         V55::Configuration(e55)
@@ -7655,8 +8033,11 @@ pub mod wavs {
                                             let l34 = *ptr10.add(8).cast::<*mut u8>();
                                             let l35 = *ptr10.add(12).cast::<usize>();
                                             let len36 = l35;
-                                            let bytes36 =
-                                                _rt::Vec::from_raw_parts(l34.cast(), len36, len36);
+                                            let bytes36 = _rt::Vec::from_raw_parts(
+                                                l34.cast(),
+                                                len36,
+                                                len36,
+                                            );
                                             _rt::string_lift(bytes36)
                                         };
                                         V55::ContextLoading(e55)
@@ -7666,8 +8047,11 @@ pub mod wavs {
                                             let l37 = *ptr10.add(8).cast::<*mut u8>();
                                             let l38 = *ptr10.add(12).cast::<usize>();
                                             let len39 = l38;
-                                            let bytes39 =
-                                                _rt::Vec::from_raw_parts(l37.cast(), len39, len39);
+                                            let bytes39 = _rt::Vec::from_raw_parts(
+                                                l37.cast(),
+                                                len39,
+                                                len39,
+                                            );
                                             _rt::string_lift(bytes39)
                                         };
                                         V55::ContextValidation(e55)
@@ -7677,8 +8061,11 @@ pub mod wavs {
                                             let l40 = *ptr10.add(8).cast::<*mut u8>();
                                             let l41 = *ptr10.add(12).cast::<usize>();
                                             let len42 = l41;
-                                            let bytes42 =
-                                                _rt::Vec::from_raw_parts(l40.cast(), len42, len42);
+                                            let bytes42 = _rt::Vec::from_raw_parts(
+                                                l40.cast(),
+                                                len42,
+                                                len42,
+                                            );
                                             _rt::string_lift(bytes42)
                                         };
                                         V55::Llm(e55)
@@ -7688,8 +8075,11 @@ pub mod wavs {
                                             let l43 = *ptr10.add(8).cast::<*mut u8>();
                                             let l44 = *ptr10.add(12).cast::<usize>();
                                             let len45 = l44;
-                                            let bytes45 =
-                                                _rt::Vec::from_raw_parts(l43.cast(), len45, len45);
+                                            let bytes45 = _rt::Vec::from_raw_parts(
+                                                l43.cast(),
+                                                len45,
+                                                len45,
+                                            );
                                             _rt::string_lift(bytes45)
                                         };
                                         V55::Io(e55)
@@ -7699,8 +8089,11 @@ pub mod wavs {
                                             let l46 = *ptr10.add(8).cast::<*mut u8>();
                                             let l47 = *ptr10.add(12).cast::<usize>();
                                             let len48 = l47;
-                                            let bytes48 =
-                                                _rt::Vec::from_raw_parts(l46.cast(), len48, len48);
+                                            let bytes48 = _rt::Vec::from_raw_parts(
+                                                l46.cast(),
+                                                len48,
+                                                len48,
+                                            );
                                             _rt::string_lift(bytes48)
                                         };
                                         V55::Transaction(e55)
@@ -7710,8 +8103,11 @@ pub mod wavs {
                                             let l49 = *ptr10.add(8).cast::<*mut u8>();
                                             let l50 = *ptr10.add(12).cast::<usize>();
                                             let len51 = l50;
-                                            let bytes51 =
-                                                _rt::Vec::from_raw_parts(l49.cast(), len51, len51);
+                                            let bytes51 = _rt::Vec::from_raw_parts(
+                                                l49.cast(),
+                                                len51,
+                                                len51,
+                                            );
                                             _rt::string_lift(bytes51)
                                         };
                                         V55::Utf8(e55)
@@ -7722,8 +8118,11 @@ pub mod wavs {
                                             let l52 = *ptr10.add(8).cast::<*mut u8>();
                                             let l53 = *ptr10.add(12).cast::<usize>();
                                             let len54 = l53;
-                                            let bytes54 =
-                                                _rt::Vec::from_raw_parts(l52.cast(), len54, len54);
+                                            let bytes54 = _rt::Vec::from_raw_parts(
+                                                l52.cast(),
+                                                len54,
+                                                len54,
+                                            );
                                             _rt::string_lift(bytes54)
                                         };
                                         V55::Other(e55)
@@ -7742,8 +8141,7 @@ pub mod wavs {
         pub mod tools {
             #[used]
             #[doc(hidden)]
-            static __FORCE_SECTION_REF: fn() =
-                super::super::super::__link_custom_section_describing_imports;
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
             pub type LlmClient = super::super::super::wavs::agent::client::LlmClient;
             pub type Message = super::super::super::wavs::agent::types::Message;
@@ -7760,7 +8158,9 @@ pub mod wavs {
             impl ToolsBuilder {
                 #[doc(hidden)]
                 pub unsafe fn from_handle(handle: u32) -> Self {
-                    Self { handle: _rt::Resource::from_handle(handle) }
+                    Self {
+                        handle: _rt::Resource::from_handle(handle),
+                    }
                 }
                 #[doc(hidden)]
                 pub fn take_handle(&self) -> u32 {
@@ -7794,7 +8194,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 40]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 40]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 40],
+                        );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         #[cfg(target_arch = "wasm32")]
                         #[link(wasm_import_module = "wavs:agent/tools@0.0.1")]
@@ -7828,8 +8230,11 @@ pub mod wavs {
                                             let l8 = *ptr0.add(20).cast::<*mut u8>();
                                             let l9 = *ptr0.add(24).cast::<usize>();
                                             let len10 = l9;
-                                            let bytes10 =
-                                                _rt::Vec::from_raw_parts(l8.cast(), len10, len10);
+                                            let bytes10 = _rt::Vec::from_raw_parts(
+                                                l8.cast(),
+                                                len10,
+                                                len10,
+                                            );
                                             _rt::string_lift(bytes10)
                                         };
                                         Some(e)
@@ -7843,8 +8248,11 @@ pub mod wavs {
                                             let l12 = *ptr0.add(32).cast::<*mut u8>();
                                             let l13 = *ptr0.add(36).cast::<usize>();
                                             let len14 = l13;
-                                            let bytes14 =
-                                                _rt::Vec::from_raw_parts(l12.cast(), len14, len14);
+                                            let bytes14 = _rt::Vec::from_raw_parts(
+                                                l12.cast(),
+                                                len14,
+                                                len14,
+                                            );
                                             _rt::string_lift(bytes14)
                                         };
                                         Some(e)
@@ -7859,11 +8267,16 @@ pub mod wavs {
             impl ToolsBuilder {
                 #[allow(unused_unsafe, clippy::all)]
                 /// Generate tools from a smart contract's ABI
-                pub fn tools_from_contract(&self, contract: &Contract) -> _rt::Vec<Tool> {
+                pub fn tools_from_contract(
+                    &self,
+                    contract: &Contract,
+                ) -> _rt::Vec<Tool> {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 8]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 8]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 8],
+                        );
                         let super::super::super::wavs::agent::types::Contract {
                             name: name0,
                             address: address0,
@@ -7947,11 +8360,19 @@ pub mod wavs {
                                 let l9 = *base.add(0).cast::<*mut u8>();
                                 let l10 = *base.add(4).cast::<usize>();
                                 let len11 = l10;
-                                let bytes11 = _rt::Vec::from_raw_parts(l9.cast(), len11, len11);
+                                let bytes11 = _rt::Vec::from_raw_parts(
+                                    l9.cast(),
+                                    len11,
+                                    len11,
+                                );
                                 let l12 = *base.add(8).cast::<*mut u8>();
                                 let l13 = *base.add(12).cast::<usize>();
                                 let len14 = l13;
-                                let bytes14 = _rt::Vec::from_raw_parts(l12.cast(), len14, len14);
+                                let bytes14 = _rt::Vec::from_raw_parts(
+                                    l12.cast(),
+                                    len14,
+                                    len14,
+                                );
                                 let l15 = i32::from(*base.add(16).cast::<u8>());
                                 let l19 = i32::from(*base.add(28).cast::<u8>());
                                 super::super::super::wavs::agent::types::Tool {
@@ -8007,11 +8428,18 @@ pub mod wavs {
             impl ToolsBuilder {
                 #[allow(unused_unsafe, clippy::all)]
                 /// Create a custom tool with the specified name, description, and parameters
-                pub fn custom_tool(&self, name: &str, description: &str, parameters: &str) -> Tool {
+                pub fn custom_tool(
+                    &self,
+                    name: &str,
+                    description: &str,
+                    parameters: &str,
+                ) -> Tool {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 40]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 40]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 40],
+                        );
                         let vec0 = name;
                         let ptr0 = vec0.as_ptr().cast::<u8>();
                         let len0 = vec0.len();
@@ -8081,8 +8509,11 @@ pub mod wavs {
                                             let l11 = *ptr3.add(20).cast::<*mut u8>();
                                             let l12 = *ptr3.add(24).cast::<usize>();
                                             let len13 = l12;
-                                            let bytes13 =
-                                                _rt::Vec::from_raw_parts(l11.cast(), len13, len13);
+                                            let bytes13 = _rt::Vec::from_raw_parts(
+                                                l11.cast(),
+                                                len13,
+                                                len13,
+                                            );
                                             _rt::string_lift(bytes13)
                                         };
                                         Some(e)
@@ -8096,8 +8527,11 @@ pub mod wavs {
                                             let l15 = *ptr3.add(32).cast::<*mut u8>();
                                             let l16 = *ptr3.add(36).cast::<usize>();
                                             let len17 = l16;
-                                            let bytes17 =
-                                                _rt::Vec::from_raw_parts(l15.cast(), len17, len17);
+                                            let bytes17 = _rt::Vec::from_raw_parts(
+                                                l15.cast(),
+                                                len17,
+                                                len17,
+                                            );
                                             _rt::string_lift(bytes17)
                                         };
                                         Some(e)
@@ -8121,7 +8555,9 @@ pub mod wavs {
                         let mut cleanup_list = _rt::Vec::new();
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 12]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 12]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 12],
+                        );
                         let super::super::super::wavs::agent::types::ToolCall {
                             id: id0,
                             tool_type: tool_type0,
@@ -8237,8 +8673,11 @@ pub mod wavs {
                                     let l10 = *ptr8.add(4).cast::<*mut u8>();
                                     let l11 = *ptr8.add(8).cast::<usize>();
                                     let len12 = l11;
-                                    let bytes12 =
-                                        _rt::Vec::from_raw_parts(l10.cast(), len12, len12);
+                                    let bytes12 = _rt::Vec::from_raw_parts(
+                                        l10.cast(),
+                                        len12,
+                                        len12,
+                                    );
                                     _rt::string_lift(bytes12)
                                 };
                                 Ok(e)
@@ -8248,8 +8687,11 @@ pub mod wavs {
                                     let l13 = *ptr8.add(4).cast::<*mut u8>();
                                     let l14 = *ptr8.add(8).cast::<usize>();
                                     let len15 = l14;
-                                    let bytes15 =
-                                        _rt::Vec::from_raw_parts(l13.cast(), len15, len15);
+                                    let bytes15 = _rt::Vec::from_raw_parts(
+                                        l13.cast(),
+                                        len15,
+                                        len15,
+                                    );
                                     _rt::string_lift(bytes15)
                                 };
                                 Err(e)
@@ -8269,7 +8711,9 @@ pub mod wavs {
                     unsafe {
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 12]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 12]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 12],
+                        );
                         let super::super::super::wavs::agent::types::ToolCall {
                             id: id0,
                             tool_type: tool_type0,
@@ -8343,7 +8787,11 @@ pub mod wavs {
                                     let l8 = *ptr6.add(4).cast::<*mut u8>();
                                     let l9 = *ptr6.add(8).cast::<usize>();
                                     let len10 = l9;
-                                    let bytes10 = _rt::Vec::from_raw_parts(l8.cast(), len10, len10);
+                                    let bytes10 = _rt::Vec::from_raw_parts(
+                                        l8.cast(),
+                                        len10,
+                                        len10,
+                                    );
                                     _rt::string_lift(bytes10)
                                 };
                                 Ok(e)
@@ -8353,8 +8801,11 @@ pub mod wavs {
                                     let l11 = *ptr6.add(4).cast::<*mut u8>();
                                     let l12 = *ptr6.add(8).cast::<usize>();
                                     let len13 = l12;
-                                    let bytes13 =
-                                        _rt::Vec::from_raw_parts(l11.cast(), len13, len13);
+                                    let bytes13 = _rt::Vec::from_raw_parts(
+                                        l11.cast(),
+                                        len13,
+                                        len13,
+                                    );
                                     _rt::string_lift(bytes13)
                                 };
                                 Err(e)
@@ -8379,7 +8830,9 @@ pub mod wavs {
                         let mut cleanup_list = _rt::Vec::new();
                         #[repr(align(4))]
                         struct RetArea([::core::mem::MaybeUninit<u8>; 144]);
-                        let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 144]);
+                        let mut ret_area = RetArea(
+                            [::core::mem::MaybeUninit::uninit(); 144],
+                        );
                         let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
                         *ptr0.add(0).cast::<i32>() = (self).handle() as i32;
                         let super::super::super::wavs::agent::types::LlmClient {
@@ -8441,8 +8894,10 @@ pub mod wavs {
                         };
                         let vec18 = initial_messages;
                         let len18 = vec18.len();
-                        let layout18 =
-                            _rt::alloc::Layout::from_size_align_unchecked(vec18.len() * 56, 4);
+                        let layout18 = _rt::alloc::Layout::from_size_align_unchecked(
+                            vec18.len() * 56,
+                            4,
+                        );
                         let result18 = if layout18.size() != 0 {
                             let ptr = _rt::alloc::alloc(layout18).cast::<u8>();
                             if ptr.is_null() {
@@ -8485,11 +8940,10 @@ pub mod wavs {
                                         *base.add(20).cast::<u8>() = (1i32) as u8;
                                         let vec15 = e;
                                         let len15 = vec15.len();
-                                        let layout15 =
-                                            _rt::alloc::Layout::from_size_align_unchecked(
-                                                vec15.len() * 32,
-                                                4,
-                                            );
+                                        let layout15 = _rt::alloc::Layout::from_size_align_unchecked(
+                                            vec15.len() * 32,
+                                            4,
+                                        );
                                         let result15 = if layout15.size() != 0 {
                                             let ptr = _rt::alloc::alloc(layout15).cast::<u8>();
                                             if ptr.is_null() {
@@ -8684,8 +9138,10 @@ pub mod wavs {
                         };
                         let vec37 = tool_calls;
                         let len37 = vec37.len();
-                        let layout37 =
-                            _rt::alloc::Layout::from_size_align_unchecked(vec37.len() * 32, 4);
+                        let layout37 = _rt::alloc::Layout::from_size_align_unchecked(
+                            vec37.len() * 32,
+                            4,
+                        );
                         let result37 = if layout37.size() != 0 {
                             let ptr = _rt::alloc::alloc(layout37).cast::<u8>();
                             if ptr.is_null() {
@@ -8793,8 +9249,11 @@ pub mod wavs {
                                     let l41 = *ptr39.add(4).cast::<*mut u8>();
                                     let l42 = *ptr39.add(8).cast::<usize>();
                                     let len43 = l42;
-                                    let bytes43 =
-                                        _rt::Vec::from_raw_parts(l41.cast(), len43, len43);
+                                    let bytes43 = _rt::Vec::from_raw_parts(
+                                        l41.cast(),
+                                        len43,
+                                        len43,
+                                    );
                                     _rt::string_lift(bytes43)
                                 };
                                 Ok(e)
@@ -8804,8 +9263,11 @@ pub mod wavs {
                                     let l44 = *ptr39.add(4).cast::<*mut u8>();
                                     let l45 = *ptr39.add(8).cast::<usize>();
                                     let len46 = l45;
-                                    let bytes46 =
-                                        _rt::Vec::from_raw_parts(l44.cast(), len46, len46);
+                                    let bytes46 = _rt::Vec::from_raw_parts(
+                                        l44.cast(),
+                                        len46,
+                                        len46,
+                                    );
                                     _rt::string_lift(bytes46)
                                 };
                                 Err(e)
@@ -8823,8 +9285,7 @@ pub mod wavs {
         pub mod layer_types {
             #[used]
             #[doc(hidden)]
-            static __FORCE_SECTION_REF: fn() =
-                super::super::super::__link_custom_section_describing_imports;
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
             #[repr(C)]
             #[derive(Clone, Copy)]
@@ -8832,7 +9293,10 @@ pub mod wavs {
                 pub nanos: u64,
             }
             impl ::core::fmt::Debug for Timestamp {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("Timestamp").field("nanos", &self.nanos).finish()
                 }
             }
@@ -8843,7 +9307,10 @@ pub mod wavs {
                 pub prefix_len: u32,
             }
             impl ::core::fmt::Debug for CosmosAddress {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("CosmosAddress")
                         .field("bech32-addr", &self.bech32_addr)
                         .field("prefix-len", &self.prefix_len)
@@ -8856,7 +9323,10 @@ pub mod wavs {
                 pub attributes: _rt::Vec<(_rt::String, _rt::String)>,
             }
             impl ::core::fmt::Debug for CosmosEvent {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("CosmosEvent")
                         .field("ty", &self.ty)
                         .field("attributes", &self.attributes)
@@ -8874,7 +9344,10 @@ pub mod wavs {
                 pub bech32_prefix: _rt::String,
             }
             impl ::core::fmt::Debug for CosmosChainConfig {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("CosmosChainConfig")
                         .field("chain-id", &self.chain_id)
                         .field("rpc-endpoint", &self.rpc_endpoint)
@@ -8891,8 +9364,13 @@ pub mod wavs {
                 pub raw_bytes: _rt::Vec<u8>,
             }
             impl ::core::fmt::Debug for EvmAddress {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    f.debug_struct("EvmAddress").field("raw-bytes", &self.raw_bytes).finish()
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
+                    f.debug_struct("EvmAddress")
+                        .field("raw-bytes", &self.raw_bytes)
+                        .finish()
                 }
             }
             #[derive(Clone)]
@@ -8903,7 +9381,10 @@ pub mod wavs {
                 pub data: _rt::Vec<u8>,
             }
             impl ::core::fmt::Debug for EvmEventLogData {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("EvmEventLogData")
                         .field("topics", &self.topics)
                         .field("data", &self.data)
@@ -8917,7 +9398,10 @@ pub mod wavs {
                 pub http_endpoint: Option<_rt::String>,
             }
             impl ::core::fmt::Debug for EvmChainConfig {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("EvmChainConfig")
                         .field("chain-id", &self.chain_id)
                         .field("ws-endpoint", &self.ws_endpoint)
@@ -8932,7 +9416,10 @@ pub mod wavs {
                 pub event_hash: _rt::Vec<u8>,
             }
             impl ::core::fmt::Debug for TriggerSourceEvmContractEvent {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("TriggerSourceEvmContractEvent")
                         .field("address", &self.address)
                         .field("chain-name", &self.chain_name)
@@ -8947,7 +9434,10 @@ pub mod wavs {
                 pub event_type: _rt::String,
             }
             impl ::core::fmt::Debug for TriggerSourceCosmosContractEvent {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("TriggerSourceCosmosContractEvent")
                         .field("address", &self.address)
                         .field("chain-name", &self.chain_name)
@@ -8959,12 +9449,19 @@ pub mod wavs {
             pub struct BlockIntervalSource {
                 pub chain_name: _rt::String,
                 pub n_blocks: u32,
+                pub start_block: Option<u64>,
+                pub end_block: Option<u64>,
             }
             impl ::core::fmt::Debug for BlockIntervalSource {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("BlockIntervalSource")
                         .field("chain-name", &self.chain_name)
                         .field("n-blocks", &self.n_blocks)
+                        .field("start-block", &self.start_block)
+                        .field("end-block", &self.end_block)
                         .finish()
                 }
             }
@@ -8975,7 +9472,10 @@ pub mod wavs {
                 pub end_time: Option<Timestamp>,
             }
             impl ::core::fmt::Debug for TriggerSourceCron {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("TriggerSourceCron")
                         .field("schedule", &self.schedule)
                         .field("start-time", &self.start_time)
@@ -8992,21 +9492,32 @@ pub mod wavs {
                 Manual,
             }
             impl ::core::fmt::Debug for TriggerSource {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     match self {
                         TriggerSource::EvmContractEvent(e) => {
-                            f.debug_tuple("TriggerSource::EvmContractEvent").field(e).finish()
+                            f.debug_tuple("TriggerSource::EvmContractEvent")
+                                .field(e)
+                                .finish()
                         }
                         TriggerSource::CosmosContractEvent(e) => {
-                            f.debug_tuple("TriggerSource::CosmosContractEvent").field(e).finish()
+                            f.debug_tuple("TriggerSource::CosmosContractEvent")
+                                .field(e)
+                                .finish()
                         }
                         TriggerSource::BlockInterval(e) => {
-                            f.debug_tuple("TriggerSource::BlockInterval").field(e).finish()
+                            f.debug_tuple("TriggerSource::BlockInterval")
+                                .field(e)
+                                .finish()
                         }
                         TriggerSource::Cron(e) => {
                             f.debug_tuple("TriggerSource::Cron").field(e).finish()
                         }
-                        TriggerSource::Manual => f.debug_tuple("TriggerSource::Manual").finish(),
+                        TriggerSource::Manual => {
+                            f.debug_tuple("TriggerSource::Manual").finish()
+                        }
                     }
                 }
             }
@@ -9017,7 +9528,10 @@ pub mod wavs {
                 pub trigger_source: TriggerSource,
             }
             impl ::core::fmt::Debug for TriggerConfig {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("TriggerConfig")
                         .field("service-id", &self.service_id)
                         .field("workflow-id", &self.workflow_id)
@@ -9033,7 +9547,10 @@ pub mod wavs {
                 pub block_height: u64,
             }
             impl ::core::fmt::Debug for TriggerDataEvmContractEvent {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("TriggerDataEvmContractEvent")
                         .field("contract-address", &self.contract_address)
                         .field("chain-name", &self.chain_name)
@@ -9050,7 +9567,10 @@ pub mod wavs {
                 pub block_height: u64,
             }
             impl ::core::fmt::Debug for TriggerDataCosmosContractEvent {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("TriggerDataCosmosContractEvent")
                         .field("contract-address", &self.contract_address)
                         .field("chain-name", &self.chain_name)
@@ -9065,7 +9585,10 @@ pub mod wavs {
                 pub block_height: u64,
             }
             impl ::core::fmt::Debug for BlockIntervalData {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("BlockIntervalData")
                         .field("chain-name", &self.chain_name)
                         .field("block-height", &self.block_height)
@@ -9078,7 +9601,10 @@ pub mod wavs {
                 pub trigger_time: Timestamp,
             }
             impl ::core::fmt::Debug for TriggerDataCron {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("TriggerDataCron")
                         .field("trigger-time", &self.trigger_time)
                         .finish()
@@ -9093,13 +9619,20 @@ pub mod wavs {
                 Raw(_rt::Vec<u8>),
             }
             impl ::core::fmt::Debug for TriggerData {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     match self {
                         TriggerData::EvmContractEvent(e) => {
-                            f.debug_tuple("TriggerData::EvmContractEvent").field(e).finish()
+                            f.debug_tuple("TriggerData::EvmContractEvent")
+                                .field(e)
+                                .finish()
                         }
                         TriggerData::CosmosContractEvent(e) => {
-                            f.debug_tuple("TriggerData::CosmosContractEvent").field(e).finish()
+                            f.debug_tuple("TriggerData::CosmosContractEvent")
+                                .field(e)
+                                .finish()
                         }
                         TriggerData::BlockInterval(e) => {
                             f.debug_tuple("TriggerData::BlockInterval").field(e).finish()
@@ -9107,7 +9640,9 @@ pub mod wavs {
                         TriggerData::Cron(e) => {
                             f.debug_tuple("TriggerData::Cron").field(e).finish()
                         }
-                        TriggerData::Raw(e) => f.debug_tuple("TriggerData::Raw").field(e).finish(),
+                        TriggerData::Raw(e) => {
+                            f.debug_tuple("TriggerData::Raw").field(e).finish()
+                        }
                     }
                 }
             }
@@ -9117,7 +9652,10 @@ pub mod wavs {
                 pub data: TriggerData,
             }
             impl ::core::fmt::Debug for TriggerAction {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("TriggerAction")
                         .field("config", &self.config)
                         .field("data", &self.data)
@@ -9130,7 +9668,10 @@ pub mod wavs {
                 pub ordering: Option<u64>,
             }
             impl ::core::fmt::Debug for WasmResponse {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     f.debug_struct("WasmResponse")
                         .field("payload", &self.payload)
                         .field("ordering", &self.ordering)
@@ -9146,7 +9687,10 @@ pub mod wavs {
                 Trace,
             }
             impl ::core::fmt::Debug for LogLevel {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
                     match self {
                         LogLevel::Error => f.debug_tuple("LogLevel::Error").finish(),
                         LogLevel::Warn => f.debug_tuple("LogLevel::Warn").finish(),
@@ -9209,8 +9753,11 @@ pub mod host {
                                         let l7 = *ptr1.add(16).cast::<*mut u8>();
                                         let l8 = *ptr1.add(20).cast::<usize>();
                                         let len9 = l8;
-                                        let bytes9 =
-                                            _rt::Vec::from_raw_parts(l7.cast(), len9, len9);
+                                        let bytes9 = _rt::Vec::from_raw_parts(
+                                            l7.cast(),
+                                            len9,
+                                            len9,
+                                        );
                                         _rt::string_lift(bytes9)
                                     };
                                     Some(e)
@@ -9224,8 +9771,11 @@ pub mod host {
                                         let l11 = *ptr1.add(28).cast::<*mut u8>();
                                         let l12 = *ptr1.add(32).cast::<usize>();
                                         let len13 = l12;
-                                        let bytes13 =
-                                            _rt::Vec::from_raw_parts(l11.cast(), len13, len13);
+                                        let bytes13 = _rt::Vec::from_raw_parts(
+                                            l11.cast(),
+                                            len13,
+                                            len13,
+                                        );
                                         _rt::string_lift(bytes13)
                                     };
                                     Some(e)
@@ -9291,8 +9841,11 @@ pub mod host {
                                         let l7 = *ptr1.add(16).cast::<*mut u8>();
                                         let l8 = *ptr1.add(20).cast::<usize>();
                                         let len9 = l8;
-                                        let bytes9 =
-                                            _rt::Vec::from_raw_parts(l7.cast(), len9, len9);
+                                        let bytes9 = _rt::Vec::from_raw_parts(
+                                            l7.cast(),
+                                            len9,
+                                            len9,
+                                        );
                                         _rt::string_lift(bytes9)
                                     };
                                     Some(e)
@@ -9306,8 +9859,11 @@ pub mod host {
                                         let l11 = *ptr1.add(28).cast::<*mut u8>();
                                         let l12 = *ptr1.add(32).cast::<usize>();
                                         let len13 = l12;
-                                        let bytes13 =
-                                            _rt::Vec::from_raw_parts(l11.cast(), len13, len13);
+                                        let bytes13 = _rt::Vec::from_raw_parts(
+                                            l11.cast(),
+                                            len13,
+                                            len13,
+                                        );
                                         _rt::string_lift(bytes13)
                                     };
                                     Some(e)
@@ -9321,8 +9877,11 @@ pub mod host {
                                         let l15 = *ptr1.add(40).cast::<*mut u8>();
                                         let l16 = *ptr1.add(44).cast::<usize>();
                                         let len17 = l16;
-                                        let bytes17 =
-                                            _rt::Vec::from_raw_parts(l15.cast(), len17, len17);
+                                        let bytes17 = _rt::Vec::from_raw_parts(
+                                            l15.cast(),
+                                            len17,
+                                            len17,
+                                        );
                                         _rt::string_lift(bytes17)
                                     };
                                     Some(e)
@@ -9404,7 +9963,10 @@ mod _rt {
         #[doc(hidden)]
         pub unsafe fn from_handle(handle: u32) -> Self {
             debug_assert!(handle != u32::MAX);
-            Self { handle: AtomicU32::new(handle), _marker: marker::PhantomData }
+            Self {
+                handle: AtomicU32::new(handle),
+                _marker: marker::PhantomData,
+            }
         }
         /// Takes ownership of the handle owned by `resource`.
         ///
@@ -9612,8 +10174,8 @@ pub(crate) use __export_layer_trigger_world_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[link_section = "component-type:wit-bindgen:0.35.0:component:dao-agent:layer-trigger-world:encoded world"]
 #[doc(hidden)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 6527] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xf51\x01A\x02\x01A)\x01\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 6544] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\x862\x01A\x02\x01A)\x01\
 B1\x01r\x01\x05nanosw\x04\0\x09timestamp\x03\0\0\x01r\x02\x0bbech32-addrs\x0apre\
 fix-leny\x04\0\x0ecosmos-address\x03\0\x02\x01o\x02ss\x01p\x04\x01r\x02\x02tys\x0a\
 attributes\x05\x04\0\x0ccosmos-event\x03\0\x06\x01ks\x01r\x07\x08chain-ids\x0crp\
@@ -9624,131 +10186,131 @@ s-denoms\x0dbech32-prefixs\x04\0\x13cosmos-chain-config\x03\0\x09\x01p}\x01r\x01
 ndpoint\x08\x0dhttp-endpoint\x08\x04\0\x10evm-chain-config\x03\0\x11\x01r\x03\x07\
 address\x0d\x0achain-names\x0aevent-hash\x0b\x04\0!trigger-source-evm-contract-e\
 vent\x03\0\x13\x01r\x03\x07address\x03\x0achain-names\x0aevent-types\x04\0$trigg\
-er-source-cosmos-contract-event\x03\0\x15\x01r\x02\x0achain-names\x08n-blocksy\x04\
-\0\x15block-interval-source\x03\0\x17\x01k\x01\x01r\x03\x08schedules\x0astart-ti\
-me\x19\x08end-time\x19\x04\0\x13trigger-source-cron\x03\0\x1a\x01q\x05\x12evm-co\
-ntract-event\x01\x14\0\x15cosmos-contract-event\x01\x16\0\x0eblock-interval\x01\x18\
-\0\x04cron\x01\x1b\0\x06manual\0\0\x04\0\x0etrigger-source\x03\0\x1c\x01r\x03\x0a\
-service-ids\x0bworkflow-ids\x0etrigger-source\x1d\x04\0\x0etrigger-config\x03\0\x1e\
-\x01r\x04\x10contract-address\x0d\x0achain-names\x03log\x10\x0cblock-heightw\x04\
-\0\x1ftrigger-data-evm-contract-event\x03\0\x20\x01r\x04\x10contract-address\x03\
-\x0achain-names\x05event\x07\x0cblock-heightw\x04\0\"trigger-data-cosmos-contrac\
-t-event\x03\0\"\x01r\x02\x0achain-names\x0cblock-heightw\x04\0\x13block-interval\
--data\x03\0$\x01r\x01\x0ctrigger-time\x01\x04\0\x11trigger-data-cron\x03\0&\x01q\
-\x05\x12evm-contract-event\x01!\0\x15cosmos-contract-event\x01#\0\x0eblock-inter\
-val\x01%\0\x04cron\x01'\0\x03raw\x01\x0b\0\x04\0\x0ctrigger-data\x03\0(\x01r\x02\
-\x06config\x1f\x04data)\x04\0\x0etrigger-action\x03\0*\x01kw\x01r\x02\x07payload\
-\x0b\x08ordering,\x04\0\x0dwasm-response\x03\0-\x01q\x05\x05error\0\0\x04warn\0\0\
-\x04info\0\0\x05debug\0\0\x05trace\0\0\x04\0\x09log-level\x03\0/\x03\0$wavs:work\
-er/layer-types@0.4.0-beta.1\x05\0\x02\x03\0\0\x0etrigger-action\x03\0\x0etrigger\
--action\x03\0\x01\x02\x03\0\0\x0dwasm-response\x03\0\x0dwasm-response\x03\0\x03\x01\
-B\x02\x01q\x0d\x03api\x01s\0\x04http\x01s\0\x10external-service\x01s\0\x06config\
-\x01s\0\x08contract\x01s\0\x0dconfiguration\x01s\0\x0fcontext-loading\x01s\0\x12\
-context-validation\x01s\0\x03llm\x01s\0\x02io\x01s\0\x0btransaction\x01s\0\x04ut\
-f8\x01s\0\x05other\x01s\0\x04\0\x0bagent-error\x03\0\0\x03\0\x17wavs:agent/error\
-s@0.0.1\x05\x05\x01B+\x01ks\x01r\x03\x04name\0\x0bdescription\0\x0eparameter-typ\
-e\0\x04\0\x12function-parameter\x03\0\x01\x01r\x03\x04names\x0bdescription\0\x0a\
-parameters\0\x04\0\x08function\x03\0\x03\x01r\x02\x09tool-types\x08function\x04\x04\
-\0\x04tool\x03\0\x05\x01r\x02\x04names\x09argumentss\x04\0\x12tool-call-function\
-\x03\0\x07\x01r\x03\x02ids\x09tool-types\x08function\x08\x04\0\x09tool-call\x03\0\
-\x09\x01p\x0a\x01k\x0b\x01r\x05\x04roles\x07content\0\x0atool-calls\x0c\x0ctool-\
-call-id\0\x04name\0\x04\0\x07message\x03\0\x0d\x04\0\x13custom-tool-handler\x03\x01\
-\x01ky\x01r\x05\x0btemperaturev\x05top-pv\x04seedy\x0amax-tokens\x10\x0econtext-\
-window\x10\x04\0\x0bllm-options\x03\0\x11\x01r\x04\x05models\x06config\x12\x07ap\
-i-urls\x07api-key\0\x04\0\x0allm-client\x03\0\x13\x01r\x04\x04names\x07addresss\x03\
-abis\x0bdescription\0\x04\0\x08contract\x03\0\x15\x01p\x16\x01p\x0e\x01o\x02ss\x01\
-p\x19\x01r\x05\x09contracts\x17\x0allm-config\x12\x05models\x08messages\x18\x06c\
-onfig\x1a\x04\0\x06config\x03\0\x1b\x01ps\x01r\x02\x08functions\x04args\x1d\x04\0\
-\x0dcontract-call\x03\0\x1e\x01k\x1f\x01r\x05\x02tos\x05values\x0dcontract-call\x20\
-\x04datas\x0bdescriptions\x04\0\x0btransaction\x03\0!\x01q\x02\x0btransaction\x01\
-\"\0\x04text\x01s\0\x04\0\x0cllm-response\x03\0#\x01h\x0f\x01@\x02\x04self%\x09t\
-ool-names\0\x7f\x04\0&[method]custom-tool-handler.can-handle\x01&\x01j\x01s\x01s\
-\x01@\x02\x04self%\x09tool-call\x0a\0'\x04\0#[method]custom-tool-handler.execute\
-\x01(\x03\0\x16wavs:agent/types@0.0.1\x05\x06\x02\x03\0\x01\x0bagent-error\x02\x03\
-\0\x02\x07message\x02\x03\0\x02\x04tool\x02\x03\0\x02\x09tool-call\x02\x03\0\x02\
-\x13custom-tool-handler\x02\x03\0\x02\x0cllm-response\x02\x03\0\x02\x0btransacti\
-on\x02\x03\0\x02\x06config\x02\x03\0\x02\x0bllm-options\x02\x03\0\x02\x0allm-cli\
-ent\x01B0\x02\x03\x02\x01\x07\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x08\x04\
-\0\x07message\x03\0\x02\x02\x03\x02\x01\x09\x04\0\x04tool\x03\0\x04\x02\x03\x02\x01\
-\x0a\x04\0\x09tool-call\x03\0\x06\x02\x03\x02\x01\x0b\x04\0\x13custom-tool-handl\
-er\x03\0\x08\x02\x03\x02\x01\x0c\x04\0\x0cllm-response\x03\0\x0a\x02\x03\x02\x01\
-\x0d\x04\0\x0btransaction\x03\0\x0c\x02\x03\x02\x01\x0e\x04\0\x06config\x03\0\x0e\
-\x02\x03\x02\x01\x0f\x04\0\x0bllm-options\x03\0\x10\x02\x03\x02\x01\x10\x04\0\x0a\
-llm-client\x03\0\x12\x04\0\x12llm-client-manager\x03\x01\x01h\x14\x01@\x01\x04se\
-lf\x15\0s\x04\0$[method]llm-client-manager.get-model\x01\x16\x01@\x01\x04self\x15\
-\0\x11\x04\0%[method]llm-client-manager.get-config\x01\x17\x01p\x03\x01p\x05\x01\
-k\x19\x01j\x01\x03\x01\x01\x01@\x03\x04self\x15\x08messages\x18\x05tools\x1a\0\x1b\
-\x04\0*[method]llm-client-manager.chat-completion\x01\x1c\x01j\x01s\x01\x01\x01@\
-\x02\x04self\x15\x08messages\x18\0\x1d\x04\0/[method]llm-client-manager.chat-com\
-pletion-text\x01\x1e\x01i\x09\x01p\x1f\x01k\x20\x01j\x01\x0b\x01\x01\x01@\x05\x04\
-self\x15\x06prompts\x06config\x0f\x0ccustom-tools\x1a\x0fcustom-handlers!\0\"\x04\
-\0)[method]llm-client-manager.process-prompt\x01#\x01j\x01\x13\x01\x01\x01@\x01\x05\
-models\0$\x04\0\x0anew-client\x01%\x01@\x02\x05models\x0bjson-configs\0$\x04\0\x09\
-from-json\x01&\x01@\x02\x05models\x06config\x11\0$\x04\0\x0bwith-config\x01'\x03\
-\0\x17wavs:agent/client@0.0.1\x05\x11\x02\x03\0\x02\x08contract\x01B.\x02\x03\x02\
-\x01\x07\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x08\x04\0\x07message\x03\0\
-\x02\x02\x03\x02\x01\x0e\x04\0\x06config\x03\0\x04\x02\x03\x02\x01\x0f\x04\0\x0b\
-llm-options\x03\0\x06\x02\x03\x02\x01\x12\x04\0\x08contract\x03\0\x08\x04\0\x11l\
-lm-options-funcs\x03\x01\x04\0\x0econfig-manager\x03\x01\x01h\x0a\x01@\x01\x04se\
-lf\x0c\0\x07\x04\0\x1d[method]llm-options-funcs.new\x01\x0d\x01@\x02\x04self\x0c\
-\x04tempv\0\x07\x04\0%[method]llm-options-funcs.temperature\x01\x0e\x01@\x02\x04\
-self\x0c\x05top-pv\0\x07\x04\0\x1f[method]llm-options-funcs.top-p\x01\x0f\x01@\x02\
-\x04self\x0c\x04seedy\0\x07\x04\0\x1e[method]llm-options-funcs.seed\x01\x10\x01k\
-y\x01@\x02\x04self\x0c\x0amax-tokens\x11\0\x07\x04\0$[method]llm-options-funcs.m\
-ax-tokens\x01\x12\x01@\x02\x04self\x0c\x0econtext-window\x11\0\x07\x04\0([method\
-]llm-options-funcs.context-window\x01\x13\x01h\x0b\x01j\x01\x05\x01s\x01@\x01\x04\
-self\x14\0\x15\x04\0\x1b[method]config-manager.load\x01\x16\x01@\x02\x04self\x14\
-\x03uris\0\x15\x04\0$[method]config-manager.load-from-uri\x01\x17\x01j\x01\x05\x01\
-\x01\x01@\x02\x04self\x14\x04jsons\0\x18\x04\0\x20[method]config-manager.from-js\
-on\x01\x19\x01j\x01s\x01s\x01@\x01\x04self\x14\0\x1a\x04\0\x1e[method]config-man\
-ager.to-json\x01\x1b\x01@\x01\x04self\x14\0s\x04\03[method]config-manager.format\
--contract-descriptions\x01\x1c\x01k\x09\x01@\x02\x04self\x14\x04names\0\x1d\x04\0\
-+[method]config-manager.get-contract-by-name\x01\x1e\x01j\0\x01\x01\x01@\x01\x04\
-self\x14\0\x1f\x04\0\x1f[method]config-manager.validate\x01\x20\x03\0\x17wavs:ag\
-ent/config@0.0.1\x05\x13\x02\x03\0\x02\x0dcontract-call\x01B#\x02\x03\x02\x01\x07\
-\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x12\x04\0\x08contract\x03\0\x02\x02\
-\x03\x02\x01\x14\x04\0\x0dcontract-call\x03\0\x04\x02\x03\x02\x01\x0d\x04\0\x0bt\
-ransaction\x03\0\x06\x04\0\x10contract-manager\x03\x01\x04\0\x13transaction-mana\
-ger\x03\x01\x01h\x08\x01@\x04\x04self\x0a\x04names\x07addresss\x03abis\0\x03\x04\
-\0\x1c[method]contract-manager.new\x01\x0b\x01@\x05\x04self\x0a\x04names\x07addr\
-esss\x03abis\x0bdescriptions\0\x03\x04\0-[method]contract-manager.new-with-descr\
-iption\x01\x0c\x01j\x01s\x01\x01\x01@\x02\x04self\x0a\x08contract\x03\0\x0d\x04\0\
-\"[method]contract-manager.parse-abi\x01\x0e\x01ps\x01p}\x01j\x01\x10\x01\x01\x01\
-@\x04\x04self\x0a\x08contract\x03\x0dfunction-names\x04args\x0f\0\x11\x04\0-[met\
-hod]contract-manager.encode-function-call\x01\x12\x01@\x03\x04self\x0a\x08contra\
-ct\x03\x0dfunction-names\0\x0d\x04\0&[method]contract-manager.find-function\x01\x13\
-\x01j\0\x01\x01\x01@\x04\x04self\x0a\x08contract\x03\x0dfunction-names\x04args\x0f\
-\0\x14\x04\0/[method]contract-manager.validate-function-call\x01\x15\x01h\x09\x01\
-@\x02\x04self\x16\x0btransaction\x07\0\x7f\x04\0$[method]transaction-manager.is-\
-valid\x01\x17\x01@\x02\x04self\x16\x0btransaction\x07\0\x14\x04\00[method]transa\
-ction-manager.validate-transaction\x01\x18\x01@\x01\x0btransaction\x07\0\x0d\x04\
-\0\x16create-payload-from-tx\x01\x19\x03\0\x1awavs:agent/contracts@0.0.1\x05\x15\
-\x02\x03\0\x03\x0allm-client\x02\x03\0\x02\x08function\x01B#\x02\x03\x02\x01\x16\
-\x04\0\x0allm-client\x03\0\0\x02\x03\x02\x01\x08\x04\0\x07message\x03\0\x02\x02\x03\
-\x02\x01\x09\x04\0\x04tool\x03\0\x04\x02\x03\x02\x01\x0a\x04\0\x09tool-call\x03\0\
-\x06\x02\x03\x02\x01\x17\x04\0\x08function\x03\0\x08\x02\x03\x02\x01\x0b\x04\0\x13\
-custom-tool-handler\x03\0\x0a\x02\x03\x02\x01\x12\x04\0\x08contract\x03\0\x0c\x04\
-\0\x0dtools-builder\x03\x01\x01h\x0e\x01@\x01\x04self\x0f\0\x05\x04\0#[method]to\
-ols-builder.send-eth-tool\x01\x10\x01p\x05\x01@\x02\x04self\x0f\x08contract\x0d\0\
-\x11\x04\0)[method]tools-builder.tools-from-contract\x01\x12\x01@\x04\x04self\x0f\
-\x04names\x0bdescriptions\x0aparameterss\0\x05\x04\0![method]tools-builder.custo\
-m-tool\x01\x13\x01i\x0b\x01p\x14\x01k\x15\x01j\x01s\x01s\x01@\x03\x04self\x0f\x09\
-tool-call\x07\x0fcustom-handlers\x16\0\x17\x04\0'[method]tools-builder.execute-t\
-ool-call\x01\x18\x01@\x02\x04self\x0f\x09tool-call\x07\0\x17\x04\0+[method]tools\
--builder.parse-eth-transaction\x01\x19\x01p\x03\x01p\x07\x01@\x06\x04self\x0f\x06\
-client\x01\x10initial-messages\x1a\x08response\x03\x0atool-calls\x1b\x0fcustom-h\
-andlers\x16\0\x17\x04\0([method]tools-builder.process-tool-calls\x01\x1c\x03\0\x16\
-wavs:agent/tools@0.0.1\x05\x18\x02\x03\0\0\x10evm-chain-config\x02\x03\0\0\x13co\
-smos-chain-config\x02\x03\0\0\x09log-level\x01B\x0e\x02\x03\x02\x01\x19\x04\0\x10\
-evm-chain-config\x03\0\0\x02\x03\x02\x01\x1a\x04\0\x13cosmos-chain-config\x03\0\x02\
-\x02\x03\x02\x01\x1b\x04\0\x09log-level\x03\0\x04\x01k\x01\x01@\x01\x0achain-nam\
-es\0\x06\x04\0\x14get-eth-chain-config\x01\x07\x01k\x03\x01@\x01\x0achain-names\0\
-\x08\x04\0\x17get-cosmos-chain-config\x01\x09\x01@\x02\x05level\x05\x07messages\x01\
-\0\x04\0\x03log\x01\x0a\x03\0\x04host\x05\x1c\x01k\x04\x01j\x01\x1d\x01s\x01@\x01\
-\x0etrigger-action\x02\0\x1e\x04\0\x03run\x01\x1f\x04\0'component:dao-agent/laye\
-r-trigger-world\x04\0\x0b\x19\x01\0\x13layer-trigger-world\x03\0\0\0G\x09produce\
-rs\x01\x0cprocessed-by\x02\x0dwit-component\x070.220.0\x10wit-bindgen-rust\x060.\
-35.0";
+er-source-cosmos-contract-event\x03\0\x15\x01kw\x01r\x04\x0achain-names\x08n-blo\
+cksy\x0bstart-block\x17\x09end-block\x17\x04\0\x15block-interval-source\x03\0\x18\
+\x01k\x01\x01r\x03\x08schedules\x0astart-time\x1a\x08end-time\x1a\x04\0\x13trigg\
+er-source-cron\x03\0\x1b\x01q\x05\x12evm-contract-event\x01\x14\0\x15cosmos-cont\
+ract-event\x01\x16\0\x0eblock-interval\x01\x19\0\x04cron\x01\x1c\0\x06manual\0\0\
+\x04\0\x0etrigger-source\x03\0\x1d\x01r\x03\x0aservice-ids\x0bworkflow-ids\x0etr\
+igger-source\x1e\x04\0\x0etrigger-config\x03\0\x1f\x01r\x04\x10contract-address\x0d\
+\x0achain-names\x03log\x10\x0cblock-heightw\x04\0\x1ftrigger-data-evm-contract-e\
+vent\x03\0!\x01r\x04\x10contract-address\x03\x0achain-names\x05event\x07\x0cbloc\
+k-heightw\x04\0\"trigger-data-cosmos-contract-event\x03\0#\x01r\x02\x0achain-nam\
+es\x0cblock-heightw\x04\0\x13block-interval-data\x03\0%\x01r\x01\x0ctrigger-time\
+\x01\x04\0\x11trigger-data-cron\x03\0'\x01q\x05\x12evm-contract-event\x01\"\0\x15\
+cosmos-contract-event\x01$\0\x0eblock-interval\x01&\0\x04cron\x01(\0\x03raw\x01\x0b\
+\0\x04\0\x0ctrigger-data\x03\0)\x01r\x02\x06config\x20\x04data*\x04\0\x0etrigger\
+-action\x03\0+\x01r\x02\x07payload\x0b\x08ordering\x17\x04\0\x0dwasm-response\x03\
+\0-\x01q\x05\x05error\0\0\x04warn\0\0\x04info\0\0\x05debug\0\0\x05trace\0\0\x04\0\
+\x09log-level\x03\0/\x03\0\x1dwavs:worker/layer-types@0.4.0\x05\0\x02\x03\0\0\x0e\
+trigger-action\x03\0\x0etrigger-action\x03\0\x01\x02\x03\0\0\x0dwasm-response\x03\
+\0\x0dwasm-response\x03\0\x03\x01B\x02\x01q\x0d\x03api\x01s\0\x04http\x01s\0\x10\
+external-service\x01s\0\x06config\x01s\0\x08contract\x01s\0\x0dconfiguration\x01\
+s\0\x0fcontext-loading\x01s\0\x12context-validation\x01s\0\x03llm\x01s\0\x02io\x01\
+s\0\x0btransaction\x01s\0\x04utf8\x01s\0\x05other\x01s\0\x04\0\x0bagent-error\x03\
+\0\0\x03\0\x17wavs:agent/errors@0.0.1\x05\x05\x01B+\x01ks\x01r\x03\x04name\0\x0b\
+description\0\x0eparameter-type\0\x04\0\x12function-parameter\x03\0\x01\x01r\x03\
+\x04names\x0bdescription\0\x0aparameters\0\x04\0\x08function\x03\0\x03\x01r\x02\x09\
+tool-types\x08function\x04\x04\0\x04tool\x03\0\x05\x01r\x02\x04names\x09argument\
+ss\x04\0\x12tool-call-function\x03\0\x07\x01r\x03\x02ids\x09tool-types\x08functi\
+on\x08\x04\0\x09tool-call\x03\0\x09\x01p\x0a\x01k\x0b\x01r\x05\x04roles\x07conte\
+nt\0\x0atool-calls\x0c\x0ctool-call-id\0\x04name\0\x04\0\x07message\x03\0\x0d\x04\
+\0\x13custom-tool-handler\x03\x01\x01ky\x01r\x05\x0btemperaturev\x05top-pv\x04se\
+edy\x0amax-tokens\x10\x0econtext-window\x10\x04\0\x0bllm-options\x03\0\x11\x01r\x04\
+\x05models\x06config\x12\x07api-urls\x07api-key\0\x04\0\x0allm-client\x03\0\x13\x01\
+r\x04\x04names\x07addresss\x03abis\x0bdescription\0\x04\0\x08contract\x03\0\x15\x01\
+p\x16\x01p\x0e\x01o\x02ss\x01p\x19\x01r\x05\x09contracts\x17\x0allm-config\x12\x05\
+models\x08messages\x18\x06config\x1a\x04\0\x06config\x03\0\x1b\x01ps\x01r\x02\x08\
+functions\x04args\x1d\x04\0\x0dcontract-call\x03\0\x1e\x01k\x1f\x01r\x05\x02tos\x05\
+values\x0dcontract-call\x20\x04datas\x0bdescriptions\x04\0\x0btransaction\x03\0!\
+\x01q\x02\x0btransaction\x01\"\0\x04text\x01s\0\x04\0\x0cllm-response\x03\0#\x01\
+h\x0f\x01@\x02\x04self%\x09tool-names\0\x7f\x04\0&[method]custom-tool-handler.ca\
+n-handle\x01&\x01j\x01s\x01s\x01@\x02\x04self%\x09tool-call\x0a\0'\x04\0#[method\
+]custom-tool-handler.execute\x01(\x03\0\x16wavs:agent/types@0.0.1\x05\x06\x02\x03\
+\0\x01\x0bagent-error\x02\x03\0\x02\x07message\x02\x03\0\x02\x04tool\x02\x03\0\x02\
+\x09tool-call\x02\x03\0\x02\x13custom-tool-handler\x02\x03\0\x02\x0cllm-response\
+\x02\x03\0\x02\x0btransaction\x02\x03\0\x02\x06config\x02\x03\0\x02\x0bllm-optio\
+ns\x02\x03\0\x02\x0allm-client\x01B0\x02\x03\x02\x01\x07\x04\0\x0bagent-error\x03\
+\0\0\x02\x03\x02\x01\x08\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\x09\x04\0\x04\
+tool\x03\0\x04\x02\x03\x02\x01\x0a\x04\0\x09tool-call\x03\0\x06\x02\x03\x02\x01\x0b\
+\x04\0\x13custom-tool-handler\x03\0\x08\x02\x03\x02\x01\x0c\x04\0\x0cllm-respons\
+e\x03\0\x0a\x02\x03\x02\x01\x0d\x04\0\x0btransaction\x03\0\x0c\x02\x03\x02\x01\x0e\
+\x04\0\x06config\x03\0\x0e\x02\x03\x02\x01\x0f\x04\0\x0bllm-options\x03\0\x10\x02\
+\x03\x02\x01\x10\x04\0\x0allm-client\x03\0\x12\x04\0\x12llm-client-manager\x03\x01\
+\x01h\x14\x01@\x01\x04self\x15\0s\x04\0$[method]llm-client-manager.get-model\x01\
+\x16\x01@\x01\x04self\x15\0\x11\x04\0%[method]llm-client-manager.get-config\x01\x17\
+\x01p\x03\x01p\x05\x01k\x19\x01j\x01\x03\x01\x01\x01@\x03\x04self\x15\x08message\
+s\x18\x05tools\x1a\0\x1b\x04\0*[method]llm-client-manager.chat-completion\x01\x1c\
+\x01j\x01s\x01\x01\x01@\x02\x04self\x15\x08messages\x18\0\x1d\x04\0/[method]llm-\
+client-manager.chat-completion-text\x01\x1e\x01i\x09\x01p\x1f\x01k\x20\x01j\x01\x0b\
+\x01\x01\x01@\x05\x04self\x15\x06prompts\x06config\x0f\x0ccustom-tools\x1a\x0fcu\
+stom-handlers!\0\"\x04\0)[method]llm-client-manager.process-prompt\x01#\x01j\x01\
+\x13\x01\x01\x01@\x01\x05models\0$\x04\0\x0anew-client\x01%\x01@\x02\x05models\x0b\
+json-configs\0$\x04\0\x09from-json\x01&\x01@\x02\x05models\x06config\x11\0$\x04\0\
+\x0bwith-config\x01'\x03\0\x17wavs:agent/client@0.0.1\x05\x11\x02\x03\0\x02\x08c\
+ontract\x01B.\x02\x03\x02\x01\x07\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x08\
+\x04\0\x07message\x03\0\x02\x02\x03\x02\x01\x0e\x04\0\x06config\x03\0\x04\x02\x03\
+\x02\x01\x0f\x04\0\x0bllm-options\x03\0\x06\x02\x03\x02\x01\x12\x04\0\x08contrac\
+t\x03\0\x08\x04\0\x11llm-options-funcs\x03\x01\x04\0\x0econfig-manager\x03\x01\x01\
+h\x0a\x01@\x01\x04self\x0c\0\x07\x04\0\x1d[method]llm-options-funcs.new\x01\x0d\x01\
+@\x02\x04self\x0c\x04tempv\0\x07\x04\0%[method]llm-options-funcs.temperature\x01\
+\x0e\x01@\x02\x04self\x0c\x05top-pv\0\x07\x04\0\x1f[method]llm-options-funcs.top\
+-p\x01\x0f\x01@\x02\x04self\x0c\x04seedy\0\x07\x04\0\x1e[method]llm-options-func\
+s.seed\x01\x10\x01ky\x01@\x02\x04self\x0c\x0amax-tokens\x11\0\x07\x04\0$[method]\
+llm-options-funcs.max-tokens\x01\x12\x01@\x02\x04self\x0c\x0econtext-window\x11\0\
+\x07\x04\0([method]llm-options-funcs.context-window\x01\x13\x01h\x0b\x01j\x01\x05\
+\x01s\x01@\x01\x04self\x14\0\x15\x04\0\x1b[method]config-manager.load\x01\x16\x01\
+@\x02\x04self\x14\x03uris\0\x15\x04\0$[method]config-manager.load-from-uri\x01\x17\
+\x01j\x01\x05\x01\x01\x01@\x02\x04self\x14\x04jsons\0\x18\x04\0\x20[method]confi\
+g-manager.from-json\x01\x19\x01j\x01s\x01s\x01@\x01\x04self\x14\0\x1a\x04\0\x1e[\
+method]config-manager.to-json\x01\x1b\x01@\x01\x04self\x14\0s\x04\03[method]conf\
+ig-manager.format-contract-descriptions\x01\x1c\x01k\x09\x01@\x02\x04self\x14\x04\
+names\0\x1d\x04\0+[method]config-manager.get-contract-by-name\x01\x1e\x01j\0\x01\
+\x01\x01@\x01\x04self\x14\0\x1f\x04\0\x1f[method]config-manager.validate\x01\x20\
+\x03\0\x17wavs:agent/config@0.0.1\x05\x13\x02\x03\0\x02\x0dcontract-call\x01B#\x02\
+\x03\x02\x01\x07\x04\0\x0bagent-error\x03\0\0\x02\x03\x02\x01\x12\x04\0\x08contr\
+act\x03\0\x02\x02\x03\x02\x01\x14\x04\0\x0dcontract-call\x03\0\x04\x02\x03\x02\x01\
+\x0d\x04\0\x0btransaction\x03\0\x06\x04\0\x10contract-manager\x03\x01\x04\0\x13t\
+ransaction-manager\x03\x01\x01h\x08\x01@\x04\x04self\x0a\x04names\x07addresss\x03\
+abis\0\x03\x04\0\x1c[method]contract-manager.new\x01\x0b\x01@\x05\x04self\x0a\x04\
+names\x07addresss\x03abis\x0bdescriptions\0\x03\x04\0-[method]contract-manager.n\
+ew-with-description\x01\x0c\x01j\x01s\x01\x01\x01@\x02\x04self\x0a\x08contract\x03\
+\0\x0d\x04\0\"[method]contract-manager.parse-abi\x01\x0e\x01ps\x01p}\x01j\x01\x10\
+\x01\x01\x01@\x04\x04self\x0a\x08contract\x03\x0dfunction-names\x04args\x0f\0\x11\
+\x04\0-[method]contract-manager.encode-function-call\x01\x12\x01@\x03\x04self\x0a\
+\x08contract\x03\x0dfunction-names\0\x0d\x04\0&[method]contract-manager.find-fun\
+ction\x01\x13\x01j\0\x01\x01\x01@\x04\x04self\x0a\x08contract\x03\x0dfunction-na\
+mes\x04args\x0f\0\x14\x04\0/[method]contract-manager.validate-function-call\x01\x15\
+\x01h\x09\x01@\x02\x04self\x16\x0btransaction\x07\0\x7f\x04\0$[method]transactio\
+n-manager.is-valid\x01\x17\x01@\x02\x04self\x16\x0btransaction\x07\0\x14\x04\00[\
+method]transaction-manager.validate-transaction\x01\x18\x01@\x01\x0btransaction\x07\
+\0\x0d\x04\0\x16create-payload-from-tx\x01\x19\x03\0\x1awavs:agent/contracts@0.0\
+.1\x05\x15\x02\x03\0\x03\x0allm-client\x02\x03\0\x02\x08function\x01B#\x02\x03\x02\
+\x01\x16\x04\0\x0allm-client\x03\0\0\x02\x03\x02\x01\x08\x04\0\x07message\x03\0\x02\
+\x02\x03\x02\x01\x09\x04\0\x04tool\x03\0\x04\x02\x03\x02\x01\x0a\x04\0\x09tool-c\
+all\x03\0\x06\x02\x03\x02\x01\x17\x04\0\x08function\x03\0\x08\x02\x03\x02\x01\x0b\
+\x04\0\x13custom-tool-handler\x03\0\x0a\x02\x03\x02\x01\x12\x04\0\x08contract\x03\
+\0\x0c\x04\0\x0dtools-builder\x03\x01\x01h\x0e\x01@\x01\x04self\x0f\0\x05\x04\0#\
+[method]tools-builder.send-eth-tool\x01\x10\x01p\x05\x01@\x02\x04self\x0f\x08con\
+tract\x0d\0\x11\x04\0)[method]tools-builder.tools-from-contract\x01\x12\x01@\x04\
+\x04self\x0f\x04names\x0bdescriptions\x0aparameterss\0\x05\x04\0![method]tools-b\
+uilder.custom-tool\x01\x13\x01i\x0b\x01p\x14\x01k\x15\x01j\x01s\x01s\x01@\x03\x04\
+self\x0f\x09tool-call\x07\x0fcustom-handlers\x16\0\x17\x04\0'[method]tools-build\
+er.execute-tool-call\x01\x18\x01@\x02\x04self\x0f\x09tool-call\x07\0\x17\x04\0+[\
+method]tools-builder.parse-eth-transaction\x01\x19\x01p\x03\x01p\x07\x01@\x06\x04\
+self\x0f\x06client\x01\x10initial-messages\x1a\x08response\x03\x0atool-calls\x1b\
+\x0fcustom-handlers\x16\0\x17\x04\0([method]tools-builder.process-tool-calls\x01\
+\x1c\x03\0\x16wavs:agent/tools@0.0.1\x05\x18\x02\x03\0\0\x10evm-chain-config\x02\
+\x03\0\0\x13cosmos-chain-config\x02\x03\0\0\x09log-level\x01B\x0e\x02\x03\x02\x01\
+\x19\x04\0\x10evm-chain-config\x03\0\0\x02\x03\x02\x01\x1a\x04\0\x13cosmos-chain\
+-config\x03\0\x02\x02\x03\x02\x01\x1b\x04\0\x09log-level\x03\0\x04\x01k\x01\x01@\
+\x01\x0achain-names\0\x06\x04\0\x14get-eth-chain-config\x01\x07\x01k\x03\x01@\x01\
+\x0achain-names\0\x08\x04\0\x17get-cosmos-chain-config\x01\x09\x01@\x02\x05level\
+\x05\x07messages\x01\0\x04\0\x03log\x01\x0a\x03\0\x04host\x05\x1c\x01k\x04\x01j\x01\
+\x1d\x01s\x01@\x01\x0etrigger-action\x02\0\x1e\x04\0\x03run\x01\x1f\x04\0'compon\
+ent:dao-agent/layer-trigger-world\x04\0\x0b\x19\x01\0\x13layer-trigger-world\x03\
+\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.220.0\x10wit-\
+bindgen-rust\x060.35.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {
